@@ -1,2 +1,2 @@
-# DWELL
-Dependently-typed WebAssembly - an Error-free Low-level Language
+# ITWorks
+Index Typed WebAssembly - it works on all machines!
