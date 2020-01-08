@@ -1,0 +1,3 @@
+[submodule "WASM-Redex"]
+	path = WASM-Redex
+	url = https://github.com/atgeller/WASM-Redex
