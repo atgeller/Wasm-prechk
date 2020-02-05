@@ -30,7 +30,7 @@
 
 ; Writes the given encoding to the specified port.
 (define (write-encoding encoding port)
-  (fprintf port "(set-logic QF_BV)\n")
+  ;(fprintf port "(set-logic QF_BV)\n")
   (for ([expr encoding])
     (fprintf port "~a\n" expr))
   (fprintf port "(check-sat)\n")
@@ -48,15 +48,6 @@
 ; 'unsat and no core was extracted).
 (define (read-solution port)
   (match (read port)
-    [(== 'sat) 
-     (match (read port)
-       [(list (== 'model) (list (== 'define-fun) const _ _ val) ...)
-        (for/hash ([c const] [v val]) 
-          (values c 
-                  (match v
-                    [(== 'true) #t]
-                    [(== 'false) #f]
-                    [(? number?) v])))]
-       [other (error 'solution "expected model, given ~a" other)])]
+    [(== 'sat) (read port) #t]
     [(== 'unsat) (read port) #f] 
     [other (error 'smt-solution "unrecognized solver output: ~a" other)]))

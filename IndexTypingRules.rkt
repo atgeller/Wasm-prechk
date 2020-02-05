@@ -17,6 +17,11 @@
   [(satisfies φ empty) #t]
   [(satisfies φ_1 φ_2) ,(test-satisfaction (term φ_1) (term φ_2))])
 
+(define-metafunction WASMIndexTypes
+  valid-table-call : tf a (i ...) (tf ...) φ -> boolean
+  [(valid-table-call tf a (i ...) (tf_2 ...) φ)
+   ,(check-table-call (term tf) (term a) (term (i ...)) (term (tf_2 ...)) (term φ))])
+
 (define-judgment-form WASMIndexTypes
   #:contract (⊢ C (e ...) tfi)
   
@@ -48,7 +53,14 @@
   [(label-types (ticond ...) (j) ((ti ...) φ))
    (where #t (satisfies φ_1 φ))
    ----------------------------
-   (⊢ (_ _ _ _ _ (label (ticond  ...)) _) ((br j)) (((ti_1 ... ti ...) φ_1) -> ((ti_2...) φ_2)))]
+   (⊢ (_ _ _ _ _ (label (ticond  ...)) _) ((br j)) (((ti_1 ... ti ...) φ_1) -> ((ti_2 ...) φ_2)))]
+
+  [(where #t (valid-table-call tf a (i ...) (tf_2 ...) φ_1))
+   (where ((t_1 ...) -> (t_2 ...)) tf)
+   (where ((t_1 _) ...) (ti_1 ...))
+   (where ((t_2 _) ...) (ti_2 ...))
+   -------------------------------------------
+   (⊢ ((func (tf_2 ...)) _ (table (j (i ...))) _ _ _ _) ((call-indirect/unsafe tf)) (((ti_1 ... (i32 a)) φ_1) -> ((ti_2 ...) φ_2)))]
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

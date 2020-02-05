@@ -6,6 +6,7 @@
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
+  (e ::= .... (call-indirect/unsafe tf))
 
   ;; Index types
   (a ::= variable-not-otherwise-mentioned)
@@ -21,8 +22,8 @@
   (ticond ::= ((ti ...) φ))
   (tfi ::= (ticond -> ticond))
 
-  (C ::= ((func (tfi ...)) (global (tgi ...)) (table j ...) (memory j ...) (local (ti ...)) (label (ticond  ...)) (return ticond))
-     ((func (tfi ...)) (global (tgi ...)) (table j ...) (memory j ...) (local (ti ...)) (label (ticond ...)) (return))))
+  (C ::= ((func (tf ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond  ...)) (return ticond))
+     ((func (tf ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond ...)) (return))))
 
 (define-metafunction WASMIndexTypes
   reverse-get : (any ...) j -> any

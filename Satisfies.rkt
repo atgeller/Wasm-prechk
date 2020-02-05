@@ -2,7 +2,7 @@
 
 (require redex "IndexTypes.rkt" "solver.rkt")
 
-(provide test-satisfaction)
+(provide test-satisfaction check-table-call)
 
 (define debug #t)
 
@@ -79,16 +79,12 @@
                    [(index2 vars3) (parse-index y vars2)])
        (values `(ite ,prop ,index1 index2) vars3))]))
 
-(define (make-proposition P)
-  (parse-proposition P null))
-
 (define (extract-constraints phi vars)
   (match phi
     [`empty (values null vars)]
     [`(,phi* ,P)
-     (let*-values ([(new-constraint new-vars) (make-proposition P)]
-                   [(rest-constraints rest-vars)
-                    (extract-constraints phi* (append new-vars vars))])
+     (let*-values ([(new-constraint new-vars) (parse-proposition P vars)]
+                   [(rest-constraints rest-vars) (extract-constraints phi* new-vars)])
        (values (cons new-constraint rest-constraints) rest-vars))]))
 
 (define (context-to-constraints phi_1 phi_2)
@@ -99,3 +95,28 @@
 (define (test-satisfaction phi_1 phi_2)
   (let-values ([(vars constraints1 constraints2) (context-to-constraints phi_1 phi_2)])
     (not (ask-z3 vars constraints1 constraints2))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (construct-z3-table table typelist)
+  (let* ([unique-typelist (remove-duplicates typelist)]
+         [typemap (for/hash ([type unique-typelist])
+                    (values type (gensym)))])
+    (values typemap (hash-values typemap))))
+
+(define (check-table-call type index table typelist phi)
+  (let*-values ([(typemap typevars) (construct-z3-table table typelist)]
+                [(constraints vars) (extract-constraints phi null)]
+                [(index-def vars*) (parse-index index vars)]
+                [(type-var) (hash-ref typemap type #f)])
+    (and type-var
+         (let ([query (append (map (lambda (x) `(declare-const ,x Bool)) typevars)
+                              (map (lambda (x) `(declare-const ,x (_ BitVec 32))) (remove-duplicates vars*))
+                              `((declare-const table (Array (_ BitVec 32) Bool))
+                                (define-fun satisfies () Bool
+                                  (= (select table ,index-def) ,type-var))
+                                (assert (not satisfies)))
+                              (map (lambda (x) `(assert ,x)) constraints)
+                              (for/list ([i (in-range 0 (length typelist))])
+                                `(assert (= (select table ,(string->symbol (format "(_ bv~a 32)" i))) ,(hash-ref typemap (list-ref typelist i))))))])
+           (not (solve query))))))
