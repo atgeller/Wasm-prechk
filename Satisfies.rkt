@@ -2,9 +2,15 @@
 
 (require redex "IndexTypes.rkt" "solver.rkt")
 
-(provide test-satisfaction check-table-call)
+(provide test-satisfaction extract-constraints parse-index index-var->z3-bitvec)
 
 (define debug #t)
+
+(define (index-var->z3-bitvec var)
+  (match-let ([(cons name type) var])
+    `(declare-const ,name (_ BitVec ,(match type
+                                      ['i32 32]
+                                      ['i64 64])))))
 
 (define (ask-z3 vars constraints1 constraints2)
   (when debug
@@ -12,7 +18,7 @@
     (displayln constraints1)
     (displayln constraints2))
   
-  (solve (append (map (lambda (x) `(declare-const ,x (_ BitVec 32))) vars)
+  (solve (append (map index-var->z3-bitvec vars)
                  `((define-fun satisfies () Bool
                      (=>
                       (and ,@constraints1)
@@ -37,54 +43,61 @@
     [`(ge ,x ,y)  `(bvuge ,x ,y)]
     [`(eqz ,x)    `(= ,x (_ bv0 32))]))
 
-(define (parse-index x vars)
+(define (parse-index x)
   (match x
-    [(? symbol?) (values x (cons x vars))]
-    [(? number?) (values (string->symbol (format "(_ bv~a 32)" x)) vars)]
+    [(? symbol?) x]
+    [`(,type ,n) #:when (and (redex-match? WASMIndexTypes t type)
+                             (number? n))
+                 (string->symbol (format "(_ bv~a ~a)" n (match type
+                                                           ['i32 32]
+                                                           ['i64 64])))]
     [`(,u_op ,x)
      #:when (redex-match? WASMIndexTypes unop u_op)
-     (let-values ([(index vars*) (parse-index x vars)])
-       (values (redex_op->z3_op `(,u_op ,index)) vars*))]
+     (let ([index (parse-index x)])
+       (redex_op->z3_op `(,u_op ,index)))]
     [`(,b_op ,x ,y)
      #:when (redex-match? WASMIndexTypes binop b_op)
-     (let*-values ([(index1 vars1) (parse-index x vars)]
-                   [(index2 vars2) (parse-index y vars1)])
-       (values (redex_op->z3_op `(,b_op ,index1 ,index2)) vars2))]))
+     (let ([index1 (parse-index x)]
+           [index2 (parse-index y)])
+       (redex_op->z3_op `(,b_op ,index1 ,index2)))]))
 
-(define (parse-proposition P vars)
+(define (parse-proposition P)
   (match P
     [`(,t_op ,x)
      #:when (redex-match? WASMIndexTypes testop t_op)
-     (let-values ([(index vars*) (parse-index x vars)])
-       (values (redex_op->z3_op `(,t_op ,index)) vars*))]
+     (let ([index (parse-index x)])
+       (redex_op->z3_op `(,t_op ,index)))]
     [`(,r_op ,x ,y)
      #:when (redex-match? WASMIndexTypes relop r_op)
-     (let*-values ([(index1 vars1) (parse-index x vars)]
-                   [(index2 vars2) (parse-index y vars1)])
-       (values (redex_op->z3_op `(,r_op ,index1 ,index2)) vars2))]
+     (let ([index1 (parse-index x)]
+           [index2 (parse-index y)])
+       (redex_op->z3_op `(,r_op ,index1 ,index2)))]
     [`(not ,P*)
-     (let-values ([(prop vars*) (parse-proposition P* vars)])
-       (values `(not ,prop) vars*))]
+     (let ([prop (parse-proposition P*)])
+       `(not ,prop))]
     [`(and ,P1 ,P2)
-     (let*-values ([(prop1 vars1) (parse-proposition P1 vars)]
-                   [(prop2 vars2) (parse-proposition P2 vars1)])
-       (values `(and ,prop1 ,prop2) vars2))]
+     (let ([prop1 (parse-proposition P1)]
+           [prop2 (parse-proposition P2)])
+       `(and ,prop1 ,prop2))]
     [`(or ,P1 ,P2)
-     (let*-values ([(prop1 vars1) (parse-proposition P1 vars)]
-                   [(prop2 vars2) (parse-proposition P2 vars1)])
-       (values `(or ,prop1 ,prop2) vars2))]
+     (let ([prop1 (parse-proposition P1)]
+           [prop2 (parse-proposition P2)])
+       `(or ,prop1 ,prop2))]
     [`(if ,P ,x ,y)
-     (let*-values ([(prop vars1) (parse-proposition P vars)]
-                   [(index1 vars2) (parse-index x vars1)]
-                   [(index2 vars3) (parse-index y vars2)])
-       (values `(ite ,prop ,index1 index2) vars3))]))
+     (let ([prop (parse-proposition P)]
+           [index1 (parse-index x)]
+           [index2 (parse-index y)])
+       `(ite ,prop ,index1 index2))]))
 
 (define (extract-constraints phi vars)
   (match phi
     [`empty (values null vars)]
+    [`(,phi* (,type ,a))
+     #:when (redex-match? WASMIndexTypes t type)
+     (extract-constraints phi* (cons (cons a type) vars))]
     [`(,phi* ,P)
-     (let*-values ([(new-constraint new-vars) (parse-proposition P vars)]
-                   [(rest-constraints rest-vars) (extract-constraints phi* new-vars)])
+     (let*-values ([(new-constraint) (parse-proposition P)]
+                   [(rest-constraints rest-vars) (extract-constraints phi* vars)])
        (values (cons new-constraint rest-constraints) rest-vars))]))
 
 (define (context-to-constraints phi_1 phi_2)
@@ -94,29 +107,6 @@
 
 (define (test-satisfaction phi_1 phi_2)
   (let-values ([(vars constraints1 constraints2) (context-to-constraints phi_1 phi_2)])
-    (not (ask-z3 vars constraints1 constraints2))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (construct-z3-table table typelist)
-  (let* ([unique-typelist (remove-duplicates typelist)]
-         [typemap (for/hash ([type unique-typelist])
-                    (values type (gensym)))])
-    (values typemap (hash-values typemap))))
-
-(define (check-table-call type index table typelist phi)
-  (let*-values ([(typemap typevars) (construct-z3-table table typelist)]
-                [(constraints vars) (extract-constraints phi null)]
-                [(index-def vars*) (parse-index index vars)]
-                [(type-var) (hash-ref typemap type #f)])
-    (and type-var
-         (let ([query (append (map (lambda (x) `(declare-const ,x Bool)) typevars)
-                              (map (lambda (x) `(declare-const ,x (_ BitVec 32))) (remove-duplicates vars*))
-                              `((declare-const table (Array (_ BitVec 32) Bool))
-                                (define-fun satisfies () Bool
-                                  (= (select table ,index-def) ,type-var))
-                                (assert (not satisfies)))
-                              (map (lambda (x) `(assert ,x)) constraints)
-                              (for/list ([i (in-range 0 (length typelist))])
-                                `(assert (= (select table ,(string->symbol (format "(_ bv~a 32)" i))) ,(hash-ref typemap (list-ref typelist i))))))])
-           (not (solve query))))))
+    (or (null? constraints2)
+        (and (not (null? constraints1))
+             (not (ask-z3 vars constraints1 constraints2))))))

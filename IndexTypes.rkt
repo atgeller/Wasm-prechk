@@ -6,14 +6,14 @@
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
-  (e ::= .... (call-indirect/unsafe tf))
+  (e ::= .... (call-indirect/unsafe tfi) (if tfi (e ...) (e ...)))
 
   ;; Index types
   (a ::= variable-not-otherwise-mentioned)
-  (x y ::= a c (local c) (global c) (binop x y))
+  (x y ::= a (t c) (binop x y))
   (P ::= (testop x) (relop x y) (not P) (and P P) (or P P))
-  (γ ::= i32 i64 (a (γ P)))
-  (φ ::= empty (φ (a γ)) (φ P))
+  ;(γ ::= t (a : γ P)) TODO: I don't think we really need these? Syntactic sugar
+  (φ ::= empty (φ (t a)) (φ P))
 
   (ti ::= (t a))
   (mut? ::= boolean)
@@ -22,8 +22,8 @@
   (ticond ::= ((ti ...) φ))
   (tfi ::= (ticond -> ticond))
 
-  (C ::= ((func (tf ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond  ...)) (return ticond))
-     ((func (tf ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond ...)) (return))))
+  (C ::= ((func (tfi ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond  ...)) (return ticond))
+     ((func (tfi ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond ...)) (return))))
 
 (define-metafunction WASMIndexTypes
   reverse-get : (any ...) j -> any
