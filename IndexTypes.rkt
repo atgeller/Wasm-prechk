@@ -6,7 +6,9 @@
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
-  (e ::= .... (call-indirect/unsafe tfi) (if tfi (e ...) (e ...)))
+  (e ::= .... (call-indirect/unsafe tfi) (if tfi (e ...) (e ...))
+     (t load/unsafe j j) (t load/unsafe (tp sz) j j)
+     (t store/unsafe j j) (t store/unsafe (tp) j j))
 
   ;; Index types
   (a ::= variable-not-otherwise-mentioned)

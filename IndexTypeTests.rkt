@@ -144,7 +144,7 @@
                                           (local ())
                                           (label ())
                                           (return))
-                                         ((i32 load 0 0))
+                                         ((i32 load/unsafe 0 0))
                                          ((((i32 a)) (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))
                                           -> (((i32 b)) ((((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))) (i32 b)))))
                                      #f
@@ -157,7 +157,7 @@
                                           (local ())
                                           (label ())
                                           (return))
-                                         ((i32 store 0 0))
+                                         ((i32 store/unsafe 0 0))
                                          ((((i32 a) (i32 b)) (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))
                                           -> (() (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))))
                                      #f
@@ -170,7 +170,7 @@
                                           (local ())
                                           (label ())
                                           (return))
-                                         ((i32 store (i8) 0 0))
+                                         ((i32 store/unsafe (i8) 0 0))
                                          ((((i32 a) (i32 b)) (((empty (i32 a)) (lt a (i32 4096))) (ge a (i32 0))))
                                           -> (() (((empty (i32 a)) (lt a (i32 4096))) (ge a (i32 0))))))
                                      #f

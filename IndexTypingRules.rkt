@@ -120,7 +120,7 @@
                                    (and (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t)) 8))) (i32 j))
                                         (ge (add a (i32 j_2)) (i32 0))))))
    ---------------------------------------------------------------
-   (⊢ C ((t load j_1 j_2)) ((((i32 a)) φ_1) -> (((t a_2)) (φ_1 (t a_2)))))]
+   (⊢ C ((t load/unsafe j_1 j_2)) ((((i32 a)) φ_1) -> (((t a_2)) (φ_1 (t a_2)))))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(< (expt 2 (term j_1))
@@ -129,7 +129,7 @@
                                    (and (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t) (term tp)) 8))) (i32 j))
                                         (ge (add a (i32 j_2)) (i32 0))))))
    ---------------------------------------------------------------
-   (⊢ C ((t load (tp sz) j_1 j_2)) ((((i32 a)) φ_1) -> (((t a_2)) (φ_1 (t a_2)))))]
+   (⊢ C ((t load/unsafe (tp sz) j_1 j_2)) ((((i32 a)) φ_1) -> (((t a_2)) (φ_1 (t a_2)))))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(< (expt 2 (term j_1))
@@ -138,7 +138,7 @@
                                    (and (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t)) 8))) (i32 j))
                                         (ge (add a (i32 j_2)) (i32 0))))))
    ---------------------------------------------------------------
-   (⊢ C ((t store j_1 j_2)) ((((i32 a) (t a_1)) φ_1) -> (() φ_1)))]
+   (⊢ C ((t store/unsafe j_1 j_2)) ((((i32 a) (t a_1)) φ_1) -> (() φ_1)))]
 
   ;; TODO: no floats yet so not included in side-condition
   [(where (_ _ _ (memory j) _ _ _) C)
@@ -148,7 +148,7 @@
                                    (and (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t) (term tp)) 8))) (i32 j))
                                         (ge (add a (i32 j_2)) (i32 0))))))
    ---------------------------------------------------------------
-   (⊢ C ((t store (tp) j_1 j_2)) ((((i32 a) (t a_1)) φ_1) -> (() φ_1)))]
+   (⊢ C ((t store/unsafe (tp) j_1 j_2)) ((((i32 a) (t a_1)) φ_1) -> (() φ_1)))]
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
