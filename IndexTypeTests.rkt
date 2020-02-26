@@ -135,5 +135,44 @@
                                          ((((i32 a) (i32 c)) (((empty (i32 a)) (i32 c)) (eq c (i32 1))))
                                           -> (((i32 b)) (((empty (i32 a)) (i32 b)) (ge b a)))))
                                      #f
+                                     (list)))
+
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
+                                          (global ())
+                                          (table)
+                                          (memory 4096)
+                                          (local ())
+                                          (label ())
+                                          (return))
+                                         ((i32 load 0 0))
+                                         ((((i32 a)) (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))
+                                          -> (((i32 b)) ((((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))) (i32 b)))))
+                                     #f
+                                     (list)))
+
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
+                                          (global ())
+                                          (table)
+                                          (memory 4096)
+                                          (local ())
+                                          (label ())
+                                          (return))
+                                         ((i32 store 0 0))
+                                         ((((i32 a) (i32 b)) (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))
+                                          -> (() (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))))
+                                     #f
+                                     (list)))
+
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
+                                          (global ())
+                                          (table)
+                                          (memory 4096)
+                                          (local ())
+                                          (label ())
+                                          (return))
+                                         ((i32 store (i8) 0 0))
+                                         ((((i32 a) (i32 b)) (((empty (i32 a)) (lt a (i32 4096))) (ge a (i32 0))))
+                                          -> (() (((empty (i32 a)) (lt a (i32 4096))) (ge a (i32 0))))))
+                                     #f
                                      (list))))
 
