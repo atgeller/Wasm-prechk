@@ -28,5 +28,7 @@
   [(where #t (satisfies φ_1 φ_2))
    (where #t (satisfies φ_3 φ_4))
    ------------------------------
-   (<: (((ti_1 ...) φ_1) -> ((ti_2 ...) φ_4))
-       (((ti_1 ...) φ_2) -> ((ti_2 ...) φ_3)))])
+   (<: (((ti_1 ...) locals_1 globals_1 φ_1)
+        -> ((ti_2 ...) locals_2 globals_2 φ_4))
+       (((ti_1 ...) locals_1 globals_1 φ_2)
+        -> ((ti_2 ...) locals_2 globals_2 φ_3)))])

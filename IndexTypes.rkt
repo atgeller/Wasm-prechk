@@ -20,12 +20,14 @@
   (ti ::= (t a))
   (mut? ::= boolean)
   (tgi ::= (mut? ti))
-  ;; Index-type pre/post-condition: types on stack and constraint context
-  (ticond ::= ((ti ...) φ))
+  ;; Index-type pre/post-condition: types on stack, locals, globals, and constraint context
+  (locals ::= (ti ...))
+  (globals ::= (ti ...))
+  (ticond ::= ((ti ...) locals globals φ))
   (tfi ::= (ticond -> ticond))
 
-  (C ::= ((func (tfi ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond  ...)) (return ticond))
-     ((func (tfi ...)) (global (tgi ...)) (table (j (i ...)) ...) (memory j ...) (local (ti ...)) (label (ticond ...)) (return))))
+  (C ::= ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond  ...)) (return ticond))
+     ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return))))
 
 (define-metafunction WASMIndexTypes
   reverse-get : (any ...) j -> any
