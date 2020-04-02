@@ -9,10 +9,31 @@
 
 (provide ⊢)
 
+(define-judgment-form WASMIndexTypes
+  #:contract (label-types (ticond ...) (j ...) ticond)
+  #:mode (label-types I I I)
+
+  [(where ticond_2 (reverse-get (ticond ...) j))
+   (<: ticond_3 ticond_2)
+   ---------------------------------------------
+   (label-types (ticond ...) (j) ticond_3)]
+
+  [(where ticond_2 (reverse-get (ticond ...) j))
+   (side-condition (<: ticond_3 ticond_2))
+   (label-types (ticond ...) (j_2 ...) ticond_3)
+   ---------------------------------------------
+   (label-types (ticond ...) (j j_2 ...) ticond_3)])
+
 (define-metafunction WASMIndexTypes
   valid-table-call : tfi a (i ...) (tfi ...) φ -> boolean
   [(valid-table-call tfi a (i ...) (tfi_2 ...) φ)
    ,(check-table-call (term tfi) (term a) (term (i ...)) (term (tfi_2 ...)) (term φ))])
+
+(define-metafunction WASMIndexTypes
+  extend : φ_1 φ_2 -> φ
+  [(extend φ_1 empty) φ_1]
+  [(extend φ_1 (φ_2 P)) ((extend φ_1 φ_2) P)]
+  [(extend φ_1 (φ_2 (t a))) ((extend φ_1 φ_2) (t a))])
 
 (define-judgment-form WASMIndexTypes
   #:contract (⊢ C (e ...) tfi)
@@ -85,16 +106,14 @@
       (((ti_1 ... (i32 a)) locals_1 globals_1 φ_1)
        -> ((ti_2 ...) locals_2 globals_2 φ_5)))]
 
-  [(label-types (ticond ...) (j) ((ti ...) φ))
-   (side-condition (satisfies φ_1 φ))
-   ----------------------------------
+  [(label-types (ticond ...) (j) ((ti ...) φ_1))
+   ---------------------------------------------
    (⊢ (_ _ _ _ _ (label (ticond  ...)) _)
       ((br j))
       (((ti_1 ... ti ...) locals globals φ_1)
        -> ((ti_2 ...) locals globals φ_2)))]
 
-  [(label-types (ticond ...) (j) ((ti ...) φ))
-   (side-condition (satisfies φ_1 φ))
+  [(label-types (ticond ...) (j) ((ti ...) φ_1))
    ----------------------------------
    (⊢ (_ _ _ _ _ (label (ticond  ...)) _)
       ((br-if j))
@@ -102,8 +121,8 @@
        -> ((ti ...) locals globals (φ_1 (eqz a)))))]
 
   ;; TODO: fix label-types :)
-  #;[(label-types (ticond ...) (j ...) ((ti_3 ...) φ))
-   (side-condition (satisfies φ_1 φ))
+  ;; TODONE: Hopefully
+  [(label-types (ticond ...) (j ...) ((ti_3 ...) φ_1))
    ----------------------------------
    (⊢ ((_ _ _ _ (label (ticond ...)) _ _))
       ((br-table (j ...)))
@@ -112,14 +131,18 @@
   
   [(side-condition (satisfies φ_1 φ))
    ----------------------------------
-   (⊢ (_ _ _ _ _ _ (return ((ti ...) φ)))
+   (⊢ (_ _ _ _ _ _ (return ((ti ...) _ globals φ)))
       ((return))
       (((ti_1 ... ti ...) locals globals φ_1)
-       -> ((ti_2 ...) locals globals φ_2)))]
+       -> ticond))]
 
-  [(where tfi_2 (do-get (tfi ...) j))
+  [(where (((ti_1 ...) _ globals_1 φ_1) -> ((ti_2 ...) _ globals_2 φ_2)) (do-get (tfi ...) j))
+   (where φ_3 (extend φ φ_2))
+   (side-condition (satisfies φ φ_1))
    ----------------------------------
-   (⊢ ((func (tfi ...)) _ _ _ _ _ _) ((call j)) tfi_2)]
+   (⊢ ((func (tfi ...)) _ _ _ _ _ _) ((call j))
+      (((ti_1 ...) locals globals_1 φ)
+       -> ((ti_2 ...) locals globals_2 φ_3)))]
 
   [(where (((ti_1 ...) _ globals_1 φ_2)
            -> ((ti_2 ...) _ globals_2 φ_3)) tfi)
@@ -146,7 +169,7 @@
    (⊢ (_ _ _ _ (local (t ...)) _ _)
       ((get-local j))
       ((() locals globals φ)
-       -> (((t_2 a)) locals globals φ)))]
+       -> (((t_2 a_2)) locals globals ((φ (t_2 a_2)) (eq a_2 a)))))]
 
   [(where t_2 (do-get (t ...) j))
    (where locals_2 (do-set locals_1 j (t_2 a)))
@@ -223,6 +246,7 @@
                  -> ((ti ... ti_2 ...) locals globals φ_2)))]
 
   ;; Subtyping
+  ;; TODO: This here?
   [(⊢ C (e ...) tfi_2)
    (<: tfi_1 tfi_2)
    ----------------

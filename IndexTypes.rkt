@@ -2,7 +2,7 @@
 
 (require redex "WASM-Redex/Syntax.rkt")
 
-(provide WASMIndexTypes label-types)
+(provide WASMIndexTypes)
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
@@ -27,7 +27,9 @@
   (tfi ::= (ticond -> ticond))
 
   (C ::= ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond  ...)) (return ticond))
-     ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return))))
+     ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return)))
+
+  (f ::= ((ex ...) (func tfi (local (t ...) (e ...))))))
 
 (define-metafunction WASMIndexTypes
   reverse-get : (any ...) j -> any
@@ -35,16 +37,3 @@
    (reverse-get (any ...) ,(sub1 (term j)))
    (side-condition (< 0 (term j)))]
   [(reverse-get (any ... any_1) 0) any_1])
-
-(define-judgment-form WASMIndexTypes
-  #:contract (label-types (ticond ...) (j ...) ticond)
-  #:mode (label-types I I O)
-
-  [(where ticond_2 (reverse-get (ticond ...) j))
-   ---------------------------------------------
-   (label-types (ticond ...) (j) ticond_2)]
-
-  [(where ticond_2 (reverse-get (ticond ...) j))
-   (label-types (ticond ...) (j_2 ...) ticond_2)
-   ---------------------------------------------
-   (label-types (ticond ...) (j j_2 ...) ticond_2)])
