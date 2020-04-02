@@ -186,8 +186,8 @@
                                           (label ())
                                           (return))
                                          ((set-local 0) (get-local 0))
-                                         ((((i32 a)) ((i32 b)) () empty)
-                                          -> (((i32 a)) ((i32 a)) () empty)))
+                                         ((((i32 a)) ((i32 b)) () ((empty (i32 a)) (i32 b)))
+                                          -> (((i32 d)) ((i32 c)) () ((((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)) (i32 d)) (eq d c)))))
                                      #f
                                      (list
                                       (derivation `(⊢ ((func ())
@@ -198,8 +198,8 @@
                                                        (label ())
                                                        (return))
                                                       ((set-local 0))
-                                                      ((((i32 a)) ((i32 b)) () empty)
-                                                       -> (() ((i32 a)) () empty)))
+                                                      ((((i32 a)) ((i32 b)) () ((empty (i32 a)) (i32 b)))
+                                                       -> (() ((i32 c)) () ((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)))))
                                                   #f
                                                   (list))
                                       (derivation `(⊢ ((func ())
@@ -210,8 +210,8 @@
                                                        (label ())
                                                        (return))
                                                       ((get-local 0))
-                                                      ((() ((i32 a)) () empty)
-                                                       -> (((i32 a)) ((i32 a)) () empty)))
+                                                      ((() ((i32 c)) () ((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)))
+                                                       -> (((i32 d)) ((i32 c)) () ((((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)) (i32 d)) (eq d c)))))
                                                   #f
                                                   (list)))))
 

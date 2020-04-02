@@ -172,20 +172,20 @@
        -> (((t_2 a_2)) locals globals ((φ (t_2 a_2)) (eq a_2 a)))))]
 
   [(where t_2 (do-get (t ...) j))
-   (where locals_2 (do-set locals_1 j (t_2 a)))
-   --------------------------------------------
+   (where locals_2 (do-set locals_1 j (t_2 a_2)))
+   ----------------------------------------------
    (⊢ (_ _ _ _ (local (t ...)) _ _)
       ((set-local j))
       ((((t_2 a)) locals_1 globals φ)
-       -> (() locals_2 globals φ)))]
+       -> (() locals_2 globals ((φ (t_2 a_2)) (eq a_2 a)))))]
 
   [(where t_2 (do-get (t ...) j))
-   (where locals_2 (do-set locals_1 j (t_2 a)))
-   --------------------------------------------
+   (where locals_2 (do-set locals_1 j (t_2 a_2)))
+   ----------------------------------------------
    (⊢ (_ _ _ _ (local (t ...)) _ _)
       ((tee-local j))
       ((((t_2 a)) locals_1 globals φ)
-       -> (((t_2 a)) locals_2 globals φ)))]
+       -> (((t_2 a)) locals_2 globals ((φ (t_2 a_2)) (eq a_2 a)))))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(< (expt 2 (term j_1))
