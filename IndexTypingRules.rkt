@@ -25,9 +25,9 @@
    (label-types (ticond ...) (j j_2 ...) ticond_3)])
 
 (define-metafunction WASMIndexTypes
-  valid-table-call : tfi a (i ...) (tfi ...) φ -> boolean
-  [(valid-table-call tfi a (i ...) (tfi_2 ...) φ)
-   ,(check-table-call (term tfi) (term a) (term (i ...)) (term (tfi_2 ...)) (term φ))])
+  valid-table-call : tfi a (tfi ...) φ -> boolean
+  [(valid-table-call tfi a (tfi_2 ...) φ)
+   ,(check-table-call (term tfi) (term a) (term (tfi_2 ...)) (term φ))])
 
 (define-metafunction WASMIndexTypes
   extend : φ_1 φ_2 -> φ
@@ -113,6 +113,7 @@
       (((ti_1 ... ti ...) locals globals φ_1)
        -> ((ti_2 ...) locals globals φ_2)))]
 
+  ;; TODO: Should be (i32 a) not (t a)
   [(label-types (ticond ...) (j) ((ti ...) φ_1))
    ----------------------------------
    (⊢ (_ _ _ _ _ (label (ticond  ...)) _)
@@ -136,6 +137,8 @@
       (((ti_1 ... ti ...) locals globals φ_1)
        -> ticond))]
 
+  ;; Only works if Function is internal
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   [(where (((ti_1 ...) _ globals_1 φ_1) -> ((ti_2 ...) _ globals_2 φ_2)) (do-get (tfi ...) j))
    (where φ_3 (extend φ φ_2))
    (side-condition (satisfies φ φ_1))
@@ -143,6 +146,7 @@
    (⊢ ((func (tfi ...)) _ _ _ _ _ _) ((call j))
       (((ti_1 ...) locals globals_1 φ)
        -> ((ti_2 ...) locals globals_2 φ_3)))]
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   [(where (((ti_1 ...) _ globals_1 φ_2)
            -> ((ti_2 ...) _ globals_2 φ_3)) tfi)
@@ -153,12 +157,11 @@
       (((ti_1 ... (i32 a)) locals_1 globals_1 φ_1)
        -> ((ti_2 ...) locals_1 globals_2 φ_3)))]
   
-  [(where (((ti_1 ...) _ globals_1 φ_2)
-           -> ((ti_2 ...) _ globals_2 φ_3)) tfi_2)
+  [(where (((ti_1 ...) _ globals_1 φ_2) -> ((ti_2 ...) _ globals_2 φ_3)) tfi_2)
    (side-condition (satisfies φ_1 φ_2))
-   (side-condition (valid-table-call tfi_2 a (i ...) (tfi ...) φ_1))
+   (side-condition (valid-table-call tfi_2 a (tfi ...) φ_1))
    -----------------------------------------------------------------
-   (⊢ ((func (tfi ...)) _ (table (j (i ...))) _ _ _ _)
+   (⊢ (_ _ (table (j (tfi ...))) _ _ _ _)
       ((call-indirect/unsafe tfi_2))
       (((ti_1 ... (i32 a)) locals_1 globals_1 φ_1)
        -> ((ti_2 ...) locals_1 globals_2 φ_3)))]

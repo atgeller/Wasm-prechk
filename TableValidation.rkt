@@ -7,7 +7,7 @@
 
 (provide check-table-call)
 
-(define (construct-z3-table call-type table typelist)
+(define (construct-z3-table call-type typelist)
   (let ([unique-typelist (remove-duplicates typelist)])
     (for/hash ([type unique-typelist])
       (displayln type)
@@ -16,8 +16,8 @@
                        'true
                        'false)))))
 
-(define (check-table-call type index table typelist phi)
-  (let*-values ([(typemap) (construct-z3-table type table typelist)]
+(define (check-table-call type index typelist phi)
+  (let*-values ([(typemap) (construct-z3-table type typelist)]
                 [(constraints vars) (extract-constraints phi null)]
                 [(index-def) (parse-index index)])
     (let ([query (append (map index-var->z3-bitvec (remove-duplicates vars))

@@ -1,8 +1,8 @@
 #lang racket
 
 (module+ test
-  (require "IndexTypes.rkt"
-           "IndexTypingRules.rkt"
+  (require "../IndexTypes.rkt"
+           "../IndexTypingRules.rkt"
            redex)
 
   (define empty-context `((func ()) (global ()) (table) (memory) (local ()) (label ()) (return)))
@@ -127,7 +127,9 @@
                                             ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () ((empty (i32 a)) (i32 b))))
                                             ((((i32 a) (i32 b)) () () ((empty (i32 a)) (i32 b))) -> (((i32 c)) () () (((empty (i32 a)) (i32 b)) (i32 c))))))
                                           (global ())
-                                          (table (3 (0 1 2)))
+                                          (table (3 (((((i32 a)) () () ((empty (i32 a)) (lt a (i32 0)))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b (i32 0)))))
+                                                     ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b a))))
+                                                     ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () ((empty (i32 a)) (i32 b)))))))
                                           (memory)
                                           (local ())
                                           (label ())

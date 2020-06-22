@@ -10,26 +10,38 @@
      (t load/unsafe j j) (t load/unsafe (tp sz) j j)
      (t store/unsafe j j) (t store/unsafe (tp) j j))
 
-  ;; Index types
+  ;; Index language
   (a ::= variable-not-otherwise-mentioned)
   (x y ::= a (t c) (binop x y))
   (P ::= (testop x) (relop x y) (not P) (and P P) (or P P))
-  ;(γ ::= t (a : γ P)) TODO: I don't think we really need these? Syntactic sugar
   (φ ::= empty (φ (t a)) (φ P))
+  (ti ::= (t a))  
 
-  (ti ::= (t a))
-  (mut? ::= boolean)
-  (tgi ::= (mut? ti))
-  ;; Index-type pre/post-condition: types on stack, locals, globals, and constraint context
+  ;; Instruction index types
   (locals ::= (ti ...))
   (globals ::= (ti ...))
+  ;; Index-type pre/post-condition: types on stack, locals, globals, and constraint context
   (ticond ::= ((ti ...) locals globals φ))
   (tfi ::= (ticond -> ticond))
 
-  (C ::= ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond  ...)) (return ticond))
-     ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return)))
+  ;; Indexed module contexts
+  (C ::= ((func (tfi ...)) (global (tg ...)) (table (j (tfi ...)) ...) (memory j ...) (local (t ...)) (label (ticond  ...)) (return ticond))
+     ((func (tfi ...)) (global (tg ...)) (table (j (tfi ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return)))
 
-  (f ::= ((ex ...) (func tfi (local (t ...) (e ...))))))
+  (S ::= ((inst (C ...)) (tab (j (i ...))) (mem (j ...))))
+
+  ;; Module-level indexed declarations
+  (f ::= ((ex ...) (func tfi (local (t ...) (e ...))))
+     ((ex ...) (func tfi im)))
+  (glob ::= ((ex ...) (global tg (e ...)))
+        ((ex ...) (global tg im)))
+  (tab ::= ((ex ...) (table j (tfi ...)))
+       ((ex ...) (table j (tfi ...) im)))
+  (mem ::= ((ex ...) (memory i))
+       ((ex ...) (memory i im)))
+  (im ::= (import string string))
+  (ex ::= (export string))
+  (m ::= (module (f ...) (glob ...) (tab ...) (mem ...))))
 
 (define-metafunction WASMIndexTypes
   reverse-get : (any ...) j -> any
