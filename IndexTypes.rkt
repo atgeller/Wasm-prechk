@@ -42,10 +42,3 @@
   (im ::= (import string string))
   (ex ::= (export string))
   (m ::= (module (f ...) (glob ...) (tab ...) (mem ...))))
-
-(define-metafunction WASMIndexTypes
-  reverse-get : (any ...) j -> any
-  [(reverse-get (any ... any_1) j)
-   (reverse-get (any ...) ,(sub1 (term j)))
-   (side-condition (< 0 (term j)))]
-  [(reverse-get (any ... any_1) 0) any_1])

@@ -1,6 +1,6 @@
 #lang racket
 
-(require redex "IndexTypes.rkt" "solver.rkt")
+(require redex "IndexTypes.rkt" "Solver.rkt")
 
 (provide test-satisfaction extract-constraints parse-index index-var->z3-bitvec)
 
