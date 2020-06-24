@@ -12,8 +12,8 @@
   (v ::= (t const c))
   (cl ::= (i f))
   (e ::= .... (trap) (call cl)
-     (label (e ...) (e ...)) (local (i (v ...)) (e ...)))
-  
+     (label n (e ...) (e ...)) (local n (i (v ...)) (e ...)))
+
   (S ::= ((C ...) (tab ((j (tfi ...)) ...)) (mem (j ...))))
 
   (inst ::= ((cl ...) (v ...) (table (j (tfi ...))) (memory j))
@@ -116,7 +116,7 @@
 
 (define-judgment-form WASMPrechkWithAdmin
   #:contract (⊢-top S k (v ...) (e ...) ticond)
-  
+
   [(where ((inst (C ...)) _ _) S)
    (where ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) _ (label (ticond_1  ...)) _) (do-get (C ...) i))
    (⊢ S ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1  ...)) (return))
@@ -126,7 +126,7 @@
 
 (define-judgment-form WASMPrechkWithAdmin
   #:contract (⊢-return S i (v ...) (e ...) ticond)
-  
+
   [(where ((inst (C ...)) _ _) S)
    (where ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) _ (label (ticond_1  ...)) _) (do-get (C ...) i))
    (⊢ S ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1  ...)) (return ticond))
@@ -140,26 +140,32 @@
   [---------------------
    (⊢- S C ((trap)) tfi)]
 
-  [(⊢ S C (e_0 ...) (ticond_1 -> ticond_2))
+  [(where ((ti_2 ...) locals_2 globals_2 φ_2) ticond_2)
+   (where n ,(length (term (ti_2 ...))))
+   (⊢ S C (e_0 ...) (ticond_1 -> ticond_2))
    (where ((func (tfi ...)) (glob (tg ...)) (table (j_1 (tfi_2 ...))) (memory j_2) (local (t_3 ...)) _ (return ticond_3)) C)
    (⊢ S ((func (tfi ...)) (glob (tg ...)) (table (j_1 (tfi_2 ...))) (memory j_2) (local (t_3 ...)) ticond_1 (return ticond_3))
       (e ...)
       ((() locals_1 globals_1 φ_1) -> ticond_2))
-   ---------------------------------------------------------------------------------------------------------------------------
-   (⊢- S C ((label (e_0 ...) (e ...))) ((() locals_1 globals_1 φ_1) -> ticond_2))]
+   -----------------------------------------------------------------------------------
+   (⊢- S C (label n (e_0 ...) (e ...)) ((() locals_1 globals_1 φ_1) -> ticond_2))]
 
   [(⊢-cl S cl tfi)
    ------------------------
    (⊢- S C ((call cl)) tfi)]
 
-  ;; TODO: This only works when j is the current instance index, need to thread instance number through typing rules
+  ;; TODO: This only works when i is the current instance index, need to thread instance number through typing rules
   ;;       to separate out the cases when they are different.
-  [(⊢-return S j (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
+  [(⊢-return S i (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
+   (where n ,(length (term (ti ...))))
    ---------------------------------------------------------------------------------------------------------
-   (⊢- S C ((local (j (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 globals_2 φ_2)))]
+   (⊢- S C ((local n (i (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 globals_2 φ_2)))]
 
-  #;[(⊢-return S j (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
+  #;[(⊢-return S i (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
    ;; replace globals_2 with (t_k a_k) where t_k is the type in C, and a_k are fresh
    ;; extend φ_2 with (t_k a_k) (eq a_k_c c), where k_c are the constant global variables
+   (where n ,(length (term (ti ...))))
+   (where (_ ((_ t) ...) _ _ _ _ _) C)
+   ;; a ... fresh
    ---------------------------------------------------------------------------------------------------------
-   (⊢- S C ((local (j (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 globals_2 φ_2)))])
+   (⊢- S C ((local n (i (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 ((t a) ...) (extend φ_2 ((t a) ...)))))])
