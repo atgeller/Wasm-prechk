@@ -12,7 +12,7 @@
   (v ::= (t const c))
   (cl ::= (i f))
   (e ::= .... (trap) (call cl)
-     (label (e ...) (e ...)) (local (i (v ...)) (e ...)))
+     (label n (e ...) (e ...)) (local n (i (v ...)) (e ...)))
   
   (S ::= ((C ...) (tab ((j (tfi ...)) ...)) (mem (j ...))))
 
@@ -158,26 +158,31 @@
    (⊢-trap S C (trap) tfi)])
 
 (define-judgment-form WASMPrechkWithAdmin
-  #:contract (⊢-label S C (label (e ...) (e ...)) tfi)
+  #:contract (⊢-label S C (label n (e ...) (e ...)) tfi)
 
-  [(⊢ C (e_0 ...) (ticond_1 -> ticond_2))
+  [(where n ,(length (term (ti_2 ...))))
+   (⊢ C (e_0 ...) (ticond_1 -> ticond_2))
    (where ((func (tfi ...)) (glob (tg ...)) (table (j_1 (tfi_2 ...))) (memory j_2) (local (t_3 ...)) _ (return ticond_3)) C)
    (⊢ ((func (tfi ...)) (glob (tg ...)) (table (j_1 (tfi_2 ...))) (memory j_2) (local (t_3 ...)) ticond_1 (return ticond_3))
       (e ...)
-      ((() locals_1 globals_1 φ_1) -> ticond_2))
+      ((() locals_1 globals_1 φ_1) -> ((ti_2 ...) locals_2 globals_2 φ_2)))
    -----------------------------------------------------------------------------------
-   (⊢-label S C (label (e_0 ...) (e ...)) ((() locals_1 globals_1 φ_1) -> ticond_2))])
+   (⊢-label S C (label n (e_0 ...) (e ...))
+            ((() locals_1 globals_1 φ_1) -> ((ti_2 ...) locals_2 globals_2 φ_2)))])
 
 (define-judgment-form WASMPrechkWithAdmin
   #:contract (⊢-call-cl S C (call cl) tfi)
 
   [(⊢-cl S cl tfi)
-   --------------
+   ---------------
    (⊢-call-cl S C (call cl) tfi)])
 
 (define-judgment-form WASMPrechkWithAdmin
-  #:contract (⊢-local S C (local (i (v ...)) (e ...)) tfi)
+  #:contract (⊢-local S C (local n (i (v ...)) (e ...)) tfi)
 
-  [(⊢code S () ticond_1 i (v ...) (e ...) ticond_2)
-   ------------------------------------------------
-   (⊢-local S C (local (i (v ...)) (e ...)) (ticond_1 -> ticond_2))])
+  [(⊢-code S (() locals_1 globals_1 φ_1) i (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
+   (where n ,(length (term (ti ...))))
+   (where (_ ((_ t) ...) _ _ _ _ _) C)
+   ;; a ... fresh
+   ----------------------------------------------
+   (⊢-local S C (local n (i (v ...)) (e ...)) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 ((t a) ...))))])
