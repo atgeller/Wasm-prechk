@@ -50,27 +50,6 @@
    ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ... ticond_3)) (return))])
 
 (define-metafunction WASMIndexTypes
-  with-locals : C (t ...) -> C
-  [(with-locals ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return ticond_2)) (t_2 ...))
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_2 ...)) (label (ticond_1 ...)) (return ticond_2))]
-  [(with-locals ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return)) (t_2 ...))
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_2 ...)) (label (ticond_1 ...)) (return))])
-
-(define-metafunction WASMIndexTypes
-  with-return : C ticond -> C
-  [(with-return ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return ticond_2)) ticond_3)
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return ticond_3))]
-  [(with-return ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return)) ticond_3)
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return ticond_3))])
-
-(define-metafunction WASMIndexTypes
-  no-return : C -> C
-  [(no-return ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return ticond_2)))
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return))]
-  [(no-return ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return)))
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t_1 ...)) (label (ticond_1 ...)) (return))])
-
-(define-metafunction WASMIndexTypes
   erase-mut : tg -> t
   [(erase-mut (mut t)) t]
   [(erase-mut t) t])
@@ -232,6 +211,7 @@
       ((((t_2 a)) locals_1 globals φ)
        -> (((t_2 a)) locals_2 globals ((φ (t_2 a_2)) (eq a_2 a)))))]
 
+  ;; TODO: if not mut, lookup value?
   [(where tg_2 (do-get (tg ...) j))
    (where t_2 (erase-mut tg_2))
    (where (t_2 a) (do-get globals j))
@@ -307,45 +287,9 @@
    (⊢ S C (e ...) (((ti ... ti_1 ...) locals globals φ_1)
                    -> ((ti ... ti_2 ...) locals globals φ_2)))]
 
-  [--------------------
-   (⊢ S C ((trap)) tfi)]
-
-  ;; TODO: I'm really not certain that φ_2 should be just copied from the post condition to the premise type.
-  ;; TODO: This only works when j is the current instance index, need to thread instance number through typing rules
-  ;;       to separate out the cases when they are different.
-  #;[(RTreturn⊢ S (ti ...) j (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
-   --------------------------------------------------------------------------------------------------------
-   (⊢ S C ((local (j (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 globals_2 φ_2)))]
-
-  #;[(RTreturn⊢ S j (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
-   ;; TODO: Need to somehow ensure that φ_2 contains all the constraints in locals_1
-   ;;       (side-condition (satisfies φ_1 φ_2)) doesn't seem right...
-   --------------------------------------------------------------------------------------------------------
-   (⊢ S C ((local (j (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 globals_2 φ_2)))]
-
   ;; Subtyping
   ;; TODO: This here?
   [(⊢ S C (e ...) tfi_2)
    (<: tfi_1 tfi_2)
    ---------------------
    (⊢ S C (e ...) tfi_1)])
-
-;; Typing with local values and return types
-(define-judgment-form WASMIndexTypes
-  #:contract (RTreturn⊢ S j (v ...) (e ...) ticond)
-  [(where ((inst (C ...)) _ _) S)
-   (where C_1 (do-get (C ...) j))
-   ;; TODO: return type of functions are ticond
-   ;;       could 
-   (⊢ S (with-return (with-locals C_1 (t ...)) (ti ...)) (e ...) ((() locals_1 globals_1 φ_1) -> ticond))
-   ---------------------------------------------------------
-   (RTreturn⊢ S j ((t const c) ...) (e ...) ticond)])
-
-;; Typing with local values but no return
-(define-judgment-form WASMIndexTypes
-  #:contract (RTtop⊢ S j (v ...) (e ...) ticond)
-  [(where ((inst (C ...)) _ _) S)
-   (where C_1 (do-get (C ...) j))
-   (⊢ S (no-return (with-locals C_1 (t ...))) (e ...) ((() locals_1 globals_1 φ_1) -> ticond))
-   ---------------------------------------------------------
-   (RTtop⊢ S j ((t const c) ...) (e ...) ticond)])
