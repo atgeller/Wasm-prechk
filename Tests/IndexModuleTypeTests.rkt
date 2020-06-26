@@ -88,18 +88,24 @@
 
   (test-judgment-holds ⊢ deriv3)
 
+  (define deriv4_s
+    (derivation `(<: (,ticond1 -> ,ticond5) (,ticond1 -> ,ticond4))
+                #f
+                (list)))
+
   (define deriv4
     (derivation `(⊢ ,dummy-store ,context1-inner
                     ((get-local 0) (get-local 1) (i32 add))
                     (,ticond1 -> ,ticond5))
                 #f
-                (list deriv3)))
-
+                (list deriv3 deriv4_s)))
+  
   (test-judgment-holds ⊢ deriv4)
-  (displayln `(⊢ ,dummy-store ,context1-inner
+  
+  #;(displayln `(⊢ ,dummy-store ,context1-inner
                     ((get-local 0) (get-local 1) (i32 add))
                     (,ticond1 -> ,ticond5)))
-  (displayln `(⊢-module-func ,context1
+  #;(displayln `(⊢-module-func ,context1
                              (() (func (,ticond0 -> ,ticond6)
                                        (local () ((get-local 0) (get-local 1) (i32 add)))))
                              (() (,ticond0 -> ,ticond6))))
