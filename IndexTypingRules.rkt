@@ -49,11 +49,6 @@
   [(in-label ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ...)) (return)) ticond_3)
    ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ... ticond_3)) (return))])
 
-(define-metafunction WASMIndexTypes
-  erase-mut : tg -> t
-  [(erase-mut (mut t)) t]
-  [(erase-mut t) t])
-
 (define-judgment-form WASMIndexTypes
   #:contract (⊢ S i C (e ...) tfi)
 
