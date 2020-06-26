@@ -28,7 +28,7 @@
   (C ::= ((func (tfi ...)) (global (tg ...)) (table (j (tfi ...)) ...) (memory j ...) (local (t ...)) (label (ticond  ...)) (return ticond))
      ((func (tfi ...)) (global (tg ...)) (table (j (tfi ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return)))
 
-  (S ::= ((inst (C ...)) (tab (j (i ...))) (mem (j ...))))
+  (S ::= ((C ...) (table ((j (tfi ...)) ...)) (memory (j ...))))
 
   ;; Module-level indexed declarations
   (f ::= ((ex ...) (func tfi (local (t ...) (e ...))))

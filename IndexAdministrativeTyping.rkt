@@ -14,7 +14,7 @@
   (e ::= .... (trap) (call cl)
      (label n (e ...) (e ...)) (local n (i (v ...)) (e ...)))
 
-  (S ::= ((C ...) (tab ((j (tfi ...)) ...)) (mem (j ...))))
+  (S ::= ((C ...) (table ((j (tfi ...)) ...)) (memory (j ...))))
 
   (inst ::= ((cl ...) (v ...) (table (j (tfi ...))) (memory j))
         ((cl ...) (v ...) (table (j (tfi ...))) (memory))

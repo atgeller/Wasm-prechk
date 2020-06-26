@@ -23,6 +23,8 @@
   (define ticond5 `(((i32 c)) ((i32 a) (i32 b)) ()
                               ((((empty (i32 a)) (i32 b)) (i32 c)) (eq c (add a b)))))
   (define ticond6 `(((i32 c)) () () ((((empty (i32 a)) (i32 b)) (i32 c)) (eq c (add a b)))))
+
+  (define dummy-store '(() (table ()) (memory ())))
   
   (define context1 (term ((func ((,ticond0 -> ,ticond6))) (global ())
                           (table) (memory)
@@ -33,7 +35,7 @@
                                 (return ,ticond5))))
 
   (define deriv1
-    (derivation `(⊢ ,context1-inner
+    (derivation `(⊢ ,dummy-store ,context1-inner
                     ((get-local 0))
                     (,ticond1 -> ,ticond2))
                 #f
@@ -42,7 +44,7 @@
   (test-judgment-holds ⊢ deriv1)
 
   (define deriv2_0
-    (derivation `(⊢ ,context1-inner
+    (derivation `(⊢ ,dummy-store ,context1-inner
                                  ((get-local 1))
                                  (,ticond2_1 -> ,ticond3_1))
                              #f
@@ -51,7 +53,7 @@
   (test-judgment-holds ⊢ deriv2_0)
 
   (define deriv2_1
-    (derivation `(⊢ ,context1-inner
+    (derivation `(⊢ ,dummy-store ,context1-inner
                                  ((get-local 1))
                                  (,ticond2 -> ,ticond3))
                              #f
@@ -60,7 +62,7 @@
   (test-judgment-holds ⊢ deriv2_1)
   
   (define deriv2
-    (derivation `(⊢ ,context1-inner
+    (derivation `(⊢ ,dummy-store ,context1-inner
                     ((get-local 0) (get-local 1))
                     (,ticond1 -> ,ticond3))
                 #f
@@ -69,7 +71,7 @@
   (test-judgment-holds ⊢ deriv2)
 
   (define deriv3_0
-    (derivation `(⊢ ,context1-inner
+    (derivation `(⊢ ,dummy-store ,context1-inner
                                  ((i32 add))
                                  (,ticond3 -> ,ticond4))
                              #f
@@ -78,7 +80,7 @@
   (test-judgment-holds ⊢ deriv3_0)
 
   (define deriv3
-    (derivation `(⊢ ,context1-inner
+    (derivation `(⊢ ,dummy-store ,context1-inner
                     ((get-local 0) (get-local 1) (i32 add))
                     (,ticond1 -> ,ticond4))
                 #f
@@ -87,14 +89,14 @@
   (test-judgment-holds ⊢ deriv3)
 
   (define deriv4
-    (derivation `(⊢ ,context1-inner
+    (derivation `(⊢ ,dummy-store ,context1-inner
                     ((get-local 0) (get-local 1) (i32 add))
                     (,ticond1 -> ,ticond5))
                 #f
                 (list deriv3)))
 
   (test-judgment-holds ⊢ deriv4)
-  (displayln `(⊢ ,context1-inner
+  (displayln `(⊢ ,dummy-store ,context1-inner
                     ((get-local 0) (get-local 1) (i32 add))
                     (,ticond1 -> ,ticond5)))
   (displayln `(⊢-module-func ,context1
@@ -103,12 +105,11 @@
                              (() (,ticond0 -> ,ticond6))))
 
   (define deriv5
-    (derivation `(⊢-module-func ,context1
+    (derivation `(⊢-module-func ,dummy-store ,context1
                                 (() (func (,ticond0 -> ,ticond6)
                                           (local () ((get-local 0) (get-local 1) (i32 add)))))
                                 (() (,ticond0 -> ,ticond6)))
                 #f
                 (list deriv4)))
 
-  (test-judgment-holds ⊢-module-func deriv5)
-  )
+  (test-judgment-holds ⊢-module-func deriv5))
