@@ -2,7 +2,7 @@
 
 (require redex "WASM-Redex/Syntax.rkt")
 
-(provide WASMIndexTypes add-vars)
+(provide WASMIndexTypes)
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
