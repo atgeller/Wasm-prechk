@@ -34,9 +34,13 @@
                   ((ex ...) (func tfi (local (t ...) (e ...))))
                   ((ex ...) tfi))]
 
-  ;; Imported function is easy
-  [-----------------------------------------------------------
-   (⊢-module-func S i C ((ex ...) (func tfi im)) ((ex ...) tfi))])
+  [;; a ... fresh
+   (where (((ti_1 ...) () _ φ_1) -> ((ti_2 ...) () ((t a) ...) φ_2)) tfi)
+   (where φ_2 (add-vars φ_1 ((t a) ...)))
+   -----------------------------------------------------------------
+   (⊢-module-func S i (_ ((_ t) ...) _ _ _ _ _)
+                  ((ex ...) (func tfi im))
+                  ((ex ...) tfi))])
 
 ;; Helper judgement to ensure that function declarations/definitions are valid
 ;; Ensures each function in the list matches its respective type under a the module type consisting only of the preceeding global definitions in the list

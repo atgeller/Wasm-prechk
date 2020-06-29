@@ -2,7 +2,7 @@
 
 (require redex "WASM-Redex/Syntax.rkt")
 
-(provide WASMIndexTypes)
+(provide WASMIndexTypes add-vars)
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
@@ -42,3 +42,8 @@
   (im ::= (import string string))
   (ex ::= (export string))
   (m ::= (module (f ...) (glob ...) (tab ...) (mem ...))))
+
+(define-metafunction WASMIndexTypes
+  add-vars : φ_1 ((t a) ...) -> φ_2
+  [(add-vars φ_1 ()) φ_1]
+  [(add-vars φ_1 ((t_1 a_1) (t a) ...)) (add-vars (φ_1 (t_1 a_1)) ((t a) ...))])
