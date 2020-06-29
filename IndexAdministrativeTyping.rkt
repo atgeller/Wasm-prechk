@@ -160,17 +160,10 @@
    (⊢- S i C ((local n (i (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 globals_2 φ_2)))]
 
   [(⊢-return S i_2 (v ...) (e ...) ((ti ...) locals_2 globals_2 φ_2))
-   ;; replace globals_2 with (t_k a_k) where t_k is the type in C, and a_k are fresh
-   ;; extend φ_2 with (t_k a_k) (eq a_k_c c), where k_c are the constant global variables
    (where n ,(length (term (ti ...))))
-   (where (_ ((_ t) ...) _ _ _ _ _) C)
-   ;; a ... fresh
-   (where φ_3 (add-vars φ_2 ((t a) ...)))
    (side-condition ,(not (equal? (term i_1) (term i_2))))
-   ---------------------------------------------------------------------------------------------------------
-   (⊢- S i_1 C ((local n (i_2 (v ...)) (e ...))) ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 ((t a) ...) φ_3)))])
-
-(define-metafunction WASMPrechkWithAdmin
-  add-vars : φ_1 ((t a) ...) -> φ_2
-  [(add-vars φ_1 ()) φ_1]
-  [(add-vars φ_1 ((t_1 a_1) (t a) ...)) (add-vars (φ_1 (t_1 a_1)) ((t a) ...))])
+   ;; a ... fresh
+   -------------------------------------------------------------------------
+   (⊢- S i_1 (_ (global ((_ t) ...)) _ _ _ _ _)
+       ((local n (i_2 (v ...)) (e ...)))
+       ((() locals_1 globals_1 φ_1) -> ((ti ...) locals_1 ((t a) ...) φ_2)))])
