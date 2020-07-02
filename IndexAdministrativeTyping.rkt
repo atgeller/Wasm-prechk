@@ -125,14 +125,15 @@
    (⊢-top S i ((t const c) ...) (e ...) ticond)])
 
 (define-judgment-form WASMPrechkWithAdmin
-  #:contract (⊢-return S i (v ...) (e ...) (locals globals φ) ticond)
+  #:contract (⊢-return S i (v ...) (e ...) (globals φ) ticond)
 
   [(where ((inst (C ...)) _ _) S)
    (where ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) _ (label (ticond_1  ...)) _) (do-get (C ...) i))
+   ;; a ... fresh
    (⊢ S i ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1  ...)) (return ticond))
       (e ...) ((() ((t a) ...) globals (add-values φ (a ...) (c ...))) -> ticond))
    --------------------------------------------------------------------------------------------------------------------------------------------------
-   (⊢-return S i ((t const c) ...) (e ...) (((t a) ...) globals φ) ticond)])
+   (⊢-return S i ((t const c) ...) (e ...) (globals φ) ticond)])
 
 (define-extended-judgment-form WASMPrechkWithAdmin ⊢
   #:contract (⊢- S i C (e ...) tfi)
@@ -154,23 +155,22 @@
    ------------------------
    (⊢- S i C ((call cl)) tfi)]
 
-  [;; a ... fresh
-   (⊢-return S i ((t const c) ...) (e ...)  (((t a) ...) globals_1 φ_1) ((ti ...) _ globals_2 φ_2))
+  [(⊢-return S i (v ...) (e ...) (globals_1 φ_1) ((ti ...) _ globals_2 φ_2))
    (where n ,(length (term (ti ...))))
    ---------------------------------------------------------------------------------------------------------
-   (⊢- S i C ((local n (i ((t const c) ...)) (e ...))) ((() locals globals_1 φ_1) -> ((ti ...) locals globals_2 φ_2)))]
+   (⊢- S i C ((local n (i (v ...)) (e ...))) ((() locals globals_1 φ_1) -> ((ti ...) locals globals_2 φ_2)))]
 
-  [;; a_2 ... fresh
-   (⊢-return S i_2 ((t_1 const c) ...) (e ...) (((t_1 a_2) ...) _ φ_1) ((ti ...) _ _ φ_2))
+  [(⊢-return S i_2 (v ...) (e ...) (_ φ_1) ((ti ...) _ _ φ_2))
    (where n ,(length (term (ti ...))))
    (side-condition ,(not (equal? (term i_1) (term i_2))))
-   ;; a_1 ... fresh
+   ;; a ... fresh
    -------------------------------------------------------------------------
    (⊢- S i_1 (_ (global ((_ t) ...)) _ _ _ _ _)
-       ((local n (i_2 ((t_1 const c) ...)) (e ...)))
-       ((() locals _ φ_1) -> ((ti ...) locals ((t a_1) ...) φ_2)))])
+       ((local n (i_2 (v ...)) (e ...)))
+       ((() locals _ φ_1) -> ((ti ...) locals ((t a) ...) φ_2)))])
 
 (define-metafunction WASMPrechkWithAdmin
-  add-values : φ_1 (a ...) (c ...) -> φ_2
-  [(add-values φ_1 () ()) φ_1]
-  [(add-values φ_1 (a a_1 ...) (c c_1 ...)) ((add-values φ_1 (a_1 ...) (c_1 ...)) (eq a c))])
+  add-values : φ_1 (t ...) (a ...) (c ...) -> φ_2
+  [(add-values φ_1 () () ()) φ_1]
+  [(add-values φ_1 (t t_1 ...) (a a_1 ...) (c c_1 ...))
+   (((add-values φ_1 (t_1 ...) (a_1 ...) (c_1 ...)) (t a)) (eq a c))])
