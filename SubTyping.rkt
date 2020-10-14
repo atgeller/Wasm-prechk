@@ -6,14 +6,6 @@
 
 (provide satisfies <:)
 
-;; TODO: this will need to actually work
-(define-metafunction WASMIndexTypes
-  simplify : φ -> φ
-  [(simplify empty) empty]
-  [(simplify (φ (a γ))) ((simplify φ) (a γ))]
-  [(simplify (φ P)) ((simplify φ) P)])
-
-;; TODO: this will need to actually work
 ;; Ensures index type context φ_1 satisfies φ_2
 (define-metafunction WASMIndexTypes
   satisfies : φ_1 φ_2 -> boolean
@@ -25,10 +17,10 @@
   #:contract (<: tfi tfi)
   #:mode (<: I I)
   
-  [(where #t (satisfies φ_1 φ_2))
-   (where #t (satisfies φ_3 φ_4))
+  [(side-condition (satisfies φ_1 φ_2))
+   (side-condition (satisfies φ_3 φ_4))
    ------------------------------
-   (<: (((ti_1 ...) locals_1 globals_1 φ_1)
-        -> ((ti_2 ...) locals_2 globals_2 φ_4))
-       (((ti_1 ...) locals_1 globals_1 φ_2)
-        -> ((ti_2 ...) locals_2 globals_2 φ_3)))])
+   (<: (((ti_1 ...) locals_1 φ_1)
+        -> ((ti_2 ...) locals_2 φ_4))
+       (((ti_1 ...) locals_1 φ_2)
+        -> ((ti_2 ...) locals_2 φ_3)))])

@@ -6,22 +6,24 @@
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
-  (e ::= .... (call-indirect/unsafe tfi) (if tfi (e ...) (e ...))
+  (e ::= .... (call-indirect/unsafe tfi)
      (t load/unsafe j j) (t load/unsafe (tp sz) j j)
-     (t store/unsafe j j) (t store/unsafe (tp) j j))
+     (t store/unsafe j j) (t store/unsafe (tp) j j)
+     (if tfi (e ...) (e ...)) (block tfi (e ...)) (loop tfi (e ...)))
 
   ;; Index language
   (a ::= variable-not-otherwise-mentioned)
-  (x y ::= a (t c) (binop x y))
-  (P ::= (testop x) (relop x y) (not P) (and P P) (or P P))
-  (φ ::= empty (φ (t a)) (φ P))
-  (ti ::= (t a))  
+  (x y ::= a (t c) (binop x y) (testop x) (relop x y))
+  (P ::= (= x y) (if P P P) (not P) (and P P) (or P P))
+  (φ ::= empty (φ P) (φ ti))
+  ;;(φ ::= (P ...))
+  ;;(Γ ::= (ti ...))
+  (ti ::= (t a))
 
   ;; Instruction index types
   (locals ::= (ti ...))
-  (globals ::= (ti ...))
-  ;; Index-type pre/post-condition: types on stack, locals, globals, and constraint context
-  (ticond ::= ((ti ...) locals globals φ))
+  ;; Index-type pre/post-condition: types on stack, locals, and constraint context
+  (ticond ::= ((ti ...) locals φ))
   (tfi ::= (ticond -> ticond))
 
   ;; Indexed module contexts

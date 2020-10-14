@@ -5,145 +5,231 @@
            "../IndexTypingRules.rkt"
            redex)
 
-  (define dummy-store '(() (table ()) (memory ())))
+  #;(define dummy-store '(() (table ()) (memory ())))
 
   (define empty-context `((func ()) (global ()) (table) (memory) (local ()) (label ()) (return)))
   
   #;(test-judgment-holds ⊢
-   (derivation `(⊢ ,dummy-store ,empty-context ((if ((((i32 a) (i32 b)) empty) -> ((i32 c) empty))
+   (derivation `(⊢ ,empty-context ((if ((((i32 a) (i32 b)) empty) -> ((i32 c) empty))
                                        (i32 div/unsafe)
                                        (i32 const -1))
                    (((i32 a) (i32 b) (i32 b)) (((empty (a : i32)) (b : i32)) (>= b 0)))
                    ))))
 
   (test-judgment-holds ⊢
-                       (derivation `(⊢ ,dummy-store ,empty-context ((i32 sub))
-                                             ((((i32 b) (i32 c)) () ()
+                       (derivation `(⊢ ,empty-context ((i32 sub))
+                                             ((((i32 b) (i32 c)) ()
                                                ((((empty (i32 a)) (i32 b)) (i32 c))
-                                                (not (eq b c))))
+                                                (not (= b c))))
                                               ->
-                                              (((i32 d)) () ()
+                                              (((i32 d)) ()
                                                ((((((empty (i32 a)) (i32 b)) (i32 c))
-                                                  (not (eq b c))) (i32 d)) (eq d (sub b c))))))
-                                         #f
+                                                  (not (= b c))) (i32 d)) (= d (sub b c))))))
+                                         "Binop"
                                          (list)))
 
   (test-judgment-holds ⊢
-                       (derivation `(⊢ ,dummy-store ,empty-context ((i32 sub))
-                                       ((((i32 a) (i32 b) (i32 c)) () ()
+                       (derivation `(⊢ ,empty-context ((i32 sub))
+                                       ((((i32 a) (i32 b) (i32 c)) ()
                                          ((((empty (i32 a)) (i32 b)) (i32 c))
-                                          (not (eq b c))))
+                                          (not (= b c))))
                                         ->
-                                        (((i32 a) (i32 d)) () ()
+                                        (((i32 a) (i32 d)) ()
                                          ((((((empty (i32 a)) (i32 b)) (i32 c))
-                                           (not (eq b c))) (i32 d)) (eq d (sub b c))))))
-                                   #f
+                                           (not (= b c))) (i32 d)) (= d (sub b c))))))
+                                   "Stack-Poly"
                                    (list
-                             (derivation `(⊢ ,dummy-store ,empty-context ((i32 sub))
-                                             ((((i32 b) (i32 c)) () ()
+                             (derivation `(⊢ ,empty-context ((i32 sub))
+                                             ((((i32 b) (i32 c)) ()
                                                ((((empty (i32 a)) (i32 b)) (i32 c))
-                                                (not (eq b c))))
+                                                (not (= b c))))
                                               ->
-                                              (((i32 d)) () ()
+                                              (((i32 d)) ()
                                                ((((((empty (i32 a)) (i32 b)) (i32 c))
-                                                  (not (eq b c))) (i32 d)) (eq d (sub b c))))))
-                                         #f
+                                                  (not (= b c))) (i32 d)) (= d (sub b c))))))
+                                         "Binop"
                                          (list)))))
 
-  #;(test-judgment-holds ⊢
-                       (derivation `(⊢ ,dummy-store ,empty-context ((i32 div/unsafe))
-                                ((((i32 a) (i32 d)) () ()
+  (test-judgment-holds ⊢
+                       (derivation `(⊢ ,empty-context ((i32 div/unsafe))
+                                ((((i32 a) (i32 d)) ()
                                   ((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
-                                     (not (eq d (i32 0)))) (eq d (sub b c))))
+                                     (not (= d (i32 0)))) (= d (sub b c))))
                                  ->
-                                 (((i32 e)) () ()
+                                 (((i32 e)) ()
                                   ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
-                                     (not (eq d (i32 0)))) (eq d (sub b c))) (i32 e)) (eq e (div a d))))))
-                            #f
+                                     (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+                            "Div-Prechk"
                             (list)))
 
   (test-judgment-holds ⊢
-   (derivation `(⊢ ,dummy-store ,empty-context ((i32 sub) (i32 div/unsafe))
-                   ((((i32 a) (i32 b) (i32 c)) () ()
-                     ((((empty (i32 a)) (i32 b)) (i32 c))
-                      (not (eq b c))))
-                    ->
-                    (((i32 e)) () ()
-                     ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
-                         (not (eq d (i32 0)))) (eq d (sub b c))) (i32 e)) (eq e (div a d))))))
-               #f
-               (list
-                (derivation `(⊢ ,dummy-store ,empty-context ((i32 sub))
-                                       ((((i32 a) (i32 b) (i32 c)) () ()
-                                         ((((empty (i32 a)) (i32 b)) (i32 c))
-                                          (not (eq b c))))
+                       (derivation `(⊢ ,empty-context ((i32 div/unsafe))
+                                       ((((i32 a) (i32 d)) ()
+                                                           ((((((empty (i32 a)) (i32 b)) (i32 c))
+                                                              (not (= b c))) (i32 d)) (= d (sub b c))))
                                         ->
-                                        (((i32 a) (i32 d)) () ()
-                                         ((((((empty (i32 a)) (i32 b)) (i32 c))
-                                           (not (eq b c))) (i32 d)) (eq d (sub b c))))))
-                                   #f
+                                        (((i32 e)) ()
+                                                   ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                       (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+                                   "Subtyping"
                                    (list
-                             (derivation `(⊢ ,dummy-store ,empty-context ((i32 sub))
-                                             ((((i32 b) (i32 c)) () ()
-                                               ((((empty (i32 a)) (i32 b)) (i32 c))
-                                                (not (eq b c))))
-                                              ->
-                                              (((i32 d)) () ()
-                                               ((((((empty (i32 a)) (i32 b)) (i32 c))
-                                                  (not (eq b c))) (i32 d)) (eq d (sub b c))))))
-                                         #f
-                                         (list))))
-                (derivation `(⊢ ,dummy-store ,empty-context ((i32 div/unsafe))
-                                ((((i32 a) (i32 d)) () ()
-                                  ((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
-                                     (not (eq d (i32 0)))) (eq d (sub b c))))
-                                 ->
-                                 (((i32 e)) () ()
-                                  ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
-                                     (not (eq d (i32 0)))) (eq d (sub b c))) (i32 e)) (eq e (div a d))))))
-                            #f
-                            (list)))))
+                                    (derivation `(⊢ ,empty-context ((i32 div/unsafe))
+                                                    ((((i32 a) (i32 d)) ()
+                                                                 ((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                   (not (= d (i32 0)))) (= d (sub b c))))
+                                                     ->
+                                                     (((i32 e)) ()
+                                                                ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                    (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+                                                "Div-Prechk"
+                                                (list))
+                                    (derivation `(<:
+                                                  ((((i32 a) (i32 d)) ()
+                                                                      ((((((empty (i32 a)) (i32 b)) (i32 c))
+                                                                         (not (= b c))) (i32 d)) (= d (sub b c))))
+                                                   ->
+                                                   (((i32 e)) ()
+                                                              ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                  (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d)))))
 
-  ;; This case worked in Adam's brain, but not in practice due to possible integer overflow
-  #;(test-judgment-holds ⊢ (derivation `(⊢ ,dummy-store ((func
-                                           (((((i32 a)) () () ((empty (i32 a)) (lt a (i32 0)))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b (i32 0)))))
-                                            ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (eq b (add a (i32 1))))))
-                                            ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () ((empty (i32 a)) (i32 b))))
-                                            ((((i32 a) (i32 b)) () () ((empty (i32 a)) (i32 b))) -> (((i32 c)) () () (((empty (i32 a)) (i32 b)) (i32 c))))))
+                                                  ((((i32 a) (i32 d)) ()
+                                                                      ((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                        (not (= d (i32 0)))) (= d (sub b c))))
+                                                   ->
+                                                   (((i32 e)) ()
+                                                              ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                  (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+                                                #f
+                                         (list)))))
+
+  (test-judgment-holds ⊢
+   (derivation `(⊢ ,empty-context ((i32 sub) (i32 div/unsafe))
+                   ((((i32 a) (i32 b) (i32 c)) ()
+                     ((((empty (i32 a)) (i32 b)) (i32 c))
+                      (not (= b c))))
+                    ->
+                    (((i32 e)) ()
+                     ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                         (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+               "Composition"
+               (list
+                (derivation `(⊢ ,empty-context ((i32 sub))
+                                       ((((i32 a) (i32 b) (i32 c)) ()
+                                         ((((empty (i32 a)) (i32 b)) (i32 c))
+                                          (not (= b c))))
+                                        ->
+                                        (((i32 a) (i32 d)) ()
+                                         ((((((empty (i32 a)) (i32 b)) (i32 c))
+                                           (not (= b c))) (i32 d)) (= d (sub b c))))))
+                                   "Stack-Poly"
+                                   (list
+                             (derivation `(⊢ ,empty-context ((i32 sub))
+                                             ((((i32 b) (i32 c)) ()
+                                               ((((empty (i32 a)) (i32 b)) (i32 c))
+                                                (not (= b c))))
+                                              ->
+                                              (((i32 d)) ()
+                                               ((((((empty (i32 a)) (i32 b)) (i32 c))
+                                                  (not (= b c))) (i32 d)) (= d (sub b c))))))
+                                         "Binop"
+                                         (list))))
+                (derivation `(⊢ ,empty-context ((i32 div/unsafe))
+                                       ((((i32 a) (i32 d)) ()
+                                                           ((((((empty (i32 a)) (i32 b)) (i32 c))
+                                                              (not (= b c))) (i32 d)) (= d (sub b c))))
+                                        ->
+                                        (((i32 e)) ()
+                                                   ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                       (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+                                   "Subtyping"
+                                   (list
+                                    (derivation `(⊢ ,empty-context ((i32 div/unsafe))
+                                                    ((((i32 a) (i32 d)) ()
+                                                                 ((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                   (not (= d (i32 0)))) (= d (sub b c))))
+                                                     ->
+                                                     (((i32 e)) ()
+                                                                ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                    (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+                                                "Div-Prechk"
+                                                (list))
+                                    (derivation `(<:
+                                                  ((((i32 a) (i32 d)) ()
+                                                                      ((((((empty (i32 a)) (i32 b)) (i32 c))
+                                                                         (not (= b c))) (i32 d)) (= d (sub b c))))
+                                                   ->
+                                                   (((i32 e)) ()
+                                                              ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                  (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d)))))
+
+                                                  ((((i32 a) (i32 d)) ()
+                                                                      ((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                        (not (= d (i32 0)))) (= d (sub b c))))
+                                                   ->
+                                                   (((i32 e)) ()
+                                                              ((((((((empty (i32 a)) (i32 b)) (i32 c)) (i32 d))
+                                                                  (not (= d (i32 0)))) (= d (sub b c))) (i32 e)) (= e (div a d))))))
+                                                #f
+                                         (list)))))))
+
+  ;; This case worked in Adam's brain, but not in practice due to possible integer overflow (interesting to note that we catch possible overflow errors!)
+  #;(test-judgment-holds ⊢ (derivation `(⊢ ((func
+                                           (((((i32 a)) () ((empty (i32 a)) (lt a (i32 0)))) -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (gt b (i32 0)))))
+                                            ((((i32 a)) () (empty (i32 a))) -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= b (add a (i32 1))))))
+                                            ((((i32 a)) () (empty (i32 a))) -> (((i32 b)) () ((empty (i32 a)) (i32 b))))
+                                            ((((i32 a) (i32 b)) () ((empty (i32 a)) (i32 b))) -> (((i32 c)) () (((empty (i32 a)) (i32 b)) (i32 c))))))
                                           (global ())
                                           (table (3 (0 1 2)))
                                           (memory)
                                           (local ())
                                           (label ())
                                           (return))
-                                         ((call-indirect/unsafe ((((i32 a)) () () (empty (i32 a)))
-                                                                 -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b a))))))
-                                         ((((i32 a) (i32 c)) () () (((empty (i32 a)) (i32 c)) (eq c (i32 1))))
-                                          -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b a)))))
+                                         ((call-indirect/unsafe ((((i32 a)) () (empty (i32 a)))
+                                                                 -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (gt b a))))))
+                                         ((((i32 a) (i32 c)) () (((empty (i32 a)) (i32 c)) (= c (i32 1))))
+                                          -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (gt b a)))))
                                      #f
                                      (list)))
 
-  (test-judgment-holds ⊢ (derivation `(⊢ ,dummy-store ((func
-                                           (((((i32 a)) () () ((empty (i32 a)) (lt a (i32 0)))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b (i32 0)))))
-                                            ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b a))))
-                                            ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () ((empty (i32 a)) (i32 b))))
-                                            ((((i32 a) (i32 b)) () () ((empty (i32 a)) (i32 b))) -> (((i32 c)) () () (((empty (i32 a)) (i32 b)) (i32 c))))))
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
                                           (global ())
-                                          (table (3 (((((i32 a)) () () ((empty (i32 a)) (lt a (i32 0)))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b (i32 0)))))
-                                                     ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b a))))
-                                                     ((((i32 a)) () () (empty (i32 a))) -> (((i32 b)) () () ((empty (i32 a)) (i32 b)))))))
+                                          (table (3 (((((i32 a)) () ((empty (i32 a)) (= (i32 1) (lt a (i32 0))))) -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0))))))
+                                                     ((((i32 a)) () (empty (i32 a))) -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b a)))))
+                                                     ((((i32 a)) () (empty (i32 a))) -> (((i32 b)) () ((empty (i32 a)) (i32 b)))))))
                                           (memory)
                                           (local ())
                                           (label ())
                                           (return))
-                                         ((call-indirect/unsafe ((((i32 a)) () () (empty (i32 a)))
-                                                                 -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (ge b a))))))
-                                         ((((i32 a) (i32 c)) () () (((empty (i32 a)) (i32 c)) (eq c (i32 1))))
-                                          -> (((i32 b)) () () (((empty (i32 a)) (i32 b)) (ge b a)))))
-                                     #f
-                                     (list)))
+                                         ((call-indirect/unsafe ((((i32 a)) () (((empty (i32 a)) (i32 c)) (= c (i32 1))))
+                                                                 -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (ge b a)))))))
+                                         ((((i32 a) (i32 c)) () (((empty (i32 a)) (i32 c)) (= c (i32 1))))
+                                          -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (ge b a))))))
+                                     "Subtyping"
+                                     (list
+                                      (derivation `(⊢ ((func ())
+                                                       (global ())
+                                                       (table (3 (((((i32 a)) () ((empty (i32 a)) (= (i32 1) (lt a (i32 0))))) -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0))))))
+                                                                  ((((i32 a)) () (empty (i32 a))) -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b a)))))
+                                                                  ((((i32 a)) () (empty (i32 a))) -> (((i32 b)) () ((empty (i32 a)) (i32 b)))))))
+                                                       (memory)
+                                                       (local ())
+                                                       (label ())
+                                                       (return))
+                                                      ((call-indirect/unsafe ((((i32 a)) () (((empty (i32 a)) (i32 c)) (= c (i32 1))))
+                                                                              -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (ge b a)))))))
+                                                      ((((i32 a) (i32 c)) () (((empty (i32 a)) (i32 c)) (= c (i32 1))))
+                                                       -> (((i32 b)) () ((((((empty (i32 a)) (i32 c)) (= c (i32 1))) (i32 a)) (i32 b)) (= (i32 1) (ge b a))))))
+                                                  "Call-Indirect-Prechk"
+                                                  (list))
+                                      (derivation `(<:
+                                                    ((((i32 a) (i32 c)) () (((empty (i32 a)) (i32 c)) (= c (i32 1))))
+                                                     -> (((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (ge b a)))))
+                                                    ((((i32 a) (i32 c)) () (((empty (i32 a)) (i32 c)) (= c (i32 1))))
+                                                     -> (((i32 b)) () ((((((empty (i32 a)) (i32 c)) (= c (i32 1))) (i32 a)) (i32 b)) (= (i32 1) (ge b a))))))
+                                                  #f
+                                                  (list)))))
 
-  (test-judgment-holds ⊢ (derivation `(⊢ ,dummy-store ((func ())
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
                                           (global ())
                                           (table)
                                           (memory 4096)
@@ -151,12 +237,12 @@
                                           (label ())
                                           (return))
                                          ((i32 load/unsafe 0 0))
-                                         ((((i32 a)) () () (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))
-                                          -> (((i32 b)) () () ((((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))) (i32 b)))))
-                                     #f
+                                         ((((i32 a)) () (((empty (i32 a)) (= (i32 1) (lt a (i32 1000)))) (= (i32 1) (ge a (i32 0)))))
+                                          -> (((i32 b)) () ((((empty (i32 a)) (= (i32 1) (lt a (i32 1000)))) (= (i32 1) (ge a (i32 0)))) (i32 b)))))
+                                     "Load-Prechk-1"
                                      (list)))
 
-  (test-judgment-holds ⊢ (derivation `(⊢ ,dummy-store ((func ())
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
                                           (global ())
                                           (table)
                                           (memory 4096)
@@ -164,12 +250,12 @@
                                           (label ())
                                           (return))
                                          ((i32 store/unsafe 0 0))
-                                         ((((i32 a) (i32 b)) () () (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))
-                                          -> (() () () (((empty (i32 a)) (lt a (i32 1000))) (ge a (i32 0))))))
-                                     #f
+                                         ((((i32 a) (i32 b)) () (((empty (i32 a)) (= (i32 1) (lt a (i32 1000)))) (= (i32 1) (ge a (i32 0)))))
+                                          -> (() () (((empty (i32 a)) (= (i32 1) (lt a (i32 1000)))) (= (i32 1) (ge a (i32 0)))))))
+                                     "Store-Prechk-1"
                                      (list)))
 
-  (test-judgment-holds ⊢ (derivation `(⊢ ,dummy-store ((func ())
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
                                           (global ())
                                           (table)
                                           (memory 4096)
@@ -177,12 +263,12 @@
                                           (label ())
                                           (return))
                                          ((i32 store/unsafe (i8) 0 0))
-                                         ((((i32 a) (i32 b)) () () (((empty (i32 a)) (lt a (i32 4096))) (ge a (i32 0))))
-                                          -> (() () () (((empty (i32 a)) (lt a (i32 4096))) (ge a (i32 0))))))
-                                     #f
+                                         ((((i32 a) (i32 b)) () (((empty (i32 a)) (= (i32 1) (lt a (i32 1000)))) (= (i32 1) (ge a (i32 0)))))
+                                          -> (() () (((empty (i32 a)) (= (i32 1) (lt a (i32 1000)))) (= (i32 1) (ge a (i32 0)))))))
+                                     "Store-Prechk-2"
                                      (list)))
 
-  (test-judgment-holds ⊢ (derivation `(⊢ ,dummy-store ((func ())
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
                                           (global ())
                                           (table)
                                           (memory)
@@ -190,11 +276,11 @@
                                           (label ())
                                           (return))
                                          ((set-local 0) (get-local 0))
-                                         ((((i32 a)) ((i32 b)) () ((empty (i32 a)) (i32 b)))
-                                          -> (((i32 d)) ((i32 c)) () ((((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)) (i32 d)) (eq d c)))))
-                                     #f
+                                         ((((i32 a)) ((i32 b)) ((empty (i32 a)) (i32 b)))
+                                          -> (((i32 c)) ((i32 a)) ((((empty (i32 a)) (i32 b)) (i32 c)) (= c a)))))
+                                     "Composition"
                                      (list
-                                      (derivation `(⊢ ,dummy-store ((func ())
+                                      (derivation `(⊢ ((func ())
                                                        (global ())
                                                        (table)
                                                        (memory)
@@ -202,11 +288,11 @@
                                                        (label ())
                                                        (return))
                                                       ((set-local 0))
-                                                      ((((i32 a)) ((i32 b)) () ((empty (i32 a)) (i32 b)))
-                                                       -> (() ((i32 c)) () ((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)))))
-                                                  #f
+                                                      ((((i32 a)) ((i32 b)) ((empty (i32 a)) (i32 b)))
+                                                       -> (() ((i32 a)) ((empty (i32 a)) (i32 b)))))
+                                                  "Set-Local"
                                                   (list))
-                                      (derivation `(⊢ ,dummy-store ((func ())
+                                      (derivation `(⊢ ((func ())
                                                        (global ())
                                                        (table)
                                                        (memory)
@@ -214,13 +300,13 @@
                                                        (label ())
                                                        (return))
                                                       ((get-local 0))
-                                                      ((() ((i32 c)) () ((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)))
-                                                       -> (((i32 d)) ((i32 c)) () ((((((empty (i32 a)) (i32 b)) (i32 c)) (eq c a)) (i32 d)) (eq d c)))))
-                                                  #f
+                                                      ((() ((i32 a)) ((empty (i32 a)) (i32 b)))
+                                                       -> (((i32 c)) ((i32 a)) ((((empty (i32 a)) (i32 b)) (i32 c)) (= c a)))))
+                                                  "Get-Local"
                                                   (list)))))
 
-  (test-judgment-holds ⊢ (derivation `(⊢ ,dummy-store ((func (((((i32 b)) () () ((empty (i32 b)) (gt b (i32 0))))
-                                                  -> (((i32 c)) () () ((empty (i32 c)) (gt c b))))))
+  (test-judgment-holds ⊢ (derivation `(⊢ ((func (((((i32 b)) () ((empty (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                  -> (((i32 c)) () ((empty (i32 c)) (= (i32 1) (gt c b)))))))
                                           (global ())
                                           (table)
                                           (memory)
@@ -228,12 +314,12 @@
                                           (label ())
                                           (return))
                                          ((call 0) (i32 div))
-                                         ((((i32 a) (i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b (i32 0))))
-                                          -> (((i32 d)) () () (((((((empty (i32 a)) (i32 b)) (gt b (i32 0))) (i32 c)) (gt c b)) (i32 d)) (eq d (div a c))))))
-                                     #f
+                                         ((((i32 a) (i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                          -> (((i32 d)) () (((((((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b))) (i32 d)) (= d (div a c))))))
+                                     "Composition"
                                      (list
-                                      (derivation `(⊢ ,dummy-store ((func (((((i32 b)) () () ((empty (i32 b)) (gt b (i32 0))))
-                                                               -> (((i32 c)) () () ((empty (i32 c)) (gt c b))))))
+                                      (derivation `(⊢ ((func (((((i32 b)) () ((empty (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                               -> (((i32 c)) () ((empty (i32 c)) (= (i32 1) (gt c b)))))))
                                                        (global ())
                                                        (table)
                                                        (memory)
@@ -241,12 +327,12 @@
                                                        (label ())
                                                        (return))
                                                       ((call 0))
-                                                      ((((i32 a) (i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b (i32 0))))
-                                                       -> (((i32 a) (i32 c)) () () (((((empty (i32 a)) (i32 b)) (gt b (i32 0))) (i32 c)) (gt c b)))))
-                                                  #f
+                                                      ((((i32 a) (i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                       -> (((i32 a) (i32 c)) () (((((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b))))))
+                                                  "Stack-Poly"
                                                   (list
-                                                   (derivation `(⊢ ,dummy-store ((func (((((i32 b)) () () ((empty (i32 b)) (gt b (i32 0))))
-                                                                            -> (((i32 c)) () () ((empty (i32 c)) (gt c b))))))
+                                                   (derivation `(⊢ ((func (((((i32 b)) () ((empty (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                                            -> (((i32 c)) () ((empty (i32 c)) (= (i32 1) (gt c b)))))))
                                                                     (global ())
                                                                     (table)
                                                                     (memory)
@@ -254,12 +340,32 @@
                                                                     (label ())
                                                                     (return))
                                                                    ((call 0))
-                                                                   ((((i32 b)) () () (((empty (i32 a)) (i32 b)) (gt b (i32 0))))
-                                                                    -> (((i32 c)) () () (((((empty (i32 a)) (i32 b)) (gt b (i32 0))) (i32 c)) (gt c b)))))
-                                                               #f
-                                                               (list))))
-                                      (derivation `(⊢ ,dummy-store ((func (((((i32 b)) () () ((empty (i32 b)) (gt b (i32 0))))
-                                                               -> (((i32 c)) () () ((empty (i32 c)) (gt c b))))))
+                                                                   ((((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                                    -> (((i32 c)) () (((((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b))))))
+                                                               "Subtyping"
+                                                               (list
+                                                                (derivation `(⊢ ((func (((((i32 b)) () ((empty (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                                                         -> (((i32 c)) () ((empty (i32 c)) (= (i32 1) (gt c b)))))))
+                                                                                 (global ())
+                                                                                 (table)
+                                                                                 (memory)
+                                                                                 (local ())
+                                                                                 (label ())
+                                                                                 (return))
+                                                                                ((call 0))
+                                                                                ((((i32 b)) () ((empty (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                                                 -> (((i32 c)) () ((((empty (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b))))))
+                                                                            "Call"
+                                                                            (list))
+                                                                (derivation `(<:
+                                                                              ((((i32 b)) () (((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                                               -> (((i32 c)) () (((((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b)))))
+                                                                              ((((i32 b)) () ((empty (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                                               -> (((i32 c)) () ((((empty (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b))))))
+                                                                            #f
+                                                                            (list))))))
+                                      (derivation `(⊢ ((func (((((i32 b)) () ((empty (i32 b)) (= (i32 1) (gt b (i32 0)))))
+                                                               -> (((i32 c)) () ((empty (i32 c)) (= (i32 1) (gt c b)))))))
                                                        (global ())
                                                        (table)
                                                        (memory)
@@ -267,8 +373,44 @@
                                                        (label ())
                                                        (return))
                                                       ((i32 div))
-                                                      ((((i32 a) (i32 c)) () () (((((empty (i32 a)) (i32 b)) (gt b (i32 0))) (i32 c)) (gt c b)))
-                                                       -> (((i32 d)) () () (((((((empty (i32 a)) (i32 b)) (gt b (i32 0))) (i32 c)) (gt c b)) (i32 d)) (eq d (div a c))))))
-                                                  #f
-                                                  (list))))))
+                                                      ((((i32 a) (i32 c)) () (((((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b))))
+                                                       -> (((i32 d)) () (((((((empty (i32 a)) (i32 b)) (= (i32 1) (gt b (i32 0)))) (i32 c)) (= (i32 1) (gt c b))) (i32 d)) (= d (div a c))))))
+                                                  "Binop"
+                                                  (list)))))
+
+  (test-judgment-holds ⊢
+                       (derivation `(⊢ ,empty-context ((i32 add))
+                                       ((((i32 a) (i32 b)) ()
+                                                           ((((empty (i32 a)) (i32 b))
+                                                             (= (i32 1) (lt a (i32 10)))) (= b (i32 1))))
+                                        ->
+                                        (((i32 c)) ()
+                                                   ((empty (i32 c)) (and (= (i32 1) (gt c (i32 0))) (= (i32 1) (lt c (i32 11))))))))
+                                   "Subtyping"
+                                   (list
+                                    (derivation `(⊢ ,empty-context ((i32 add))
+                                       ((((i32 a) (i32 b)) ()
+                                                           ((((empty (i32 a)) (i32 b))
+                                                             (= (i32 1) (lt a (i32 10)))) (= b (i32 1))))
+                                        ->
+                                        (((i32 c)) ()
+                                                   ((((((empty (i32 a)) (i32 b)) (= (i32 1) (lt a (i32 10)))) (= b (i32 1)))
+                                                   (i32 c)) (= c (add a b))))))
+                                                "Binop"
+                                                (list))
+                                    (derivation `(<: ((((i32 a) (i32 b)) ()
+                                                                         ((((empty (i32 a)) (i32 b))
+                                                                           (= (i32 1) (lt a (i32 10)))) (= b (i32 1))))
+                                                      ->
+                                                      (((i32 c)) ()
+                                                                 ((empty (i32 c)) (and (= (i32 1) (gt c (i32 0))) (= (i32 1) (lt c (i32 11)))))))
+                                                     ((((i32 a) (i32 b)) ()
+                                                                         ((((empty (i32 a)) (i32 b))
+                                                                           (= (i32 1) (lt a (i32 10)))) (= b (i32 1))))
+                                                      ->
+                                                      (((i32 c)) ()
+                                                                 ((((((empty (i32 a)) (i32 b)) (= (i32 1) (lt a (i32 10)))) (= b (i32 1)))
+                                                                   (i32 c)) (= c (add a b))))))
+                                                #f
+                                                (list))))))
 
