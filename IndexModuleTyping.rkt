@@ -74,8 +74,7 @@
   [(⊢-module-global ((func ()) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)) glob_1 ((ex_1 ...) tg_1))
    (⊢-module-global-list (glob ...) (((ex ...) tg) ...))
    ------------------------------------------------------------------------------------------------------------------------
-   (⊢-module-global-list (glob ... glob_1) (((ex ...) tg) ... ((ex_1 ...) tg_1)))]
-  )
+   (⊢-module-global-list (glob ... glob_1) (((ex ...) tg) ... ((ex_1 ...) tg_1)))])
 
 ;; Helper function to ensure a table is well-formed
 ;; Checks that there are exactly `i` indices (j ...), and that each one points to a valid function

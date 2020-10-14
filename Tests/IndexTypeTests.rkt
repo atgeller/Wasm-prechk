@@ -255,6 +255,7 @@
                                      "Store-Prechk-1"
                                      (list)))
 
+
   (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
                                           (global ())
                                           (table)
@@ -267,6 +268,7 @@
                                           -> (() () (((empty (i32 a)) (= (i32 1) (lt a (i32 1000)))) (= (i32 1) (ge a (i32 0)))))))
                                      "Store-Prechk-2"
                                      (list)))
+
 
   (test-judgment-holds ⊢ (derivation `(⊢ ((func ())
                                           (global ())
