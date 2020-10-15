@@ -112,5 +112,4 @@
                 (list deriv4)))
 
   ;; Should work, but doesn't.
-  ;; (test-judgment-holds ⊢-module-func deriv5)
-  )
+  (test-judgment-holds ⊢-module-func deriv5))

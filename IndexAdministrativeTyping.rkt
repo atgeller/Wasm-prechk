@@ -156,13 +156,13 @@
 
   [;; a_2 fresh
    (⊢-admin S C ((t testop)) ((((t a)) locals φ)
-                        -> (((t a_2)) locals globals
+                        -> (((t a_2)) locals
                                     ((φ (t a_2)) (and (and (testop a) (eq a_2 1))
                                                       (and (not (testop a)) (eq a_2 0)))))))]
 
   [;; a_3 fresh
    (⊢-admin S C ((t relop)) ((((t a_1) (t a_2)) locals φ)
-                       -> (((t a_3)) locals globals
+                       -> (((t a_3)) locals
                                      ((φ (t a_3)) (and (and (relop a_1 a_2) (eq a_3 1))
                                                        (and (not (relop a_1 a_2)) (eq a_3 0)))))))]
 
@@ -173,7 +173,7 @@
   [(⊢-admin S C ((drop)) (((ti ... (t a)) locals φ) -> ((ti ...) locals φ)))]
 
   [(⊢-admin S C ((select)) ((((t a_1) (t a_2) (i32 c)) locals φ)
-                      -> (((t a_3)) locals globals
+                      -> (((t a_3)) locals
                                     ((φ (t a_3)) (and (and (eqz c) (eq a_3 a_1))
                                                       (and (not (eqz c)) (eq a_3 a_2)))))))]
 
@@ -368,39 +368,30 @@
    ----------------
    (⊢-admin S C (e ...) tfi_1)])
 
-(define-extended-judgment-form WASMPrechkWithAdmin ⊢
-  #:contract (⊢- S i C (e ...) tfi)
+(define-extended-judgment-form WASMPrechkWithAdmin ⊢-admin
+  #:contract (⊢- S C (e ...) tfi)
 
   [---------------------
-   (⊢- S i C ((trap)) tfi)]
+   (⊢- S C ((trap)) tfi)]
 
-  [(where ((ti_2 ...) locals_2  φ_2) ticond_2)
+  [(where ((ti_2 ...) locals_2 φ_2) ticond_2)
    (where n ,(length (term (ti_2 ...))))
-   (⊢-admin S i C (e_0 ...) (ticond_1 -> ticond_2))
+   (⊢-admin S C (e_0 ...) (ticond_1 -> ticond_2))
    (where ((func (tfi ...)) (glob (tg ...)) (table (j_1 (tfi_2 ...))) (memory j_2) (local (t_3 ...)) _ (return ticond_3)) C)
-   (⊢-admin S i ((func (tfi ...)) (glob (tg ...)) (table (j_1 (tfi_2 ...))) (memory j_2) (local (t_3 ...)) ticond_1 (return ticond_3))
+   (⊢-admin S ((func (tfi ...)) (glob (tg ...)) (table (j_1 (tfi_2 ...))) (memory j_2) (local (t_3 ...)) ticond_1 (return ticond_3))
       (e ...)
       ((() locals_1 φ_1) -> ticond_2))
    -----------------------------------------------------------------------------------
-   (⊢- S i C (label n (e_0 ...) (e ...)) ((() locals_1 globals_1 φ_1) -> ticond_2))]
+   (⊢- S C (label n (e_0 ...) (e ...)) ((() locals_1 φ_1) -> ticond_2))]
 
   [(⊢-cl S cl tfi)
    ------------------------
-   (⊢- S i C ((call cl)) tfi)]
+   (⊢- S C ((call cl)) tfi)]
 
-  [(⊢-return S i (v ...) (e ...) (globals_1 φ_1) ((ti ...) _ globals_2 φ_2))
+  [(⊢-return S i (v ...) (e ...) (locals_1 φ_1) ((ti ...) _ φ_2))
    (where n ,(length (term (ti ...))))
-   ---------------------------------------------------------------------------------------------------------
-   (⊢- S i C ((local n (i (v ...)) (e ...))) ((() locals globals_1 φ_1) -> ((ti ...) locals globals_2 φ_2)))]
-
-  [(⊢-return S i_2 (v ...) (e ...) (_ φ_1) ((ti ...) _ _ φ_2))
-   (where n ,(length (term (ti ...))))
-   (side-condition ,(not (equal? (term i_1) (term i_2))))
-   ;; a ... fresh
-   -------------------------------------------------------------------------
-   (⊢- S i_1 (_ (global ((_ t) ...)) _ _ _ _ _)
-       ((local n (i_2 (v ...)) (e ...)))
-       ((() locals _ φ_1) -> ((ti ...) locals ((t a) ...) φ_2)))])
+   -------------------------------------------------------------------------------------
+   (⊢- S C ((local n (i (v ...)) (e ...))) ((() locals φ_1) -> ((ti ...) locals φ_2)))])
 
 (define-metafunction WASMPrechkWithAdmin
   add-values : φ_1 (t ...) (a ...) (c ...) -> φ_2

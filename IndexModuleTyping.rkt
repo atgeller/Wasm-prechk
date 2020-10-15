@@ -17,16 +17,16 @@
 
   ;; Should (t _) ... be instiantiated in phi_1?
   [(⊢ ((func (tfi_1 ...))
-       (global ((_ t_2) ...)) (table (j_1 (tfi ...)) ...)
+       (global (tg ...)) (table (j_1 (tfi ...)) ...)
        (memory j_2 ...) (local (t_1 ... t ...))
-       (label (((ti_2 ...) locals_2 φ_2))) (return ((ti_2 ...) locals_2 φ_2)))
+       (label (ticond_2)) (return ticond_2))
       (e ...)
-      ((() ((t_1 a) ... (t a_2) ...) φ_1) -> ((ti_2 ...) locals_2 φ_2)))
+      ((() ((t_1 a) ... (t _) ...) φ_1) -> ticond_2))
    ;; a_2 ... fresh
    ---------------------------------------------------------------------------
-   (⊢-module-func ((func (tfi_1 ...)) (global ((_ t_2) ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)
-                  ((ex ...) (func ((((t_1 a) ...) () φ_1) -> ((ti_2 ...) locals_2 φ_2)) (local (t ...) (e ...))))
-                  ((ex ...) ((((t_1 a) ...) () φ_1) -> ((ti_2 ...) locals_2 φ_2))))]
+   (⊢-module-func ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)
+                  ((ex ...) (func ((((t_1 a) ...) () φ_1) -> ticond_2) (local (t ...) (e ...))))
+                  ((ex ...) ((((t_1 a) ...) () φ_1) -> ticond_2)))]
 
   ;; Imported function is easy
   [-----------------------------------------------------------
