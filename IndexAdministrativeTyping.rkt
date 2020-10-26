@@ -130,12 +130,12 @@
 
   [(where ((inst (C ...)) _ _) S)
    (where ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) _ (label (ticond_1  ...)) _) (do-get (C ...) i))
-   (⊢- S ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1  ...)) (return ticond))
+   (⊢-admin S ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1  ...)) (return ticond))
       (e ...) ((() locals_1 φ_1) -> ticond))
    --------------------------------------------------------------------------------------------------------------------------------------------------
    (⊢-return S i ((t const c) ...) (e ...) (locals_1 φ_1) ticond)])
 
-(define-judgment-form WASMIndexTypes
+(define-judgment-form WASMPrechkWithAdmin
   #:contract (⊢-admin S C (e ...) tfi)
 
   [;; a fresh
@@ -366,13 +366,10 @@
   [(⊢-admin S C (e ...) tfi_2)
    (<: tfi_1 tfi_2)
    ----------------
-   (⊢-admin S C (e ...) tfi_1)])
-
-(define-extended-judgment-form WASMPrechkWithAdmin ⊢-admin
-  #:contract (⊢- S C (e ...) tfi)
+   (⊢-admin S C (e ...) tfi_1)]
 
   [---------------------
-   (⊢- S C ((trap)) tfi)]
+   (⊢-admin S C ((trap)) tfi)]
 
   [(where ((ti_2 ...) locals_2 φ_2) ticond_2)
    (where n ,(length (term (ti_2 ...))))
@@ -382,16 +379,16 @@
       (e ...)
       ((() locals_1 φ_1) -> ticond_2))
    -----------------------------------------------------------------------------------
-   (⊢- S C (label n (e_0 ...) (e ...)) ((() locals_1 φ_1) -> ticond_2))]
+   (⊢-admin S C (label n (e_0 ...) (e ...)) ((() locals_1 φ_1) -> ticond_2))]
 
   [(⊢-cl S cl tfi)
    ------------------------
-   (⊢- S C ((call cl)) tfi)]
+   (⊢-admin S C ((call cl)) tfi)]
 
   [(⊢-return S i (v ...) (e ...) (locals_1 φ_1) ((ti ...) _ φ_2))
    (where n ,(length (term (ti ...))))
    -------------------------------------------------------------------------------------
-   (⊢- S C ((local n (i (v ...)) (e ...))) ((() locals φ_1) -> ((ti ...) locals φ_2)))])
+   (⊢-admin S C ((local n (i (v ...)) (e ...))) ((() locals φ_1) -> ((ti ...) locals φ_2)))])
 
 (define-metafunction WASMPrechkWithAdmin
   add-values : φ_1 (t ...) (a ...) (c ...) -> φ_2
