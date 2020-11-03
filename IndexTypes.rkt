@@ -2,49 +2,45 @@
 
 (require redex "WASM-Redex/Syntax.rkt")
 
-(provide WASMIndexTypes label-types)
+(provide WASMIndexTypes)
 
 (define-extended-language WASMIndexTypes WASM
   (binop ::= .... div/unsafe)
-  (e ::= .... (call-indirect/unsafe tfi) (if tfi (e ...) (e ...))
+  (e ::= .... (call-indirect/unsafe tfi)
      (t load/unsafe j j) (t load/unsafe (tp sz) j j)
-     (t store/unsafe j j) (t store/unsafe (tp) j j))
+     (t store/unsafe j j) (t store/unsafe (tp) j j)
+     (if tfi (e ...) (e ...)) (block tfi (e ...)) (loop tfi (e ...)))
 
-  ;; Index types
+  ;; Index language
   (a ::= variable-not-otherwise-mentioned)
-  (x y ::= a (t c) (binop x y))
-  (P ::= (testop x) (relop x y) (not P) (and P P) (or P P))
-  ;(γ ::= t (a : γ P)) TODO: I don't think we really need these? Syntactic sugar
-  (φ ::= empty (φ (t a)) (φ P))
-
+  (x y ::= a (t c) (binop x y) (testop x) (relop x y))
+  (P ::= (= x y) (if P P P) (not P) (and P P) (or P P))
+  (φ ::= empty (φ P) (φ ti))
+  ;;(φ ::= (P ...))
+  ;;(Γ ::= (ti ...))
   (ti ::= (t a))
-  (mut? ::= boolean)
-  (tgi ::= (mut? ti))
-  ;; Index-type pre/post-condition: types on stack, locals, globals, and constraint context
+
+  ;; Instruction index types
   (locals ::= (ti ...))
-  (globals ::= (ti ...))
-  (ticond ::= ((ti ...) locals globals φ))
+  ;; Index-type pre/post-condition: types on stack, locals, and constraint context
+  (ticond ::= ((ti ...) locals φ))
   (tfi ::= (ticond -> ticond))
 
-  (C ::= ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond  ...)) (return ticond))
-     ((func (tfi ...)) (global (tg ...)) (table (j (i ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return))))
+  ;; Indexed module contexts
+  (C ::= ((func (tfi ...)) (global (tg ...)) (table (j (tfi ...)) ...) (memory j ...) (local (t ...)) (label (ticond  ...)) (return ticond))
+     ((func (tfi ...)) (global (tg ...)) (table (j (tfi ...)) ...) (memory j ...) (local (t ...)) (label (ticond ...)) (return)))
 
-(define-metafunction WASMIndexTypes
-  reverse-get : (any ...) j -> any
-  [(reverse-get (any ... any_1) j)
-   (reverse-get (any ...) ,(sub1 (term j)))
-   (side-condition (< 0 (term j)))]
-  [(reverse-get (any ... any_1) 0) any_1])
+  (S ::= ((C ...) (table ((j (tfi ...)) ...)) (memory (j ...))))
 
-(define-judgment-form WASMIndexTypes
-  #:contract (label-types (ticond ...) (j ...) ticond)
-  #:mode (label-types I I O)
-
-  [(where ticond_2 (reverse-get (ticond ...) j))
-   ---------------------------------------------
-   (label-types (ticond ...) (j) ticond_2)]
-
-  [(where ticond_2 (reverse-get (ticond ...) j))
-   (label-types (ticond ...) (j_2 ...) ticond_2)
-   ---------------------------------------------
-   (label-types (ticond ...) (j j_2 ...) ticond_2)])
+  ;; Module-level indexed declarations
+  (f ::= ((ex ...) (func tfi (local (t ...) (e ...))))
+     ((ex ...) (func tfi im)))
+  (glob ::= ((ex ...) (global tg (e ...)))
+        ((ex ...) (global tg im)))
+  (tab ::= ((ex ...) (table j (tfi ...)))
+       ((ex ...) (table j (tfi ...) im)))
+  (mem ::= ((ex ...) (memory i))
+       ((ex ...) (memory i im)))
+  (im ::= (import string string))
+  (ex ::= (export string))
+  (m ::= (module (f ...) (glob ...) (tab ...) (mem ...))))

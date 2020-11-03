@@ -1,6 +1,6 @@
 #lang racket
 
-(require redex "IndexTypes.rkt" "solver.rkt")
+(require redex "IndexTypes.rkt" "Solver.rkt")
 
 (provide test-satisfaction extract-constraints parse-index index-var->z3-bitvec)
 
@@ -59,19 +59,23 @@
      #:when (redex-match? WASMIndexTypes binop b_op)
      (let ([index1 (parse-index x)]
            [index2 (parse-index y)])
-       (redex_op->z3_op `(,b_op ,index1 ,index2)))]))
-
-(define (parse-proposition P)
-  (match P
+       (redex_op->z3_op `(,b_op ,index1 ,index2)))]
     [`(,t_op ,x)
      #:when (redex-match? WASMIndexTypes testop t_op)
      (let ([index (parse-index x)])
-       (redex_op->z3_op `(,t_op ,index)))]
+       `(ite ,(redex_op->z3_op `(,t_op ,index)) (_ bv1 32) (_ bv0 32)))]
     [`(,r_op ,x ,y)
      #:when (redex-match? WASMIndexTypes relop r_op)
      (let ([index1 (parse-index x)]
            [index2 (parse-index y)])
-       (redex_op->z3_op `(,r_op ,index1 ,index2)))]
+       `(ite ,(redex_op->z3_op `(,r_op ,index1 ,index2)) (_ bv1 32) (_ bv0 32)))]))
+
+(define (parse-proposition P)
+  (match P
+    [`(= ,x ,y)
+     (let ([index1 (parse-index x)]
+           [index2 (parse-index y)])
+       `(= ,index1 ,index2))]
     [`(not ,P*)
      (let ([prop (parse-proposition P*)])
        `(not ,prop))]
@@ -83,11 +87,11 @@
      (let ([prop1 (parse-proposition P1)]
            [prop2 (parse-proposition P2)])
        `(or ,prop1 ,prop2))]
-    [`(if ,P ,x ,y)
-     (let ([prop (parse-proposition P)]
-           [index1 (parse-index x)]
-           [index2 (parse-index y)])
-       `(ite ,prop ,index1 index2))]))
+    [`(if ,P? ,P1 ,P2)
+     (let ([cond (parse-proposition P?)]
+           [true (parse-proposition P1)]
+           [false (parse-proposition P2)])
+       `(ite ,cond ,true ,false))]))
 
 (define (extract-constraints phi vars)
   (match phi
