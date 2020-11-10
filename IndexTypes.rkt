@@ -15,15 +15,14 @@
   (a ::= variable-not-otherwise-mentioned)
   (x y ::= a (t c) (binop x y) (testop x) (relop x y))
   (P ::= (= x y) (if P P P) (not P) (and P P) (or P P))
-  (φ ::= empty (φ P) (φ ti))
-  ;;(φ ::= (P ...))
-  ;;(Γ ::= (ti ...))
+  (φ ::= empty (φ P))
+  (Γ ::= empty (Γ ti))
   (ti ::= (t a))
 
   ;; Instruction index types
   (locals ::= (ti ...))
   ;; Index-type pre/post-condition: types on stack, locals, and constraint context
-  (ticond ::= ((ti ...) locals φ))
+  (ticond ::= ((ti ...) locals Γ φ))
   (tfi ::= (ticond -> ticond))
 
   ;; Indexed module contexts

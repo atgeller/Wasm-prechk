@@ -13,21 +13,19 @@
   #:contract (label-types (ticond ...) (j ...) ticond)
   #:mode (label-types I I I)
 
-  [(where ticond_2 (reverse-get (ticond ...) j))
-   (<: ticond_3 ticond_2)
-   ---------------------------------------------
-   (label-types (ticond ...) (j) ticond_3)]
+  [(label-types (ticond ...) () ticond_3)]
 
-  [(where ticond_2 (reverse-get (ticond ...) j))
-   (side-condition (<: ticond_3 ticond_2))
-   (label-types (ticond ...) (j_2 ...) ticond_3)
-   ---------------------------------------------
-   (label-types (ticond ...) (j j_2 ...) ticond_3)])
+  [(where ((ti_2 ...) locals_2 Γ_2 φ_2) (reverse-get (ticond ...) j))
+   (side-condition (satisfies (union Γ_1 Γ_2) φ_1 φ_2))
+   ;; TODO: (side-condition (subset Γ_2 Γ_1))
+   (label-types (ticond ...) (j_2 ...) ((ti_1 ...) locals_1 Γ_1 φ_1))
+   ------------------------------------------------------------------
+   (label-types (ticond ...) (j j_2 ...) ((ti_1 ...) locals_1 Γ_1 φ_1))])
 
 (define-metafunction WASMIndexTypes
-  valid-table-call : tfi a (tfi ...) φ -> boolean
-  [(valid-table-call tfi a (tfi_2 ...) φ)
-   ,(check-table-call (term tfi) (term a) (term (tfi_2 ...)) (term φ))])
+  valid-table-call : tfi a (tfi ...) Γ φ -> boolean
+  [(valid-table-call tfi a (tfi_2 ...) Γ φ)
+   ,(check-table-call (term tfi) (term a) (term (tfi_2 ...)) (term Γ) (term φ))])
 
 (define-metafunction WASMIndexTypes
   extend : φ_1 φ_2 -> φ
@@ -53,3 +51,21 @@
   erase-mut : tg -> t
   [(erase-mut (mut? t)) t]
   [(erase-mut t) t])
+
+(define-metafunction WASMIndexTypes
+  in : any any -> boolean
+  [(in _ empty) #f]
+  [(in any_1 (any any_1)) #t]
+  [(in any_1 (any any_2)) (in any_1 any)])
+
+(define-metafunction WASMIndexTypes
+  union : any any -> any
+  [(union any empty) any]
+  [(union any (any_1 any_2)) (union any any_1) (where #t (in any_2 any))]
+  [(union any (any_1 any_2)) ((union any any_1) any_2) (where #f (in any_2 any))])
+
+(define-metafunction WASMIndexTypes
+  subset : any any -> boolean
+  [(subset any empty) #t]
+  [(subset any (any_1 any_2)) (subset any any_1) (where #t (in any_2 any))]
+  [(subset any (any_1 any_2)) #f (where #f (in any_2 any))])

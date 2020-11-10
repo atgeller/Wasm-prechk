@@ -12,15 +12,17 @@
     (for/hash ([type unique-typelist])
       (displayln type)
       (displayln call-type)
-      (values type (if (judgment-holds (<: ,call-type ,type))
+      (values type (if (judgment-holds (<: ,type ,call-type))
                        'true
                        'false)))))
 
-(define (check-table-call type index typelist phi)
-  (let*-values ([(typemap) (construct-z3-table type typelist)]
-                [(constraints vars) (extract-constraints phi null)]
-                [(index-def) (parse-index index)])
-    (let ([query (append (map index-var->z3-bitvec (remove-duplicates vars))
+(define (check-table-call type index typelist gamma phi)
+  (displayln "Hello world")
+  (let* ([typemap (construct-z3-table type typelist)]
+         [vars (parse-defs gamma)]
+         [constraints (extract-constraints phi)]
+         [index-def (parse-index index)])
+    (let ([query (append (map index-var->z3-bitvec vars)
                          `((declare-const table (Array (_ BitVec 32) Bool))
                            (define-fun satisfies () Bool
                              (select table ,index-def))

@@ -2,15 +2,13 @@
 
 (require redex "IndexTypes.rkt" "Solver.rkt")
 
-(provide test-satisfaction extract-constraints parse-index index-var->z3-bitvec)
+(provide test-satisfaction extract-constraints parse-index index-var->z3-bitvec parse-defs)
 
 (define debug #t)
 
 (define (index-var->z3-bitvec var)
   (match-let ([(cons name type) var])
-    `(declare-const ,name (_ BitVec ,(match type
-                                      ['i32 32]
-                                      ['i64 64])))))
+    `(declare-const ,name (_ BitVec ,(match type ['i32 32] ['i64 64])))))
 
 (define (ask-z3 vars constraints1 constraints2)
   (when debug
@@ -93,24 +91,24 @@
            [false (parse-proposition P2)])
        `(ite ,cond ,true ,false))]))
 
-(define (extract-constraints phi vars)
+(define (parse-defs gamma)
+  (match gamma
+    [`empty null]
+    [`(,gamma* (,t ,a)) (cons (cons a t) (parse-defs gamma*))]))
+
+(define (extract-constraints phi)
   (match phi
-    [`empty (values null vars)]
-    [`(,phi* (,type ,a))
-     #:when (redex-match? WASMIndexTypes t type)
-     (extract-constraints phi* (cons (cons a type) vars))]
-    [`(,phi* ,P)
-     (let*-values ([(new-constraint) (parse-proposition P)]
-                   [(rest-constraints rest-vars) (extract-constraints phi* vars)])
-       (values (cons new-constraint rest-constraints) rest-vars))]))
+    [`empty null]
+    [`(,phi* ,P) (cons (parse-proposition P) (extract-constraints phi*))]))
 
-(define (context-to-constraints phi_1 phi_2)
-  (let*-values ([(consts1 vars1) (extract-constraints phi_1 null)]
-                [(consts2 vars2) (extract-constraints phi_2 vars1)])
-    (values (remove-duplicates vars2) consts1 consts2)))
+(define (context-to-constraints gamma phi_1 phi_2)
+  (let* ([vars (parse-defs gamma)]
+         [consts1 (extract-constraints phi_1)]
+         [consts2 (extract-constraints phi_2)])
+    (values vars consts1 consts2)))
 
-(define (test-satisfaction phi_1 phi_2)
-  (let-values ([(vars constraints1 constraints2) (context-to-constraints phi_1 phi_2)])
+(define (test-satisfaction gamma phi_1 phi_2)
+  (let-values ([(vars constraints1 constraints2) (context-to-constraints gamma phi_1 phi_2)])
     (or (null? constraints2)
         (and (not (null? constraints1))
              (not (ask-z3 vars constraints1 constraints2))))))
