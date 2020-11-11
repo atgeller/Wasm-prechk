@@ -3,9 +3,10 @@
 (require redex
          "SubTyping.rkt"
          "Satisfies.rkt"
-         "Solver.rkt")
+         "Solver.rkt"
+         "IndexTypes.rkt")
 
-(provide check-table-call)
+(provide valid-table-call)
 
 (define (construct-z3-table call-type typelist)
   (let ([unique-typelist (remove-duplicates typelist)])
@@ -31,3 +32,8 @@
                          (for/list ([i (in-range 0 (length typelist))])
                            `(assert (= (select table ,(string->symbol (format "(_ bv~a 32)" i))) ,(hash-ref typemap (list-ref typelist i))))))])
       (not (solve query)))))
+
+(define-metafunction WASMIndexTypes
+  valid-table-call : tfi a (tfi ...) Γ φ -> boolean
+  [(valid-table-call tfi a (tfi_2 ...) Γ φ)
+   ,(check-table-call (term tfi) (term a) (term (tfi_2 ...)) (term Γ) (term φ))])
