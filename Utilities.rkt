@@ -52,5 +52,6 @@
 
 (define-metafunction WASMIndexTypes
   superset : any any -> boolean
+  [(superset any any) #t]
   [(superset any_1 any_2) #t (where #f (subset any_1 any_2))]
   [(superset any_1 any_2) #f (where #t (subset any_1 any_2))])

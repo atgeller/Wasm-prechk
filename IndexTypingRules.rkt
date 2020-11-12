@@ -148,7 +148,7 @@
   [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 Γ_3))
-   (side-condition (valid-table-call (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))
+   (side-condition (valid-table-call (((ti_1 ...) () Γ_2 φ_2) -> ((ti_2 ...) () Γ_3 φ_3))
                                      a (tfi ...) Γ_1 φ_1))
    ------------------------------------------------------- "Call-Indirect-Prechk"
    (⊢ (_ _ (table (j (tfi ...))) _ _ _ _)

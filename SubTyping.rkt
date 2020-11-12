@@ -5,7 +5,7 @@
          "Satisfies.rkt"
          "Utilities.rkt")
 
-(provide satisfies <: label-types)
+(provide satisfies <: label-types contains-all)
 
 ;; Ensures index type context φ_1 satisfies φ_2
 (define-metafunction WASMIndexTypes
@@ -30,7 +30,7 @@
    (side-condition (superset Γ_2 Γ_1))
    (side-condition (superset Γ_4 Γ_3))
    (where (ti ...) locals_2)
-   (side-condition (contains-all (ti_1 ... ti ...) Γ_3))
+   (side-condition (contains-all Γ_3 (ti_1 ... ti ...)))
    -----------------------------------------------------
    (<: (((ti_1 ...) locals_1 Γ_2 φ_2)
         -> ((ti_2 ...) locals_2 Γ_3 φ_3))
