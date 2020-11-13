@@ -60,39 +60,38 @@
                                          (= a_3 a_2)
                                          (= a_3 a_1))))))]
   
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
-   (where Γ_4 (union Γ_1 Γ_3))
-   (where φ_4 (union φ_1 φ_3))
-   (where C_2 (in-label C_1 ((ti_1 ...) locals_1 Γ_3 φ_3)))
-   (⊢ C_2 (e ...) tfi_2)
-   (<: tfi_2 (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   --------------------------------------------------------------------------- "Block"
+  [(where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (where Γ_5 (union Γ_1 Γ_3))
+   (where φ_5 (union φ_1 φ_3))
+   --------------------------- "Block"
    (⊢ C_1 ((block (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))]
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
-   (where Γ_4 (union Γ_1 Γ_3))
-   (where φ_4 (union φ_1 φ_3))
-   (where C_2 (in-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
-   (⊢ C_2 (e ...) tfi_2)
-   (<: tfi_2 (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   --------------------------------------------------------------------------- "Loop"
+  [(where C_2 (in-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
+   (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (where Γ_5 (union Γ_1 Γ_3))
+   (where φ_5 (union φ_1 φ_3))
+   --------------------------- "Loop"
    (⊢ C_1 ((loop (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))]
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
-   (where Γ_4 (union Γ_1 Γ_3))
-   (where φ_4 (union φ_1 φ_3))
-   (where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_2 φ_2)))
-   (⊢ C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_5 (φ_5 (not (= a (i32 0)))))
-                     -> ((ti_2 ...) locals_2 Γ_6 φ_6)))
-   (⊢ C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_5 (φ_5 (= a (i32 0))))
-                     -> ((ti_2 ...) locals_2 Γ_6 φ_6)))
-   (<: (((ti_1 ...) locals_1 Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_6 φ_6))
-       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_2 φ_2)))
+  [(where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (⊢ C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_2 (φ_2 (not (= a (i32 0)))))
+                     -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (⊢ C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_2 (φ_2 (= a (i32 0))))
+                     -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (where Γ_5 (union Γ_1 Γ_3))
+   (where φ_5 (union φ_1 φ_3))
    --------------------------------------------------------------------- "If"
    (⊢ C_1 ((if (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e_1 ...) (e_2 ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))]
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
   [(label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
    -------------------------------------------------------- "Br"

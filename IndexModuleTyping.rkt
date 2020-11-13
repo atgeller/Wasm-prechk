@@ -21,13 +21,12 @@
        (memory j_2 ...) (local (t_1 ... t ...))
        (label (ticond_2)) (return ticond_2))
       (e ...)
-      ((() ((t_1 a_1) ... (t a) ...) Γ_2 φ_2) -> (((t_2 a_2) ...) _ Γ_3 φ_3)))
+      ((() ((t_1 a_1) ... (t a) ...) Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_3 φ_3)))
    ;; Don't care about stack/locals since they are otherwise constrained
-   (<: ((((t_1 a_1) ...) () Γ_2 φ_2) -> (((t_2 a_2) ...) () Γ_3 φ_3))
-       ((((t_1 a_1) ...) () Γ_1 φ_1) -> (((t_2 a_2) ...) () Γ_4 φ_4)))
    ;; TODO: (where #f (in (t a) Γ_2)) ;; (a ...) fresh
-   ;;(side-condition (contains-all Γ_1 ((t_1 a_1) ... (t a) ...)))
-   ;;(side-condition (contains-all Γ_4 ((t_2 a_2) ...)))
+   (side-condition (contains-all Γ_1 ((t_1 a_1) ... (t a) ...)))
+   (side-condition (contains-all Γ_4 ((t_2 a_2) ...)))
+   (side-condition (satisifies Γ_3 φ_3 φ_4))
    ---------------------------------------------------
    (⊢-module-func ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)
                   ((ex ...) (func ((((t_1 a_1) ...) _ Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_4 φ_4)) (local (t ...) (e ...))))

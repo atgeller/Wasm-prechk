@@ -15,7 +15,7 @@
   (define ticond3_1 `(((i32 b)) ((i32 a) (i32 b)) ((empty (i32 a)) (i32 b)) empty))
   (define ticond4 `(((i32 c)) ((i32 a) (i32 b)) (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c (add a b)))))
   (define ticond5 `(((i32 c)) () (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c (add a b)))))
-  
+
   (define context1 (term ((func ((,ticond0 -> ,ticond5))) (global ())
                           (table) (memory)
                           (local ()) (label ()) (return))))
@@ -66,7 +66,7 @@
                     (,ticond3 -> ,ticond4))
                 "Binop"
                 (list)))
-  
+
   (test-judgment-holds ⊢ deriv3_0)
 
   (define deriv3
@@ -78,17 +78,12 @@
 
   (test-judgment-holds ⊢ deriv3)
 
-  (define deriv3_s
-    (derivation `(<: (,ticond0 -> ,ticond5) (,ticond0 -> ,ticond5))
-                #f
-                (list)))
-
   (define deriv4
     (derivation `(⊢-module-func ,context1
                                 (() (func (,ticond0 -> ,ticond5)
                                           (local () ((get-local 0) (get-local 1) (i32 add)))))
                                 (() (,ticond0 -> ,ticond4)))
                 #f
-                (list deriv3 deriv3_s)))
+                (list deriv3)))
 
   (test-judgment-holds ⊢-module-func deriv4))
