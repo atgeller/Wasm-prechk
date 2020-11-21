@@ -22,10 +22,8 @@
        (label (ticond_2)) (return ticond_2))
       (e ...)
       ((() ((t_1 a_1) ... (t a) ...) Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_3 φ_3)))
-   ;; Don't care about stack/locals since they are otherwise constrained
-   ;; TODO: (where #f (in (t a) Γ_2)) ;; (a ...) fresh
-   (side-condition (contains-all Γ_1 ((t_1 a_1) ... (t a) ...)))
-   (side-condition (contains-all Γ_4 ((t_2 a_2) ...)))
+   (side-condition (equiv-gamma Γ_1 (build-gamma ((t_1 a_1) ... (t a) ...)))) ;; Γ_2 = ((t_1 a_1) ... (t a) ...)
+   (side-condition (subset (build-gamma (domain-φ φ_1)) Γ_1)) ;; domain(φ_1) subset of Γ_1
    (side-condition (satisifies Γ_3 φ_3 φ_4))
    ---------------------------------------------------
    (⊢-module-func ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)

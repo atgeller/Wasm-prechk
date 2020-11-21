@@ -15,12 +15,6 @@
   [(satisfies Γ φ empty) #t]
   [(satisfies Γ φ_1 φ_2) ,(test-satisfaction (term Γ) (term φ_1) (term φ_2))])
 
-(define-metafunction WASMIndexTypes
-  contains-all : any (any ...) -> boolean
-  [(contains-all any ()) #t]
-  [(contains-all any (any_1 any_2 ...)) (contains-all any (any_2 ...)) (where #t (in any_1 any))]
-  [(contains-all any (any_1 any_2 ...)) #f (where #f (in any_1 any))])
-
 (define-judgment-form WASMIndexTypes
   #:contract (<: tfi tfi)
   #:mode (<: I I)

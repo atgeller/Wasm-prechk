@@ -64,6 +64,8 @@
    (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
    --------------------------- "Block"
@@ -74,6 +76,8 @@
    (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
    --------------------------- "Loop"
@@ -81,12 +85,14 @@
       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
   [(where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   (⊢ C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_2 (φ_2 (not (= a (i32 0)))))
+   (⊢ C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
                      -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
-   (⊢ C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_2 (φ_2 (= a (i32 0))))
+   (⊢ C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
                      -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
    --------------------------------------------------------------------- "If"
@@ -157,11 +163,12 @@
 
   [(where t_2 (do-get (t ...) j))
    (where (t_2 a) (do-get locals j))
+   (where #f (in a_2 Γ)) ;; a_2 fresh
    --------------------------------- "Get-Local"
    (⊢ (_ _ _ _ (local (t ...)) _ _)
       ((get-local j))
       ((() locals Γ φ)
-       -> (((t_2 a)) locals Γ φ)))]
+       -> (((t_2 a_2)) locals (Γ (t_2 a_2)) (φ (= a_2 a)))))]
 
   [(where t_2 (do-get (t ...) j))
    (where locals_2 (do-set locals_1 j (t_2 a)))
@@ -173,11 +180,12 @@
 
   [(where t_2 (do-get (t ...) j))
    (where locals_2 (do-set locals_1 j (t_2 a)))
+   (where #f (in a_2 Γ)) ;; a_2 fresh
    ---------------------------------- "Tee-Local"
    (⊢ (_ _ _ _ (local (t ...)) _ _)
       ((tee-local j))
       ((((t_2 a)) locals_1 Γ φ)
-       -> (((t_2 a)) locals_2 Γ φ)))]
+       -> (((t_2 a_2)) locals_2 (Γ (t_2 a_2)) (φ (= a_2 a)))))]
 
   [(where tg_2 (do-get (tg ...) j))
    (where t_2 (erase-mut tg_2))

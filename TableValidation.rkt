@@ -13,7 +13,8 @@
     (for/hash ([type unique-typelist])
       (displayln type)
       (displayln call-type)
-      (values type (if (judgment-holds (<: ,type ,call-type))
+      (displayln (equal? type call-type))
+      (values type (if (equal? type call-type)
                        'true
                        'false)))))
 

@@ -144,7 +144,7 @@
                                           (label ())
                                           (return))
                                          ((call-indirect/unsafe ((((i32 a)) () (empty (i32 a)) empty)
-                                                                 -> (((i32 b)) () ((empty (i32 a)) (i32 b)) (empty (= (i32 1) (ge b a)))))))
+                                                                 -> (((i32 b)) () ((empty (i32 a)) (i32 b)) (empty (= (i32 1) (gt b a)))))))
                                          ((((i32 a) (i32 c))
                                            ()
                                            ((empty (i32 a)) (i32 c))
@@ -152,7 +152,7 @@
                                           -> (((i32 b))
                                               ()
                                               (((empty (i32 a)) (i32 c)) (i32 b))
-                                              ((empty (= c (i32 1))) (= (i32 1) (ge b a))))))
+                                              ((empty (= c (i32 1))) (= (i32 1) (gt b a))))))
                                      "Call-Indirect-Prechk"
                                      (list)))
 
@@ -222,7 +222,7 @@
                                           (return))
                                          ((set-local 0) (get-local 0))
                                          ((((i32 a)) ((i32 b)) ((empty (i32 a)) (i32 b)) empty)
-                                          -> (((i32 a)) ((i32 a)) ((empty (i32 a)) (i32 b)) empty)))
+                                          -> (((i32 a_2)) ((i32 a)) (((empty (i32 a)) (i32 b)) (i32 a_2)) (empty (= a_2 a)))))
                                      "Composition"
                                      (list
                                       (derivation `(⊢ ((func ())
@@ -246,7 +246,7 @@
                                                        (return))
                                                       ((get-local 0))
                                                       ((() ((i32 a)) ((empty (i32 a)) (i32 b)) empty)
-                                                       -> (((i32 a)) ((i32 a)) ((empty (i32 a)) (i32 b)) empty)))
+                                                       -> (((i32 a_2)) ((i32 a)) (((empty (i32 a)) (i32 b)) (i32 a_2)) (empty (= a_2 a)))))
                                                   "Get-Local"
                                                   (list)))))
 

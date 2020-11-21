@@ -9,11 +9,11 @@
 
   (define ticond0 `(((i32 a) (i32 b)) () ((empty (i32 a)) (i32 b)) empty))
   (define ticond1 `(() ((i32 a) (i32 b)) ((empty (i32 a)) (i32 b)) empty))
-  (define ticond2 `(((i32 a)) ((i32 a) (i32 b)) ((empty (i32 a)) (i32 b)) empty))
-  (define ticond2_1 `(() ((i32 a) (i32 b)) ((empty (i32 a)) (i32 b)) empty))
-  (define ticond3 `(((i32 a) (i32 b)) ((i32 a) (i32 b)) ((empty (i32 a)) (i32 b)) empty))
-  (define ticond3_1 `(((i32 b)) ((i32 a) (i32 b)) ((empty (i32 a)) (i32 b)) empty))
-  (define ticond4 `(((i32 c)) ((i32 a) (i32 b)) (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c (add a b)))))
+  (define ticond2 `(((i32 a_2)) ((i32 a) (i32 b)) (((empty (i32 a)) (i32 b)) (i32 a_2)) (empty (= a_2 a))))
+  (define ticond2_1 `(() ((i32 a) (i32 b)) (((empty (i32 a)) (i32 b)) (i32 a_2)) (empty (= a_2 a))))
+  (define ticond3 `(((i32 a_2) (i32 b_2)) ((i32 a) (i32 b)) ((((empty (i32 a)) (i32 b)) (i32 a_2)) (i32 b_2)) ((empty (= a_2 a)) (= b_2 b))))
+  (define ticond3_1 `(((i32 b_2)) ((i32 a) (i32 b)) ((((empty (i32 a)) (i32 b)) (i32 a_2)) (i32 b_2)) ((empty (= a_2 a)) (= b_2 b))))
+  (define ticond4 `(((i32 c)) ((i32 a) (i32 b)) (((((empty (i32 a)) (i32 b)) (i32 a_2)) (i32 b_2)) (i32 c)) (((empty (= a_2 a)) (= b_2 b)) (= c (add a_2 b_2)))))
   (define ticond5 `(((i32 c)) () (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c (add a b)))))
 
   (define context1 (term ((func ((,ticond0 -> ,ticond5))) (global ())
@@ -82,7 +82,7 @@
     (derivation `(⊢-module-func ,context1
                                 (() (func (,ticond0 -> ,ticond5)
                                           (local () ((get-local 0) (get-local 1) (i32 add)))))
-                                (() (,ticond0 -> ,ticond4)))
+                                (() (,ticond0 -> ,ticond5)))
                 #f
                 (list deriv3)))
 
