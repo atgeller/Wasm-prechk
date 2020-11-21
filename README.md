@@ -16,5 +16,7 @@
 
 * bitsyntax
 * redex
+* racket v7.7 (https://download.racket-lang.org/racket-v7.7.html)
+* z3 4.5.0 (https://github.com/Z3Prover/z3/releases/tag/z3-4.5.0), compiled and executable placed in bin/
 
 Both dependencies can be installed with `raco pkg install <name>`.
