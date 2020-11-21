@@ -14,7 +14,7 @@
 
 ## Dependencies
 
-* racket v7.7 (https://download.racket-lang.org/racket-v7.7.html)
+* Racket v7.7+ (https://download.racket-lang.org/racket-v7.7.html)
 * z3 4.5.0 (https://github.com/Z3Prover/z3/releases/tag/z3-4.5.0), compiled and
   executable placed in PATH or in a directory named `bin` located in the same
   directory as `Solver.rtk`.
