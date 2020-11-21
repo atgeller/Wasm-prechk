@@ -14,3 +14,9 @@ The code to generate Z3 queries from constraints is in `satisfies.rkt`, and the
 - The syntax and typing rules for the run-time system are defined in [IndexAdministrativeTyping.rkt](IndexAdministrativeTyping.rkt).
 - The Z3 implementation of the constraint solver is defined in [Satisfies.rkt](Satisfies.rkt).
 - The code for generating queries to handle the checking of table calls is in [TableValidation.rkt](TableValidation.rkt).
+
+## Dependencies
+* bitsyntax
+* redex
+
+Both dependencies can be installed with `raco pkg install <name>`.
