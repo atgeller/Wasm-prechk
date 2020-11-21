@@ -4,11 +4,13 @@
 
 (provide solve z3)
 
-; We assume that the solvers is in the bin folder.
+; We assume that the solver can be placed in the bin folder in this directory.
 (define-runtime-path bin (build-path "bin"))
 
-;(define z3 (make-parameter (build-path bin "z3.exe")))
-(define z3 (make-parameter (find-executable-path "z3")))
+(define z3
+  (make-parameter (if (eq? (system-type 'os) 'windows)
+                      (or (find-executable-path "z3.exe") (build-path bin "z3.exe"))
+                      (find-executable-path "z3"))))
 
 ; Invokes Z3 on the given QF_BV formula, represented as a list 
 ; of symbols (see examples.rkt). It returns #f if the formula 
