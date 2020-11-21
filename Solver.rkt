@@ -8,9 +8,11 @@
 (define-runtime-path bin (build-path "bin"))
 
 (define z3
-  (make-parameter (if (eq? (system-type 'os) 'windows)
-                      (or (find-executable-path "z3.exe") (build-path bin "z3.exe"))
-                      (find-executable-path "z3"))))
+  (let ([bin-name
+         (if (eq? (system-type 'os) 'windows)
+             "z3.exe"
+             "z3")])
+    (make-parameter (or (find-executable-path bin-name) (build-path bin bin-name)))))
 
 ; Invokes Z3 on the given QF_BV formula, represented as a list 
 ; of symbols (see examples.rkt). It returns #f if the formula 
