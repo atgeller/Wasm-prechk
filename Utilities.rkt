@@ -77,6 +77,11 @@
   [(equiv-gammas Γ_1 Γ_2) #t (where (#t #t) ((superset Γ_1 Γ_2) (subset Γ_1 Γ_2)))])
 
 (define-metafunction WASMIndexTypes
+  build-phi : (a ...) (t ...) (c ...) -> φ
+  [(build-phi ()) empty]
+  [(build-phi (a_1 ... a_2) (t_1 ... t_2) (c_1 ... c_2)) ((build-phi (a_1 ...) (t_1 ...) (c_1 ...)) (= a_2 (t_2 c_2)))])
+
+(define-metafunction WASMIndexTypes
   domain-x : x -> (a ...)
   [(domain-x (t c)) ()]
   [(domain-x a) (a)]

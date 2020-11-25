@@ -121,46 +121,50 @@
   [(where ((inst (C ...)) _ _) S)
    (where ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) _ (label (ticond_1  ...)) _) (do-get (C ...) i))
    (⊢-admin S ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1  ...)) (return))
-      (e ...) ((() locals_1 φ_1) -> ticond))
+      (e ...) ((() ((t a) ...) Γ_1 φ_1) -> ((ti ...) locals Γ φ)))
+   (where Γ_1 (build-gamma ((t a) ...)))
+   (where φ_1 (build-phi (a ...) (t ...) (c ...)))
    --------------------------------------------------------------------------------------------------------------------------------------------
-   (⊢-top S i ((t const c) ...) (e ...) ticond)])
+   (⊢-top S i ((t const c) ...) (e ...) ((ti ...) locals Γ φ))])
 
 (define-judgment-form WASMPrechkWithAdmin
-  #:contract (⊢-return S i (v ...) (e ...) (locals φ) ticond)
+  #:contract (⊢-return S i (v ...) (e ...) ticond)
 
   [(where ((inst (C ...)) _ _) S)
    (where ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) _ (label (ticond_1  ...)) _) (do-get (C ...) i))
    (⊢-admin S ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1  ...)) (return ticond))
-      (e ...) ((() locals_1 φ_1) -> ticond))
+      (e ...) ((() ((t a) ...) Γ_1 φ_1) -> ((ti ...) locals Γ φ)))
+   (where Γ_1 (build-gamma ((t a) ...)))
+   (where φ_1 (build-phi (a ...) (t ...) (c ...)))
    --------------------------------------------------------------------------------------------------------------------------------------------------
-   (⊢-return S i ((t const c) ...) (e ...) (locals_1 φ_1) ticond)])
+   (⊢-return S i ((t const c) ...) (e ...) ((ti ...) locals Γ φ))])
 
-(define-judgment-form WASMPrechkWithAdmin
+(define-judgment-form WASMIndexTypes
   #:contract (⊢-admin S C (e ...) tfi)
 
   [(side-condition (satisfies Γ φ (empty (not (= a_2 (i32 0))))))
    (where #f (in a_3 Γ)) ;; a_3 fresh
    ------------------------------------------------------- "Div-Prechk"
    (⊢-admin S C ((t div/unsafe)) ((((t a_1) (t a_2)) locals Γ φ)
-                            -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 (div a_1 a_2))))))]
+                                  -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 (div a_1 a_2))))))]
 
   [(where (binop_!_1 binop_!_1) (binop div/unsafe))
    (where #f (in a_3 Γ)) ;; a_3 fresh
    ------------------------------------------------ "Binop"
    (⊢-admin S C ((t binop)) ((((t a_1) (t a_2)) locals Γ φ)
-                       -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 (binop a_1 a_2))))))]
+                             -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 (binop a_1 a_2))))))]
 
   [(where #f (in a_2 Γ)) ;; a_2 fresh
    --------
    "Testop"
    (⊢-admin S C ((t testop)) ((((t a)) locals Γ φ)
-                        -> (((t a_2)) locals (Γ (t a_2)) (φ (= a_2 (testop a))))))]
+                              -> (((t a_2)) locals (Γ (t a_2)) (φ (= a_2 (testop a))))))]
 
   [(where #f (in a_3 Γ)) ;; a_3 fresh
    -------
    "Relop"
    (⊢-admin S C ((t relop)) ((((t a_1) (t a_2)) locals Γ φ)
-                       -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 (relop a_1 a_2))))))]
+                             -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 (relop a_1 a_2))))))]
 
   [---
    "Unreachable"
@@ -178,71 +182,76 @@
    ---
    "Select"
    (⊢-admin S C ((select)) ((((t a_1) (t a_2) (i32 a)) locals Γ φ)
-                    -> (((t a_3)) locals (Γ (t a))
-                                  (φ (if (= a (i32 0))
-                                         (= a_3 a_2)
-                                         (= a_3 a_1))))))]
+                            -> (((t a_3)) locals (Γ (t a))
+                                          (φ (if (= a (i32 0))
+                                                 (= a_3 a_2)
+                                                 (= a_3 a_1))))))]
   
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
-   (where Γ_4 (union Γ_1 Γ_3))
-   (where φ_4 (union φ_1 φ_3))
-   (where C_2 (in-label C_1 ((ti_1 ...) locals_1 Γ_3 φ_3)))
-   (⊢-admin S C_2 (e ...) tfi_2)
-   (<: tfi_2 (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   --------------------------------------------------------------------------- "Block"
+  [(where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (⊢-admin S C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
+   (where Γ_5 (union Γ_1 Γ_3))
+   (where φ_5 (union φ_1 φ_3))
+   --------------------------- "Block"
    (⊢-admin S C_1 ((block (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))]
+            (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
-   (where Γ_4 (union Γ_1 Γ_3))
-   (where φ_4 (union φ_1 φ_3))
-   (where C_2 (in-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
-   (⊢-admin S C_2 (e ...) tfi_2)
-   (<: tfi_2 (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   --------------------------------------------------------------------------- "Loop"
+  [(where C_2 (in-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
+   (⊢-admin S C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
+   (where Γ_5 (union Γ_1 Γ_3))
+   (where φ_5 (union φ_1 φ_3))
+   --------------------------- "Loop"
    (⊢-admin S C_1 ((loop (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))]
+            (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
-   (where Γ_4 (union Γ_1 Γ_3))
-   (where φ_4 (union φ_1 φ_3))
-   (where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_2 φ_2)))
-   (⊢-admin S C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_5 (φ_5 (not (= a (i32 0)))))
-                     -> ((ti_2 ...) locals_2 Γ_6 φ_6)))
-   (⊢-admin S C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_5 (φ_5 (= a (i32 0))))
-                     -> ((ti_2 ...) locals_2 Γ_6 φ_6)))
-   (<: (((ti_1 ...) locals_1 Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_6 φ_6))
-       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_2 φ_2)))
+  [(where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (⊢-admin S C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
+                             -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (⊢-admin S C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
+                             -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
+   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
+   (where Γ_5 (union Γ_1 Γ_3))
+   (where φ_5 (union φ_1 φ_3))
    --------------------------------------------------------------------- "If"
    (⊢-admin S C_1 ((if (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e_1 ...) (e_2 ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))]
+            (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
   [(label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
    -------------------------------------------------------- "Br"
    (⊢-admin S (_ _ _ _ _ (label (ticond  ...)) _)
-      ((br j))
-      (((ti_1 ... ti ...) locals Γ_1 φ_1)
-       -> ((ti_2 ...) locals Γ_2 φ_2)))]
+            ((br j))
+            (((ti_1 ... ti ...) locals Γ_1 φ_1)
+             -> ((ti_2 ...) locals Γ_2 φ_2)))]
 
   [(label-types (ticond ...) (j) ((ti ...) locals Γ_1 (φ_1 (not (= a (i32 0))))))
    ------------------------------------------------------------------------------ "Br-If"
    (⊢-admin S (_ _ _ _ _ (label (ticond  ...)) _)
-      ((br-if j))
-      (((ti ... (i32 a)) locals Γ_1 φ_1)
-       -> ((ti ...) locals Γ_1 (φ_1 (= a (i32 0))))))]
+            ((br-if j))
+            (((ti ... (i32 a)) locals Γ_1 φ_1)
+             -> ((ti ...) locals Γ_1 (φ_1 (= a (i32 0))))))]
 
   [(label-types (ticond ...) (j ...) ((ti_3 ...) locals Γ_1 φ_1))
    -------------------------------------------------------------- "Br-Table"
    (⊢-admin S ((_ _ _ _ (label (ticond ...)) _ _))
-      ((br-table (j ...)))
-      (((ti_1 ... ti_3 ... (i32 a)) locals Γ_1 φ_1)
-       -> ((ti_2 ...) locals Γ_1 φ_2)))]
+            ((br-table (j ...)))
+            (((ti_1 ... ti_3 ... (i32 a)) locals Γ_1 φ_1)
+             -> ((ti_2 ...) locals Γ_1 φ_2)))]
 
   [(side-condition (satisfies Γ_1 φ_1 φ)) ;; Strengthen precondition
    -------------------------------------- "Return"
    (⊢-admin S (_ _ _ _ _ _ (return ((ti ...) _ _ φ)))
-      ((return))
-      (((ti_1 ... ti ...) locals Γ_1 φ_1) -> ticond))]
+            ((return))
+            (((ti_1 ... ti ...) locals Γ_1 φ_1) -> ticond))]
 
   ;; Only works if Function is internal
   ;; Justin - Actually, I think this works fine, functions imported from other contexts have to
@@ -255,8 +264,8 @@
    (where Γ_4 (union Γ_1 Γ_3))
    --------------------------- "Call"
    (⊢-admin S ((func (tfi ...)) _ _ _ _ _ _) ((call j))
-      (((ti_1 ...) locals Γ_1 φ_1)
-       -> ((ti_2 ...) locals Γ_4 φ_4)))]
+            (((ti_1 ...) locals Γ_1 φ_1)
+             -> ((ti_2 ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
@@ -264,9 +273,9 @@
    (where Γ_4 (union Γ_1 Γ_3))
    --------------------------- "Call-Indirect"
    (⊢-admin S (_ _ (table j _) _ _ _ _)
-      ((call-indirect (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
-      (((ti_1 ... (i32 a)) locals_1 Γ_1 φ_1)
-       -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
+            ((call-indirect (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
+            (((ti_1 ... (i32 a)) locals_1 Γ_1 φ_1)
+             -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
   
   [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
@@ -275,49 +284,51 @@
                                      a (tfi ...) Γ_1 φ_1))
    ------------------------------------------------------- "Call-Indirect-Prechk"
    (⊢-admin S (_ _ (table (j (tfi ...))) _ _ _ _)
-      ((call-indirect/unsafe (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
-      (((ti_1 ... (i32 a)) locals_1 Γ_1 φ_1)
-       -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
+            ((call-indirect/unsafe (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
+            (((ti_1 ... (i32 a)) locals_1 Γ_1 φ_1)
+             -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
 
   [(where t_2 (do-get (t ...) j))
    (where (t_2 a) (do-get locals j))
+   (where #f (in a_2 Γ)) ;; a_2 fresh
    --------------------------------- "Get-Local"
    (⊢-admin S (_ _ _ _ (local (t ...)) _ _)
-      ((get-local j))
-      ((() locals Γ φ)
-       -> (((t_2 a)) locals Γ φ)))]
+            ((get-local j))
+            ((() locals Γ φ)
+             -> (((t_2 a_2)) locals (Γ (t_2 a_2)) (φ (= a_2 a)))))]
 
   [(where t_2 (do-get (t ...) j))
    (where locals_2 (do-set locals_1 j (t_2 a)))
    -------------------------------------------- "Set-Local"
    (⊢-admin S (_ _ _ _ (local (t ...)) _ _)
-      ((set-local j))
-      ((((t_2 a)) locals_1 Γ φ)
-       -> (() locals_2 Γ φ)))]
+            ((set-local j))
+            ((((t_2 a)) locals_1 Γ φ)
+             -> (() locals_2 Γ φ)))]
 
   [(where t_2 (do-get (t ...) j))
    (where locals_2 (do-set locals_1 j (t_2 a)))
+   (where #f (in a_2 Γ)) ;; a_2 fresh
    ---------------------------------- "Tee-Local"
    (⊢-admin S (_ _ _ _ (local (t ...)) _ _)
-      ((tee-local j))
-      ((((t_2 a)) locals_1 Γ φ)
-       -> (((t_2 a)) locals_2 Γ φ)))]
+            ((tee-local j))
+            ((((t_2 a)) locals_1 Γ φ)
+             -> (((t_2 a_2)) locals_2 (Γ (t_2 a_2)) (φ (= a_2 a)))))]
 
   [(where tg_2 (do-get (tg ...) j))
    (where t_2 (erase-mut tg_2))
    (where #f (in a Γ)) ;; a_2 fresh
    ------------------- "Get-Global"
    (⊢-admin S (_ (global (tg ...)) _ _ _ _ _ _)
-      ((get-global j))
-      ((() locals Γ φ)
-       -> (((t_2 a)) locals (Γ (t_2 a)) φ)))]
+            ((get-global j))
+            ((() locals Γ φ)
+             -> (((t_2 a)) locals (Γ (t_2 a)) φ)))]
 
   [(where (#t t_2) (do-get (tg ...) j))
    ------------------------------------ "Set-Global"
    (⊢-admin S (_ (global (tg ...)) _ _ _ _ _ _)
-      ((set-global j))
-      ((((t_2 a)) locals Γ φ)
-       -> (() locals Γ φ)))]
+            ((set-global j))
+            ((((t_2 a)) locals Γ φ)
+             -> (() locals Γ φ)))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(< (expt 2 (term j_1))
@@ -328,7 +339,7 @@
    (where #f (in a_2 Γ)) ;; a_2 fresh
    ----------------------------------------------------------------------- "Load-Prechk-1"
    (⊢-admin S C ((t load/unsafe j_1 j_2)) ((((i32 a)) locals Γ φ_1)
-                                     -> (((t a_2)) locals (Γ (t a_2)) φ_1)))]
+                                           -> (((t a_2)) locals (Γ (t a_2)) φ_1)))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(< (expt 2 (term j_1))
@@ -339,7 +350,7 @@
    (where #f (in a_2 Γ)) ;; a_2 fresh
    ----------------------------------------------------------------------- "Load-Prechk-2"
    (⊢-admin S C ((t load/unsafe (tp sz) j_1 j_2)) ((((i32 a)) locals Γ φ_1)
-                                             -> (((t a_2)) locals (Γ (t a_2)) φ_1)))]
+                                                   -> (((t a_2)) locals (Γ (t a_2)) φ_1)))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(< (expt 2 (term j_1))
@@ -349,7 +360,7 @@
                                           (= (i32 1) (ge (add a (i32 j_2)) (i32 0)))))))
    ------------------------------------------------------------------------- "Store-Prechk-1"
    (⊢-admin S C ((t store/unsafe j_1 j_2)) ((((i32 a) (t a_1)) locals Γ φ_1)
-                                      -> (() locals Γ φ_1)))]
+                                            -> (() locals Γ φ_1)))]
 
   ;; TODO: no floats yet so not included in side-condition
   [(where (_ _ _ (memory j) _ _ _) C)
@@ -360,7 +371,7 @@
                                           (= (i32 1) (ge (add a (i32 j_2)) (i32 0)))))))
    ------------------------------------------------------------------------------ "Store-Prechk-2"
    (⊢-admin S C ((t store/unsafe (tp) j_1 j_2)) ((((i32 a) (t a_1)) locals Γ φ_1)
-                                           -> (() locals Γ φ_1)))]
+                                                 -> (() locals Γ φ_1)))]
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -374,10 +385,10 @@
 
   ;; Stack polymorphism
   [(⊢-admin S C (e ...) (((ti_1 ...) locals Γ_1 φ_1)
-                   -> ((ti_2 ...) locals Γ_2 φ_2)))
+                         -> ((ti_2 ...) locals Γ_2 φ_2)))
    ------------------------------------------------------ "Stack-Poly"
    (⊢-admin S C (e ...) (((ti ... ti_1 ...) locals Γ_1 φ_1)
-                   -> ((ti ... ti_2 ...) locals Γ_2 φ_2)))]
+                         -> ((ti ... ti_2 ...) locals Γ_2 φ_2)))]
 
   ;; Admin instructions
   [-------------------------- "Trap"
@@ -402,13 +413,8 @@
    (⊢-admin S C ((call cl)) (((ti_1 ...) _ Γ_1 φ_1) -> ((ti_2 ...) _ Γ_4 φ_4)))]
 
   [(where n ,(length (term (ti ...))))
-   (⊢-return S i (v ...) (e ...) (locals_1 Γ_1 φ_1) ((ti ...) _ Γ_2 φ_2))
+   (⊢-return S i (v ...) (e ...) ((ti ...) _ Γ_2 φ_2))
+   (where Γ_3 (union Γ_1 Γ_2))
    (where φ_3 (union φ_1 φ_2))
    ---------------------------------------------------------------------------------------- "Local"
-   (⊢-admin S C ((local n (i (v ...)) (e ...))) ((() locals φ_1) -> ((ti ...) locals φ_3)))])
-
-(define-metafunction WASMPrechkWithAdmin
-  add-values : φ_1 (t ...) (a ...) (c ...) -> φ_2
-  [(add-values φ_1 () () ()) φ_1]
-  [(add-values φ_1 (t t_1 ...) (a a_1 ...) (c c_1 ...))
-   (((add-values φ_1 (t_1 ...) (a_1 ...) (c_1 ...)) (t a)) (eq a c))])
+   (⊢-admin S C ((local n (i (v ...)) (e ...))) ((() locals Γ_1 φ_1) -> ((ti ...) locals Γ_3 φ_3)))])
