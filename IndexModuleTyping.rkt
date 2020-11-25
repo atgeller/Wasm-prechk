@@ -34,12 +34,12 @@
    (side-condition (satisifies Γ_3 φ_3 φ_4))
    ---------------------------------------------------
    (⊢-module-func ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)
-                  ((ex ...) (func ((((t_1 a_1) ...) _ Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_4 φ_4)) (local (t ...) (e ...))))
+                  (func (ex ...) ((((t_1 a_1) ...) _ Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_4 φ_4)) (local (t ...) (e ...)))
                   ((ex ...) ((((t_1 a_1) ...) _ Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_4 φ_4))))]
 
   ;; Imported function is easy
   [-----------------------------------------------------------
-   (⊢-module-func C ((ex ...) (func tfi im)) ((ex ...) tfi))])
+   (⊢-module-func C (func (ex ...) tfi im) ((ex ...) tfi))])
 
 ;; Helper judgement to ensure that function declarations/definitions are valid
 ;; Ensures each function in the list matches its respective type under a the module type consisting only of the preceeding global definitions in the list
@@ -63,13 +63,13 @@
    (⊢ C (e ...) ((() () empty empty) -> ((t a) () Γ_2 φ_2)))
    ----------------------------------------------
    (⊢-module-global C
-                    ((ex ...) (global (mut? t) (e ...)))
+                    (global (ex ...) (mut? t) (e ...))
                     ((ex ...) (mut? t)))]
 
   [;; Can't import a mutable global
    -------------------
    (⊢-module-global C
-                    ((ex ...) (global (#f t) im))
+                    (global (ex ...) (#f t) im)
                     ((ex ...) (#f t)))])
 
 ;; Helper judgement to ensure that global variable definitions are valid
@@ -110,13 +110,13 @@
                             (term (j ...))))
    -----------------------------------------
    (⊢-module-table C
-                   ((ex ...) (table i) (j ...))
+                   (table (ex ...) i (j ...))
                    ((ex ...) (i (tfi_2 ...))))]
 
   [(where i ,(length (term (tfi ...))))
    -----------------------------------
    (⊢-module-table C
-                   ((ex ...) (table i) im (tfi ...))
+                   (table (ex ...) i im (tfi ...))
                    ((ex ...) (i (tfi ...))))])
 
 ;; Returns all exports and the memory size
@@ -124,10 +124,10 @@
   #:contract (⊢-module-mem C mem ((ex ...) i))
 
   [----------------------------------------------------
-   (⊢-module-mem C ((ex ...) (memory i)) ((ex ...) i))]
+   (⊢-module-mem C (memory (ex ...) i) ((ex ...) i))]
 
   [----------------------------------------------------
-   (⊢-module-mem C ((ex ...) (memory i im)) ((ex ...) i))])
+   (⊢-module-mem C (memory (ex ...) i im) ((ex ...) i))])
 
 ;; Validates all definitions in the module against the types declared in the module
 (define-judgment-form WASMIndexTypes

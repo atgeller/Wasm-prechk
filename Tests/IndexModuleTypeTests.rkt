@@ -80,8 +80,8 @@
 
   (define deriv4
     (derivation `(⊢-module-func ,context1
-                                (() (func (,ticond0 -> ,ticond5)
-                                          (local () ((get-local 0) (get-local 1) (i32 add)))))
+                                (func () (,ticond0 -> ,ticond5)
+                                      (local () ((get-local 0) (get-local 1) (i32 add))))
                                 (() (,ticond0 -> ,ticond5)))
                 #f
                 (list deriv3)))
