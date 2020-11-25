@@ -1,7 +1,8 @@
 #lang racket
 
 (require redex
-         "IndexTypes.rkt")
+         "IndexTypes.rkt"
+         "IndexModuleTyping.rkt")
 
 ;; module -> derivation of ⊢-module or #f
 (define (typecheck module)
@@ -57,18 +58,18 @@
     [`(,exs (global (#f ,t) im)) (derivation `(⊢-module-global ,C ,glob (,exs (#f ,t))) #f (list))]))
 
 ;; C tab -> derivation of ⊢-module-table or #f
+;; TODO: This typecheck function confusingly needs to produce a derivation with a different context,
+;;       it needs to add the type of the table to the context since the type isn't known until checked.
 (define (typecheck-tab C tab)
   (match tab
-    [`(,exs (table ,i ,js))
-     (if (equal? i (length js))
-         (redex-let WASMIndexTypes ([((func (tfi ...)) _ _ _ _ _ _) C])
-            (if (andmap (λ (j) (< j (length (term (tfi ...))))) js)
-                (derivation `(⊢-module-table ,C ,tab (,exs (,i ,(map (curry list-ref (term (tfi ...))) js))))
-                            #f
-                            (list))
-                #f))
-         #f)]
-    [`(,exs (table ,i ,tfis im))
+    [`(,exs (table ,i) ,js)
+     (redex-let WASMIndexTypes ([((func (tfi ...)) _ _ _ _ _ _) C])
+       (if (judgment-holds (valid-indices (tfi ...) ,js ,i))
+           (derivation `(⊢-module-table ,C ,tab (,exs (,i ,(map (curry list-ref (term (tfi ...))) js))))
+                       #f
+                       (list (first (build-derivations (valid-indices (tfi ...) ,js ,i)))))
+           #f))]
+    [`(,exs (table ,i) ,_ ,tfis)
      (if (equal? i (length tfis))
          (derivation `(⊢-module-table ,C ,tab (,exs (,i ,tfis)))
                      #f
