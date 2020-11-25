@@ -395,22 +395,18 @@
    (⊢-admin S C ((trap)) tfi)]
 
   [(where n ,(length (term (ti_2 ...))))
-   (⊢-admin S C (e_0 ...) (((ti_3 ...) locals_3 Γ_3 φ_3) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (⊢-admin S C (e_0 ...) (((ti_3 ...) locals_3 Γ_3 φ_3) -> ((ti_2 ...) locals_2 Γ_2 φ_2)))
    (where C_2 (in-label C_1 ((ti_3 ...) locals_3 Γ_3 φ_3)))
-   (⊢-admin S C_2 (e ...) ((() locals_1 Γ_2 φ_2) -> ((ti_3 ...) locals_3 Γ_3 φ_3)))
-   (side-condition (satisfies Γ_1 φ_1 φ_2))
-   (side-condition (subset Γ_1 Γ_2))
-   (where Γ_5 (union Γ_1 Γ_4))
-   (where φ_5 (union φ_1 φ_4))
+   (⊢-admin S C_2 (e ...) ((() locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_2 φ_2)))
    --------------------------------------------------------------------- "Label"
-   (⊢-admin S C_1 ((label n (e_0 ...) (e ...))) ((() locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
+   (⊢-admin S C_1 ((label n (e_0 ...) (e ...))) ((() locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_2 φ_2)))]
 
   [(⊢-cl S cl (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3)))
    (side-condition (satisfies Γ_1 φ_1 φ_2))
    (where Γ_4 (union Γ_1 Γ_3))
    (where φ_4 (union φ_1 φ_3))
    ---------------------------------------- "Call-Cl"
-   (⊢-admin S C ((call cl)) (((ti_1 ...) _ Γ_1 φ_1) -> ((ti_2 ...) _ Γ_4 φ_4)))]
+   (⊢-admin S C ((call cl)) (((ti_1 ...) locals Γ_1 φ_1) -> ((ti_2 ...) locals Γ_4 φ_4)))]
 
   [(where n ,(length (term (ti ...))))
    (⊢-return S i (v ...) (e ...) ((ti ...) _ Γ_2 φ_2))
