@@ -43,7 +43,7 @@
 ;; C glob -> derivation of ⊢-module-global or #f
 (define (typecheck-global C glob)
   (match glob
-    [`(,exs (global (,mut? ,t) ,es))
+    [`(global ,exs global (,mut? ,t) ,es)
      (if (and mut? (not (empty? exs)))
          #f
          (let ([ins-deriv? (typecheck-ins C es)])
@@ -55,21 +55,21 @@
                               (list ins-deriv?))
                   #f)]
              [#f #f])))]
-    [`(,exs (global (#f ,t) im)) (derivation `(⊢-module-global ,C ,glob (,exs (#f ,t))) #f (list))]))
+    [`(global ,exs (#f ,t) im) (derivation `(⊢-module-global ,C ,glob (,exs (#f ,t))) #f (list))]))
 
 ;; C tab -> derivation of ⊢-module-table or #f
 ;; TODO: This typecheck function confusingly needs to produce a derivation with a different context,
 ;;       it needs to add the type of the table to the context since the type isn't known until checked.
 (define (typecheck-tab C tab)
   (match tab
-    [`(,exs (table ,i) ,js)
+    [`(table ,exs ,i ,js)
      (redex-let WASMIndexTypes ([((func (tfi ...)) _ _ _ _ _ _) C])
        (if (judgment-holds (valid-indices (tfi ...) ,js ,i))
            (derivation `(⊢-module-table ,C ,tab (,exs (,i ,(map (curry list-ref (term (tfi ...))) js))))
                        #f
                        (list (first (build-derivations (valid-indices (tfi ...) ,js ,i)))))
            #f))]
-    [`(,exs (table ,i) ,_ ,tfis)
+    [`(table ,exs ,i ,_ ,tfis)
      (if (equal? i (length tfis))
          (derivation `(⊢-module-table ,C ,tab (,exs (,i ,tfis)))
                      #f
@@ -78,7 +78,11 @@
 
 ;; C mem -> derivation of ⊢-module-mem or #f
 (define (typecheck-mem C mem)
-  #f)
+  (match mem
+    [`(memory ,exs ,i)
+     #f]
+    [`(memory ,exs ,i ,im)
+     #f]))
 
 ;; C func -> derivation of ⊢-module-func or #f
 (define (typecheck-func C func)
