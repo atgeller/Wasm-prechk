@@ -53,7 +53,7 @@
 
   [;; Can't have exports if global is mutable
    (side-condition ,(or (not (term mut?)) (null? (term (ex ...)))))
-   (⊢ C (e ...) ((() () φ_1) -> ((t a) () φ_2)))
+   (⊢ C (e ...) ((() () empty empty) -> ((t a) () Γ_2 φ_2)))
    ----------------------------------------------
    (⊢-module-global C
                     ((ex ...) (global (mut? t) (e ...)))
