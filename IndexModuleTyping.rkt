@@ -5,7 +5,14 @@
          "SubTyping.rkt"
          "IndexTypingRules.rkt")
 
-(provide ⊢-module-func valid-indices)
+(provide ⊢-module-func
+         ⊢-module-func-list
+         ⊢-module-global
+         ⊢-module-global-list
+         ⊢-module-table
+         ⊢-module-mem
+         ⊢-module
+         valid-indices)
 
 (define-metafunction WASMIndexTypes
   make-locals : (ti ...) -> (t ...)
@@ -103,13 +110,13 @@
                             (term (j ...))))
    -----------------------------------------
    (⊢-module-table C
-                   ((ex ...) (table i (j ...)))
+                   ((ex ...) (table i) (j ...))
                    ((ex ...) (i (tfi_2 ...))))]
 
-  [(side-condition ,(equal? (term i) (length (term (tfi ...)))))
+  [(where i ,(length (term (tfi ...))))
    -----------------------------------
    (⊢-module-table C
-                   ((ex ...) (table i (tfi ...)) im)
+                   ((ex ...) (table i) im (tfi ...))
                    ((ex ...) (i (tfi ...))))])
 
 ;; Returns all exports and the memory size
@@ -137,7 +144,7 @@
   [(where ((func (tfi ...)) (global (tg ...)) (table (i (tfi_2 ...))) (memory) (local ()) (label ()) (return)) C)
    (⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
-   (⊢-module-mem C tab ((ex_3_ ...) (i (tfi_2 ...))))
+   (⊢-module-table C tab ((ex_3_ ...) (i (tfi_2 ...))))
    --------------------------------------------------
    (⊢-module (module (f ...) (glob ...) (tab) ()) C)]
 
