@@ -58,7 +58,22 @@
 
 ;; C tab -> derivation of ⊢-module-table or #f
 (define (typecheck-tab C tab)
-  #f)
+  (match tab
+    [`(,exs (table ,i ,js))
+     (if (equal? i (length js))
+         (redex-let WASMIndexTypes ([((func (tfi ...)) _ _ _ _ _ _) C])
+            (if (andmap (λ (j) (< j (length (term (tfi ...))))) js)
+                (derivation `(⊢-module-table ,C ,tab (,exs (,i ,(map (curry list-ref (term (tfi ...))) js))))
+                            #f
+                            (list))
+                #f))
+         #f)]
+    [`(,exs (table ,i ,tfis im))
+     (if (equal? i (length tfis))
+         (derivation `(⊢-module-table ,C ,tab (,exs (,i ,tfis)))
+                     #f
+                     (list))
+         #f)]))
 
 ;; C mem -> derivation of ⊢-module-mem or #f
 (define (typecheck-mem C mem)
