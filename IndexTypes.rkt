@@ -36,7 +36,7 @@
      ((ex ...) (func tfi im)))
   (glob ::= ((ex ...) (global tg (e ...)))
         ((ex ...) (global tg im)))
-  (tab ::= ((ex ...) (table j (tfi ...)))
+  (tab ::= ((ex ...) (table j (j ...)))
        ((ex ...) (table j (tfi ...) im)))
   (mem ::= ((ex ...) (memory i))
        ((ex ...) (memory i im)))

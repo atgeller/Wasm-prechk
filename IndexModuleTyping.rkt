@@ -106,9 +106,10 @@
                    ((ex ...) (table i (j ...)))
                    ((ex ...) (i (tfi_2 ...))))]
 
-  [-----------------------------------
+  [(side-condition ,(equal? (term i) (length (term (tfi ...)))))
+   -----------------------------------
    (⊢-module-table C
-                   ((ex ...) (table (i (tfi ...)) im))
+                   ((ex ...) (table i (tfi ...)) im)
                    ((ex ...) (i (tfi ...))))])
 
 ;; Returns all exports and the memory size
