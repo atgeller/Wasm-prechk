@@ -7,14 +7,8 @@
 ;; module -> derivation of ⊢-module or #f
 (define (typecheck module)
   (match module
-    [`(module ,fs ,globs (,tab) (,mem))
-     '()]
-    [`(module ,fs ,globs (,tab) ())
-     '()]
-    [`(module ,fs ,globs () (,mem))
-     '()]
-    [`(module ,fs ,globs () ())
-     '()]))
+    [`(module ,fs ,globs ,tab? ,mem?)
+     #f]))
 
 ;; (listof glob) -> derivation of ⊢-module-global-list or #f
 (define (typecheck-globals globs)
@@ -77,12 +71,13 @@
          #f)]))
 
 ;; C mem -> derivation of ⊢-module-mem or #f
+;; TODO: This function also needs to change the context passed to them, maybe the structure needs to be changed
 (define (typecheck-mem C mem)
   (match mem
     [`(memory ,exs ,i)
-     #f]
+     (derivation `(⊢-module-mem ,C ,mem (,exs ,i)) #f (list))]
     [`(memory ,exs ,i ,im)
-     #f]))
+     (derivation `(⊢-module-mem ,C ,mem (,exs ,i)) #f (list))]))
 
 ;; C func -> derivation of ⊢-module-func or #f
 (define (typecheck-func C func)
