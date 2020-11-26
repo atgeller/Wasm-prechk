@@ -26,18 +26,21 @@
 
   ;; Should (t _) ... be instiantiated in phi_1?
   [(⊢ ((func (tfi_1 ...))
-       (global (tg ...)) (table (j_1 (tfi ...)) ...)
-       (memory j_2 ...) (local (t_1 ... t ...))
-       (label (ticond_2)) (return ticond_2))
+       (global (tg ...))
+       (table (j_1 (tfi ...)) ...)
+       (memory j_2 ...)
+       (local (t_1 ... t ...))
+       (label ((((t_2 a_2) ...) locals_2 Γ_3 φ_3)))
+       (return (((t_2 a_2) ...) locals_2 Γ_3 φ_3)))
       (e ...)
-      ((() ((t_1 a_1) ... (t a) ...) Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_3 φ_3)))
+      ((() ((t_1 a_1) ... (t a) ...) Γ_1 φ_1) -> (((t_2 a_2) ...) locals_2 Γ_3 φ_3)))
    (side-condition (equiv-gamma Γ_1 (build-gamma ((t_1 a_1) ... (t a) ...)))) ;; Γ_2 = ((t_1 a_1) ... (t a) ...)
    (side-condition (subset (build-gamma (domain-φ φ_1)) Γ_1)) ;; domain(φ_1) subset of Γ_1
    (side-condition (satisifies Γ_3 φ_3 φ_4))
    ---------------------------------------------------
    (⊢-module-func ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)
-                  (func (ex ...) ((((t_1 a_1) ...) _ Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_4 φ_4)) (local (t ...) (e ...)))
-                  ((ex ...) ((((t_1 a_1) ...) _ Γ_1 φ_1) -> (((t_2 a_2) ...) _ Γ_4 φ_4))))]
+                  (func (ex ...) ((((t_1 a_1) ...) () Γ_1 φ_1) -> (((t_2 a_2) ...) () Γ_4 φ_4)) (local (t ...) (e ...)))
+                  ((ex ...) ((((t_1 a_1) ...) () Γ_1 φ_1) -> (((t_2 a_2) ...) () Γ_4 φ_4))))]
 
   ;; Imported function is easy
   [-----------------------------------------------------------
@@ -133,36 +136,35 @@
 
 ;; Validates all definitions in the module against the types declared in the module
 (define-judgment-form WASMIndexTypes
-  #:contract (⊢-module m C)
+  #:contract (⊢-module m)
 
-  [(where ((func (tfi ...)) (global (tg ...)) (table (i (tfi_2 ...))) (memory j) (local ()) (label ()) (return)) C)
-   (⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
+  [(⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
    (⊢-module-table C tab ((ex_3_ ...) (i (tfi_2 ...))))
    (⊢-module-mem C mem ((ex_4_ ...) j))
+   (where C ((func (tfi ...)) (global (tg ...)) (table (i (tfi_2 ...))) (memory j) (local ()) (label ()) (return)))
    ------------------------------------
-   (⊢-module (module (f ...) (glob ...) (tab) (mem)) C)]
+   (⊢-module (module (f ...) (glob ...) (tab) (mem)))]
 
-  [(where ((func (tfi ...)) (global (tg ...)) (table (i (tfi_2 ...))) (memory) (local ()) (label ()) (return)) C)
-   (⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
+  [(⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
    (⊢-module-table C tab ((ex_3_ ...) (i (tfi_2 ...))))
+   (where C ((func (tfi ...)) (global (tg ...)) (table (i (tfi_2 ...))) (memory) (local ()) (label ()) (return)))
    --------------------------------------------------
-   (⊢-module (module (f ...) (glob ...) (tab) ()) C)]
+   (⊢-module (module (f ...) (glob ...) (tab) ()))]
 
-  [(where ((func (tfi ...)) (global (tg ...)) (table) (memory j) (local ()) (label ()) (return)) C)
-   (⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
+  [(⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
    (⊢-module-mem C mem ((ex_4_ ...) j))
+   (where C ((func (tfi ...)) (global (tg ...)) (table) (memory j) (local ()) (label ()) (return)))
    ------------------------------------
-   (⊢-module (module (f ...) (glob ...) () (mem)) C)]
+   (⊢-module (module (f ...) (glob ...) () (mem)))]
 
   [(⊢-module-func-list C (f ...) (((ex_1_ ...) tfi) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
    (where C ((func (tfi ...)) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)))
    ---------------------------------------------------------------------------------------------
-   (⊢-module (module (f ...) (glob ...) () ()) C)]
-  )
+   (⊢-module (module (f ...) (glob ...) () ()))])
 
 
 ;; Helper metafunction to extract a function type declaration from the function definition
