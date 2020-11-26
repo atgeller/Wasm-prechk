@@ -4,6 +4,7 @@
          "IndexTypes.rkt"
          "SubTyping.rkt"
          "IndexTypingRules.rkt"
+         "Utilities.rkt"
          "WASM-Redex/Utilities.rkt")
 
 (provide ⊢-module-func

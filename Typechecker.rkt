@@ -50,10 +50,11 @@
                                                  (local ())
                                                  (label ())
                                                  (return))
-                                               glob)])
+                                               glob)]
+                [rest-types (map list exs_1 tg_1)])
             (match glob-deriv?
               [(derivation `(⊢-module-global ,_ ,_ (,exs ,tg)) _ _)
-               (derivation `(⊢-module-global-list ,globs ((,exs_1 ,tg_1) ... (,exs ,tg)))
+               (derivation `(⊢-module-global-list ,globs (,@rest-types ... (,exs ,tg)))
                            #f
                            (list rest-deriv? glob-deriv?))]
               [#f #f]))]
@@ -102,15 +103,15 @@
 ;; C (listof func) -> derivation of ⊢-module-func-list or #f
 (define (typecheck-funcs C funcs)
   (match funcs
-    [`() (derivation `(⊢-module-func-list () () #f (list)))]
+    [`() (derivation `(⊢-module-func-list ,C () ()) #f (list))]
     [`(,func ,rest-funcs ...)
      (let ([func-deriv? (typecheck-func C func)]
            [rest-deriv? (typecheck-funcs C rest-funcs)])
        (match func-deriv?
          [(derivation `(⊢-module-func ,_ ,_ (,exs ,tfi)) _ _)
           (match rest-deriv?
-            [(derivation `(⊢-module-func-list ,_ ,_ ((,exs_1 ,tfi_1) ...)) _ _)
-             (derivation `(⊢-module-func-list ,C ,funcs ((,exs ,tfi) (,exs_1 ,tfi_1) ...))
+            [(derivation `(⊢-module-func-list ,_ ,_ (,rest-types ...)) _ _)
+             (derivation `(⊢-module-func-list ,C ,funcs ((,exs ,tfi) ,@rest-types))
                          #f
                          (list func-deriv? rest-deriv?))]
             [#f #f])]
@@ -122,8 +123,43 @@
     [`(func ,exs ,tfi (local ,ts ,es))
      #f]
     [`(func ,exs ,tfi (import ,_ ,_))
-     (derivation `(⊢-module-func ,C ,func (,exs ,tfi)))]))
+     (derivation `(⊢-module-func ,C ,func (,exs ,tfi)) #f (list))]))
 
 ;; C (listof e) -> derivation of ⊢ or #f
 (define (typecheck-ins C es)
   #f)
+
+(module+ test
+  (require rackunit)
+  
+  (test-judgment-holds
+   ⊢-module
+   (typecheck
+    (term (module () () () ()))))
+
+  (test-judgment-holds
+   ⊢-module
+   (typecheck
+    (term (module () () () ((memory () 1))))))
+  
+  (test-judgment-holds
+   ⊢-module
+   (typecheck
+    (term (module
+             ((func ()
+                    ((() () empty empty) -> (() () empty empty))
+                    (import "test" "test")))
+           ()
+           ()
+           ((memory () 1))))))
+
+  (test-judgment-holds
+   ⊢-module
+   (typecheck
+    (term (module
+             ((func ()
+                    ((() () empty empty) -> (() () empty empty))
+                    (local () ())))
+           ()
+           ()
+           ((memory () 1)))))))
