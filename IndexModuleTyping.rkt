@@ -30,17 +30,17 @@
        (table (j_1 (tfi ...)) ...)
        (memory j_2 ...)
        (local (t_1 ... t ...))
-       (label ((((t_2 a_2) ...) locals_2 Γ_3 φ_3)))
-       (return (((t_2 a_2) ...) locals_2 Γ_3 φ_3)))
+       (label (((ti_2 ...) locals_2 Γ_3 φ_3)))
+       (return ((ti_2 ...) locals_2 Γ_3 φ_3)))
       (e ...)
-      ((() ((t_1 a_1) ... (t a) ...) Γ_1 φ_1) -> (((t_2 a_2) ...) locals_2 Γ_3 φ_3)))
-   (side-condition (equiv-gamma Γ_1 (build-gamma ((t_1 a_1) ... (t a) ...)))) ;; Γ_2 = ((t_1 a_1) ... (t a) ...)
-   (side-condition (subset (build-gamma (domain-φ φ_1)) Γ_1)) ;; domain(φ_1) subset of Γ_1
-   (side-condition (satisifies Γ_3 φ_3 φ_4))
+      ((() ((t_1 a_1) ... (t a) ...) Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (side-condition (equiv-gammas Γ_1 (build-gamma ((t_1 a_1) ... (t a) ...)))) ;; Γ_2 = ((t_1 a_1) ... (t a) ...)
+   (side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-Γ Γ_1)))) ;; domain(φ_1) subset of Γ_1
+   (side-condition (satisfies Γ_3 φ_3 φ_4))
    ---------------------------------------------------
    (⊢-module-func ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)
-                  (func (ex ...) ((((t_1 a_1) ...) () Γ_1 φ_1) -> (((t_2 a_2) ...) () Γ_4 φ_4)) (local (t ...) (e ...)))
-                  ((ex ...) ((((t_1 a_1) ...) () Γ_1 φ_1) -> (((t_2 a_2) ...) () Γ_4 φ_4))))]
+                  (func (ex ...) ((((t_1 a_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4)) (local (t ...) (e ...)))
+                  ((ex ...) ((((t_1 a_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4))))]
 
   ;; Imported function is easy
   [-----------------------------------------------------------
@@ -201,7 +201,8 @@
   [(extract-memory-type (memory _ j)) j]
   [(extract-memory-type (memory _ j _)) j])
 
-;; Extracts the declared module type (consisting of all declared function and global types in that module, as well as the size of table and memory if applicable)
+;; Extracts the declared module type (consisting of all declared function and global types in that module,
+;; as well as the size of table and memory if applicable)
 (define-metafunction WASMIndexTypes
   extract-module-type : m -> C
   [(extract-module-type (module (f ...) (glob ...) (tab ...) (mem ...)))

@@ -46,9 +46,9 @@
 
 (define-metafunction WASMIndexTypes
   subset : any any -> boolean
-  [(subset any empty) #t]
-  [(subset any (any_1 any_2)) (subset any any_1) (where #t (in any_2 any))]
-  [(subset any (any_1 any_2)) #f (where #f (in any_2 any))])
+  [(subset empty any) #t]
+  [(subset (any_1 any_2) any) (subset any_1 any) (where #t (in any_2 any))]
+  [(subset (any_1 any_2) any) #f (where #f (in any_2 any))])
 
 (define-metafunction WASMIndexTypes
   superset : any any -> boolean
@@ -101,3 +101,10 @@
   domain-φ : φ -> (a ...)
   [(domain-φ empty) ()]
   [(domain-φ (φ P)) (merge (domain-φ φ) (domain-P P))])
+
+(define-metafunction WASMIndexTypes
+  domain-Γ : Γ -> (a ...)
+  [(domain-Γ empty) ()]
+  [(domain-Γ (Γ (t a)))
+   (a a_rest ...)
+   (where (a_rest ...) (domain-Γ Γ))])

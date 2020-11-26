@@ -191,8 +191,8 @@
    (⊢-admin S C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
-   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition ,(subset? (term (domain-φ φ_2)) (term (domain-Γ Γ_2)))) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
    --------------------------- "Block"
@@ -203,8 +203,8 @@
    (⊢-admin S C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
-   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition ,(subset? (term (domain-φ φ_2)) (term (domain-Γ Γ_2)))) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
    --------------------------- "Loop"
@@ -218,8 +218,8 @@
                              -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
-   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition ,(subset? (term (domain-φ φ_2)) (term (domain-Γ Γ_2)))) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
    --------------------------------------------------------------------- "If"
