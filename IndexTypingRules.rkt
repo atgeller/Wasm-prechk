@@ -15,6 +15,11 @@
 (define-judgment-form WASMIndexTypes
   #:contract (⊢ C (e ...) tfi)
 
+  [(where #f (in a Γ)) ;; a fresh
+   ---
+   "Const"
+   (⊢ C ((t const c)) ((() locals Γ φ) -> (((t a)) locals (Γ (t a)) (φ (= a (t c))))))]
+
   [(side-condition (satisfies Γ φ (empty (not (= a_2 (i32 0))))))
    (where #f (in a_3 Γ)) ;; a_3 fresh
    ------------------------------------------------------- "Div-Prechk"

@@ -34,8 +34,10 @@
        (label (((ti_2 ...) locals_2 Γ_3 φ_3)))
        (return ((ti_2 ...) locals_2 Γ_3 φ_3)))
       (e ...)
-      ((() ((t_1 a_1) ... (t a) ...) Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   (side-condition (equiv-gammas Γ_1 (build-gamma ((t_1 a_1) ... (t a) ...)))) ;; Γ_2 = ((t_1 a_1) ... (t a) ...)
+      ((() ((t_1 a_1) ... (t a) ...) Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (where φ_5 (extend φ_1 (build-phi-zeros (t ...) (a ...))))
+   (side-condition (equiv-gammas Γ_5 (union Γ_1 (build-gamma ((t a) ...)))))
+   (side-condition (equiv-gammas Γ_1 (build-gamma ((t_1 a_1) ...)))) ;; Γ_2 = ((t_1 a_1) ...)
    (side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-Γ Γ_1)))) ;; domain(φ_1) subset of Γ_1
    (side-condition (satisfies Γ_3 φ_3 φ_4))
    ---------------------------------------------------

@@ -2,7 +2,9 @@
 
 (require redex
          "IndexTypes.rkt"
-         "IndexModuleTyping.rkt")
+         "IndexTypingRules.rkt"
+         "IndexModuleTyping.rkt"
+         "Utilities.rkt")
 
 ;; module -> derivation of ⊢-module or #f
 ;; TODO: distinct exports
@@ -21,10 +23,9 @@
                  [funcs-deriv? (typecheck-funcs C fs)])
              (if (and globs-deriv? funcs-deriv?)
                  (derivation `(⊢-module ,module)
-                             #f
-                             (append (list funcs-deriv? globs-deriv?)
-                                     tab-derivs
-                                     mem-derivs))
+                             #f (append (list funcs-deriv? globs-deriv?)
+                                        tab-derivs
+                                        mem-derivs))
                  #f)))
          #f)]))
 
@@ -55,8 +56,7 @@
             (match glob-deriv?
               [(derivation `(⊢-module-global ,_ ,_ (,exs ,tg)) _ _)
                (derivation `(⊢-module-global-list ,globs (,@rest-types ... (,exs ,tg)))
-                           #f
-                           (list rest-deriv? glob-deriv?))]
+                           #f (list rest-deriv? glob-deriv?))]
               [#f #f]))]
          [#f #f]))]))
 
@@ -64,17 +64,16 @@
 (define (typecheck-global C glob)
   (match glob
     [`(global ,exs global (,mut? ,t) ,es)
-     (if (and mut? (not (empty? exs)))
-         #f
+     (if (or (empty? exs) (not mut?))
          (let ([ins-deriv? (typecheck-ins C es)])
            (match ins-deriv?
              [(derivation `(⊢ ,_ ,_ (,_ -> (((,t_1 ,_)) ,_ ,_ ,_))) _ _)
               (if (equal? t t_1)
                   (derivation `(⊢-module-global ,C ,glob (,exs (,mut? ,t)))
-                              #f
-                              (list ins-deriv?))
+                              #f (list ins-deriv?))
                   #f)]
-             [#f #f])))]
+             [#f #f]))
+         #f)]
     [`(global ,exs (#f ,t) im)
      (derivation `(⊢-module-global ,C ,glob (,exs (#f ,t))) #f (list))]))
 
@@ -85,12 +84,10 @@
     [`(table ,exs ,i ,js)
      (redex-let WASMIndexTypes ([((func (tfi ...)) _ _ _ _ _ _) C])
        (derivation `(⊢-module-table ,C ,tab (,exs (,i ,(map (curry list-ref (term (tfi ...))) js))))
-                   #f
-                   (list (first (build-derivations (valid-indices (tfi ...) ,js ,i))))))]
+                   #f (list (first (build-derivations (valid-indices (tfi ...) ,js ,i))))))]
     [`(table ,exs ,i ,_ ,tfis)
      (derivation `(⊢-module-table ,C ,tab (,exs (,i ,tfis)))
-                 #f
-                 (list))]))
+                 #f (list))]))
 
 ;; C mem -> derivation of ⊢-module-mem
 (define (build-memory-derivation C mem)
@@ -112,22 +109,92 @@
           (match rest-deriv?
             [(derivation `(⊢-module-func-list ,_ ,_ (,rest-types ...)) _ _)
              (derivation `(⊢-module-func-list ,C ,funcs ((,exs ,tfi) ,@rest-types))
-                         #f
-                         (list func-deriv? rest-deriv?))]
+                         #f (list func-deriv? rest-deriv?))]
             [#f #f])]
          [#f #f]))]))
 
 ;; C func -> derivation of ⊢-module-func or #f
 (define (typecheck-func C func)
   (match func
-    [`(func ,exs ,tfi (local ,ts ,es))
-     #f]
+    [`(func ,exs ((((,t ,a) ...) () ,Gamma1 ,phi1) -> (,ti () ,Gamma2 ,phi2)) (local (,tl ...) ,es))
+     (if (subset? (term (domain-φ ,phi1)) (term (domain-Γ ,Gamma1)))
+         (match C
+           [`((func ,tfis) (global ,tgs) (table ,tabs ...) (memory ,mems ...) ,_ ,_ ,_)
+            (let* ([ti-args (map list t a)]
+                   [al (map gensym tl)]
+                   [ti-ls (map list tl al)]
+                   [ticond (term (,ti () ,Gamma2 ,phi2))]
+                   [C2 `((func ,tfis)
+                         (global ,tgs)
+                         (table ,@tabs)
+                         (memory ,@mems)
+                         (local (,@t ,@tl))
+                         (label (,ticond))
+                         (return ,ticond))]
+                   [ins-deriv? (typecheck-ins C2 es
+                                              (term (()
+                                                     ,(append ti-args ti-ls)
+                                                     (build-gamma ,(append ti-args ti-ls))
+                                                     (extend ,phi1 (build-phi-zeros ,tl ,al)))))])
+              #f)])
+         #f)]
     [`(func ,exs ,tfi (import ,_ ,_))
      (derivation `(⊢-module-func ,C ,func (,exs ,tfi)) #f (list))]))
 
-;; C (listof e) -> derivation of ⊢ or #f
-(define (typecheck-ins C es)
-  #f)
+;; C (listof e) ticond -> derivation of ⊢ or #f
+;; Typechecking takes the precondition for the instructions
+;; if the usage needs to unify with specific postcondition
+;; index variables they can rename the vars in the derivation
+(define (typecheck-ins C es ticond)
+  (match ticond
+    [`(,tis ,locals ,Γ ,φ)
+     (match es
+       [`((,t const ,c))
+        (let* ([a (gensym)]
+               [deriv (derivation
+                       `(⊢ ,C ,es ((() ,locals ,Γ ,φ)
+                                     ->
+                                     (((,t ,a)) ,locals (,Γ (,t ,a)) (,φ (= ,a (,t ,c))))))
+                       "Const" (list))])
+          (if (empty? tis)
+              deriv
+              (derivation
+               `(⊢ ,C ,es (,ticond
+                             ->
+                             ((,@tis (,t ,a)) ,locals (,Γ (,t ,a)) (,φ (= ,a (,t ,c))))))
+               "Stack-Poly" (list deriv))))]
+
+       [`((unreachable))
+        #f]
+
+       [`((nop))
+        #f]
+
+       [`(drop)
+        #f]
+
+       [`()
+        (let ([deriv (derivation `(⊢ ,C () ((() ,locals ,Γ ,φ) -> (() ,locals ,Γ ,φ)))
+                                 "Empty" (list))])
+          (if (empty? tis)
+              deriv
+              (derivation
+               `(⊢ ,C ,es (,ticond -> ,ticond))
+               "Stack-Poly" (list deriv))))]
+
+       [`(,ess ... ,e)
+        #:when (not (empty? ess))
+        (let ([ess-deriv? (typecheck-ins C ess ticond)])
+          (match ess-deriv?
+            [(derivation `(⊢ ,_ ,_ (,_ -> ,ess-postcond)) _ _)
+             (let ([e-deriv? (typecheck-ins C (list e) ess-postcond)])
+               (match e-deriv?
+                 [(derivation `(⊢ ,_ ,_ (,_ -> ,e-postcond)) _ _)
+                  (derivation `(⊢ ,C ,es (,ticond -> ,e-postcond))
+                              "Composition"
+                              (list ess-deriv? e-deriv?))]
+                 [#f #f]))]
+            [#f #f]))])]))
 
 (module+ test
   (require rackunit)
