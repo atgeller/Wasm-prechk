@@ -168,10 +168,21 @@
         #f]
 
        [`((nop))
-        #f]
+        (let ([deriv (derivation `(⊢ ,C ,es ((() ,locals ,Γ ,φ) -> (() ,locals ,Γ ,φ)))
+                                 "Nop" (list))])
+          (if (empty? tis)
+              deriv
+              (derivation `(⊢ ,C ,es (,ticond -> ,ticond)) "Stack-Poly" (list deriv))))]
 
        [`(drop)
-        #f]
+        (if (not (empty? tis))
+            (let ([deriv (derivation `(⊢ ,C ,es (((,(last tis)) ,locals ,Γ ,φ) -> (() ,locals ,Γ ,φ)))
+                                     "Drop" (list))])
+              (if (= (length tis) 1)
+                  deriv
+                  (derivation `(⊢ ,C ,es (,ticond -> (,(drop-right tis 1) ,locals ,Γ ,φ)))
+                              "Stack-Poly" (list deriv))))
+            #f)]
 
        [`()
         (let ([deriv (derivation `(⊢ ,C () ((() ,locals ,Γ ,φ) -> (() ,locals ,Γ ,φ)))
@@ -229,4 +240,19 @@
                     (local () ())))
            ()
            ()
-           ((memory () 1)))))))
+           ((memory () 1))))))
+
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    `((func ())
+      (global ())
+      (table)
+      (memory)
+      (local ())
+      (label ())
+      (return (() () empty empty)))
+    `((return) (i32 add))
+    `(() () empty empty)))
+
+  )
