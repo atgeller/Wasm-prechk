@@ -14,7 +14,7 @@
   ;; Index language
   (a ::= variable-not-otherwise-mentioned)
   (x y ::= a (t c) (binop x y) (testop x) (relop x y))
-  (P ::= (= x y) (if P P P) (not P) (and P P) (or P P))
+  (P ::= (= x y) (if P P P) (not P) (and P P) (or P P) ⊥)
   (φ ::= empty (φ P))
   (Γ ::= empty (Γ ti))
   (ti ::= (t a))

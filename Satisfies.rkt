@@ -89,7 +89,9 @@
      (let ([cond (parse-proposition P?)]
            [true (parse-proposition P1)]
            [false (parse-proposition P2)])
-       `(ite ,cond ,true ,false))]))
+       `(ite ,cond ,true ,false))]
+    [`⊥
+     `false]))
 
 (define (parse-defs gamma)
   (match gamma
