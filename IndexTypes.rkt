@@ -5,7 +5,7 @@
 (provide WASMIndexTypes)
 
 (define-extended-language WASMIndexTypes WASM
-  (binop ::= .... (div/unsafe sx))
+  (binop ::= .... (div/unsafe sx) (rem/unsafe sx))
   (e ::= .... (call-indirect/unsafe tfi)
      (t load/unsafe j j) (t load/unsafe (tp sz) j j)
      (t store/unsafe j j) (t store/unsafe (tp) j j)

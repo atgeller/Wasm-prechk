@@ -20,13 +20,20 @@
    "Const"
    (⊢ C ((t const c)) ((() locals Γ φ) -> (((t a)) locals (Γ (t a)) (φ (= a (t c))))))]
 
-  [(side-condition (satisfies Γ φ (empty (not (= a_2 (i32 0))))))
+  [(side-condition (satisfies Γ φ (empty (not (= a_2 (t 0))))))
    (where #f (in a_3 Γ)) ;; a_3 fresh
-   ------------------------------------------------------- "Div-Prechk"
+   ---------------------------------------------------------- "Div-Prechk"
    (⊢ C ((t (div/unsafe sx))) ((((t a_1) (t a_2)) locals Γ φ)
                                -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 ((div sx) a_1 a_2))))))]
 
+  [(side-condition (satisfies Γ φ (empty (not (= a_2 (t 0))))))
+   (where #f (in a_3 Γ)) ;; a_3 fresh
+   ---------------------------------------------------------- "Rem-Prechk"
+   (⊢ C ((t (rem/unsafe sx))) ((((t a_1) (t a_2)) locals Γ φ)
+                               -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 ((rem sx) a_1 a_2))))))]
+
   [(where (binop_!_1 binop_!_1 binop_!_1) (binop (div/unsafe signed) (div/unsafe unsigned)))
+   (where (binop_!_1 binop_!_1 binop_!_1) (binop (rem/unsafe signed) (rem/unsafe unsigned)))
    (where #f (in a_3 Γ)) ;; a_3 fresh
    ------------------------------------------------ "Binop"
    (⊢ C ((t binop)) ((((t a_1) (t a_2)) locals Γ φ)
