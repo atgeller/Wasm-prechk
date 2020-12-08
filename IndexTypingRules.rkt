@@ -219,8 +219,8 @@
    (side-condition ,(< (expt 2 (term j_1))
                        (type-width (term t))))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t)) 8))) (i32 j)))
-                                          (= (i32 1) (ge (add a (i32 j_2)) (i32 0)))))))
+                                     (and (= (i32 1) ((le unsigned) (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t)) 8))) (i32 j)))
+                                          (= (i32 1) ((ge unsigned) (add a (i32 j_2)) (i32 0)))))))
    (where #f (in a_2 Γ)) ;; a_2 fresh
    ----------------------------------------------------------------------- "Load-Prechk-1"
    (⊢ C ((t load/unsafe j_1 j_2)) ((((i32 a)) locals Γ φ_1)
@@ -230,8 +230,8 @@
    (side-condition ,(< (expt 2 (term j_1))
                        (type-width (term t) (term tp))))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t) (term tp)) 8))) (i32 j)))
-                                          (= (i32 1) (ge (add a (i32 j_2)) (i32 0)))))))
+                                     (and (= (i32 1) ((le unsigned) (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t) (term tp)) 8))) (i32 j)))
+                                          (= (i32 1) ((ge unsigned) (add a (i32 j_2)) (i32 0)))))))
    (where #f (in a_2 Γ)) ;; a_2 fresh
    ----------------------------------------------------------------------- "Load-Prechk-2"
    (⊢ C ((t load/unsafe (tp sz) j_1 j_2)) ((((i32 a)) locals Γ φ_1)
@@ -241,8 +241,8 @@
    (side-condition ,(< (expt 2 (term j_1))
                        (type-width (term t))))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t)) 8))) (i32 j)))
-                                          (= (i32 1) (ge (add a (i32 j_2)) (i32 0)))))))
+                                     (and (= (i32 1) ((le unsigned) (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t)) 8))) (i32 j)))
+                                          (= (i32 1) ((ge unsigned) (add a (i32 j_2)) (i32 0)))))))
    ------------------------------------------------------------------------- "Store-Prechk-1"
    (⊢ C ((t store/unsafe j_1 j_2)) ((((i32 a) (t a_1)) locals Γ φ_1)
                                       -> (() locals Γ φ_1)))]
@@ -252,8 +252,8 @@
    (side-condition ,(< (expt 2 (term j_1))
                        (type-width (term t) (term tp))))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t) (term tp)) 8))) (i32 j)))
-                                          (= (i32 1) (ge (add a (i32 j_2)) (i32 0)))))))
+                                     (and (= (i32 1) ((le unsigned) (add (add a (i32 j_2)) (i32 ,(/ (type-width (term t) (term tp)) 8))) (i32 j)))
+                                          (= (i32 1) ((ge unsigned) (add a (i32 j_2)) (i32 0)))))))
    ------------------------------------------------------------------------------ "Store-Prechk-2"
    (⊢ C ((t store/unsafe (tp) j_1 j_2)) ((((i32 a) (t a_1)) locals Γ φ_1)
                                            -> (() locals Γ φ_1)))]
