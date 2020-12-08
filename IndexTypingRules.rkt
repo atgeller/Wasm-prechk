@@ -23,10 +23,10 @@
   [(side-condition (satisfies Γ φ (empty (not (= a_2 (i32 0))))))
    (where #f (in a_3 Γ)) ;; a_3 fresh
    ------------------------------------------------------- "Div-Prechk"
-   (⊢ C ((t div/unsafe)) ((((t a_1) (t a_2)) locals Γ φ)
-                            -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 (div a_1 a_2))))))]
+   (⊢ C ((t (div/unsafe sx))) ((((t a_1) (t a_2)) locals Γ φ)
+                               -> (((t a_3)) locals (Γ (t a_3)) (φ (= a_3 ((div sx) a_1 a_2))))))]
 
-  [(where (binop_!_1 binop_!_1) (binop div/unsafe))
+  [(where (binop_!_1 binop_!_1 binop_!_1) (binop (div/unsafe signed) (div/unsafe unsigned)))
    (where #f (in a_3 Γ)) ;; a_3 fresh
    ------------------------------------------------ "Binop"
    (⊢ C ((t binop)) ((((t a_1) (t a_2)) locals Γ φ)
