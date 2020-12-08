@@ -38,6 +38,8 @@
     [`(shl ,x ,y) `(bvshl ,x ,y)]
     [`((shr signed) ,x ,y) `(bvashr ,x ,y)]
     [`((shr unsigned) ,x ,y) `(bvlshr ,x ,y)]
+    [`(rotl ,x ,y) `(ext_rotate_left ,x ,y)]
+    [`(rotr ,x ,y) `(ext_rotate_right ,x ,y)]
     [`(eq ,x ,y)  `(= ,x ,y)]
     [`(ne ,x ,y)  `(not (= ,x ,y))]
     [`((lt signed) ,x ,y)  `(bvslt ,x ,y)]
