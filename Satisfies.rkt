@@ -25,41 +25,43 @@
 
 (define (redex_op->z3_op expr)
   (match expr
-    [`(add ,x ,y) `(bvadd ,x ,y)]
-    [`(sub ,x ,y) `(bvsub ,x ,y)]
-    [`(mul ,x ,y) `(bvmul ,x ,y)]
-    [`((div signed) ,x ,y) `(bvsdiv ,x ,y)]
-    [`((rem signed) ,x ,y) `(bvsrem ,x ,y)]
-    [`((div unsigned) ,x ,y) `(bvudiv ,x ,y)]
-    [`((rem unsigned) ,x ,y) `(bvurem ,x ,y)]
-    [`(and ,x ,y) `(bvand ,x ,y)]
-    [`(or ,x ,y)  `(bvor ,x ,y)]
-    [`(xor ,x ,y) `(bvxor ,x ,y)]
-    [`(shl ,x ,y) `(bvshl ,x ,y)]
-    [`((shr signed) ,x ,y) `(bvashr ,x ,y)]
-    [`((shr unsigned) ,x ,y) `(bvlshr ,x ,y)]
-    [`(rotl ,x ,y) `(ext_rotate_left ,x ,y)]
-    [`(rotr ,x ,y) `(ext_rotate_right ,x ,y)]
-    [`(eq ,x ,y)  `(= ,x ,y)]
-    [`(ne ,x ,y)  `(not (= ,x ,y))]
-    [`((lt signed) ,x ,y)  `(bvslt ,x ,y)]
-    [`((gt signed) ,x ,y)  `(bvsgt ,x ,y)]
-    [`((le signed) ,x ,y)  `(bvsle ,x ,y)]
-    [`((ge signed) ,x ,y)  `(bvsge ,x ,y)]
-    [`((lt unsigned) ,x ,y)  `(bvult ,x ,y)]
-    [`((gt unsigned) ,x ,y)  `(bvugt ,x ,y)]
-    [`((le unsigned) ,x ,y)  `(bvule ,x ,y)]
-    [`((ge unsigned) ,x ,y)  `(bvuge ,x ,y)]
-    [`(eqz ,x)    `(= ,x (_ bv0 32))]))
+    [`(add ,x ,y)   `(bvadd ,x ,y)]
+    [`(sub ,x ,y)   `(bvsub ,x ,y)]
+    [`(mul ,x ,y)   `(bvmul ,x ,y)]
+    [`(div-s ,x ,y) `(bvsdiv ,x ,y)]
+    [`(rem-s ,x ,y) `(bvsrem ,x ,y)]
+    [`(div-u ,x ,y) `(bvudiv ,x ,y)]
+    [`(rem-u ,x ,y) `(bvurem ,x ,y)]
+    [`(and ,x ,y)   `(bvand ,x ,y)]
+    [`(or ,x ,y)    `(bvor ,x ,y)]
+    [`(xor ,x ,y)   `(bvxor ,x ,y)]
+    [`(shl ,x ,y)   `(bvshl ,x ,y)]
+    [`(shr-s ,x ,y) `(bvashr ,x ,y)]
+    [`(shr-u ,x ,y) `(bvlshr ,x ,y)]
+    [`(rotl ,x ,y)  `(ext_rotate_left ,x ,y)]
+    [`(rotr ,x ,y)  `(ext_rotate_right ,x ,y)]
+    [`(eq ,x ,y)    `(= ,x ,y)]
+    [`(ne ,x ,y)    `(not (= ,x ,y))]
+    [`(lt-s ,x ,y)  `(bvslt ,x ,y)]
+    [`(gt-s ,x ,y)  `(bvsgt ,x ,y)]
+    [`(le-s ,x ,y)  `(bvsle ,x ,y)]
+    [`(ge-s ,x ,y)  `(bvsge ,x ,y)]
+    [`(lt-u ,x ,y)  `(bvult ,x ,y)]
+    [`(gt-u ,x ,y)  `(bvugt ,x ,y)]
+    [`(le-u ,x ,y)  `(bvule ,x ,y)]
+    [`(ge-u ,x ,y)  `(bvuge ,x ,y)]
+    [`(eqz ,x)      `(= ,x (_ bv0 32))]))
 
 (define (parse-index x)
   (match x
     [(? symbol?) x]
-    [`(,type ,n) #:when (and (redex-match? WASMIndexTypes t type)
-                             (number? n))
-                 (string->symbol (format "(_ bv~a ~a)" n (match type
-                                                           ['i32 32]
-                                                           ['i64 64])))]
+    [`(,type ,n)
+     #:when (and (redex-match? WASMIndexTypes t type)
+                 (number? n))
+     (string->symbol (format "(_ bv~a ~a)"
+                             n (match type
+                                 ['i32 32]
+                                 ['i64 64])))]
     [`(,u_op ,x)
      #:when (redex-match? WASMIndexTypes unop u_op)
      (let ([index (parse-index x)])
@@ -107,7 +109,7 @@
 (define (parse-defs gamma)
   (match gamma
     [`empty null]
-    [`(,gamma* (,t ,a)) (cons (cons a t) (parse-defs gamma*))]))
+    [`(,gamma* (,t ,ivar)) (cons (cons ivar t) (parse-defs gamma*))]))
 
 (define (extract-constraints phi)
   (match phi

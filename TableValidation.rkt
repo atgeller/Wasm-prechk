@@ -35,6 +35,6 @@
       (not (solve query)))))
 
 (define-metafunction WASMIndexTypes
-  valid-table-call : tfi a (tfi ...) Γ φ -> boolean
-  [(valid-table-call tfi a (tfi_2 ...) Γ φ)
-   ,(check-table-call (term tfi) (term a) (term (tfi_2 ...)) (term Γ) (term φ))])
+  valid-table-call : tfi ivar (tfi ...) Γ φ -> boolean
+  [(valid-table-call tfi ivar (tfi_2 ...) Γ φ)
+   ,(check-table-call (term tfi) (term ivar) (term (tfi_2 ...)) (term Γ) (term φ))])

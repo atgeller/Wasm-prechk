@@ -6,23 +6,22 @@
          "IndexTypingRules.rkt"
          "IndexModuleTyping.rkt"
          "Utilities.rkt"
-         "WASM-Redex/Utilities.rkt"
-         "WASM-Redex/Bits.rkt")
+         "WASM-Redex/Utilities.rkt")
 
 (define-extended-language WASMPrechkWithAdmin WASMIndexTypes
   (v ::= (t const c))
   (cl ::= (i f))
-  (e ::= .... (trap) (call cl)
+  (e ::= .... trap (call cl)
      (label n (e ...) (e ...)) (local n (i (v ...)) (e ...)))
 
   (S ::= ((C ...) (table ((j (tfi ...)) ...)) (memory (j ...))))
 
-  (inst ::= ((cl ...) (v ...) (table (j (tfi ...))) (memory j))
-        ((cl ...) (v ...) (table (j (tfi ...))) (memory))
-        ((cl ...) (v ...) (table) (memory j))
-        ((cl ...) (v ...) (table) (memory)))
+  (inst ::= ((cl ...) (v ...) (table (j tfi ...) ...) (memory j ...)))
   (tabinst ::= (cl ...))
-  (meminst ::= (bits any))
+  (meminst ::= bstr)
+
+  (bstr ::= (side-condition any_1 (bytes? (term any_1))))
+  
   (s ::= ((inst ...) (tabinst ...) (meminst ...))))
 
 (define-judgment-form WASMPrechkWithAdmin

@@ -1,9 +1,7 @@
 #lang racket
 
 (require redex
-         "IndexTypes.rkt"
-         "WASM-Redex/Utilities.rkt"
-         "WASM-Redex/Bits.rkt")
+         "IndexTypes.rkt")
 
 (provide (all-defined-out))
 
@@ -11,14 +9,7 @@
   extend : φ_1 φ_2 -> φ
   [(extend φ_1 empty) φ_1]
   [(extend φ_1 (φ_2 P)) ((extend φ_1 φ_2) P)]
-  [(extend φ_1 (φ_2 (t a))) ((extend φ_1 φ_2) (t a))])
-
-(define-metafunction WASMIndexTypes
-  reverse-get : (any ...) j -> any
-  [(reverse-get (any ... any_1) j)
-   (reverse-get (any ...) ,(sub1 (term j)))
-   (side-condition (< 0 (term j)))]
-  [(reverse-get (any ... any_1) 0) any_1])
+  [(extend φ_1 (φ_2 (t ivar))) ((extend φ_1 φ_2) (t ivar))])
 
 (define-metafunction WASMIndexTypes
   in-label : C ticond -> C
@@ -77,25 +68,25 @@
   [(equiv-gammas Γ_1 Γ_2) #t (where (#t #t) ((superset Γ_1 Γ_2) (subset Γ_1 Γ_2)))])
 
 (define-metafunction WASMIndexTypes
-  build-phi : (t ...) (a ...) (c ...) -> φ
+  build-phi : (t ...) (ivar ...) (c ...) -> φ
   [(build-phi () () ()) empty]
-  [(build-phi (t_1 ... t_2) (a_1 ... a_2) (c_1 ... c_2)) ((build-phi (t_1 ...) (a_1 ...) (c_1 ...)) (= a_2 (t_2 c_2)))])
+  [(build-phi (t_1 ... t_2) (ivar_1 ... ivar_2) (c_1 ... c_2)) ((build-phi (t_1 ...) (ivar_1 ...) (c_1 ...)) (= ivar_2 (t_2 c_2)))])
 
 (define-metafunction WASMIndexTypes
-  build-phi-zeros : (t ...) (a ...) -> φ
+  build-phi-zeros : (t ...) (ivar ...) -> φ
   [(build-phi-zeros () ()) empty]
-  [(build-phi-zeros (t_1 ... t_2) (a_1 ... a_2) ) ((build-phi-zeros (t_1 ...) (a_1 ...)) (= a_2 (t_2 0)))])
+  [(build-phi-zeros (t_1 ... t_2) (ivar_1 ... ivar_2) ) ((build-phi-zeros (t_1 ...) (ivar_1 ...)) (= ivar_2 (t_2 0)))])
 
 (define-metafunction WASMIndexTypes
-  domain-x : x -> (a ...)
+  domain-x : x -> (ivar ...)
   [(domain-x (t c)) ()]
-  [(domain-x a) (a)]
+  [(domain-x ivar) (ivar)]
   [(domain-x (binop x y)) (merge (domain-x x) (domain-x y))]
   [(domain-x (testop x)) (domain-x x)]
   [(domain-x (relop x y)) (merge (domain-x x) (domain-x y))])
 
 (define-metafunction WASMIndexTypes
-  domain-P : P -> (a ...)
+  domain-P : P -> (ivar ...)
   [(domain-P (= x y)) (merge (domain-x x) (domain-x y))]
   [(domain-P (if P_1 P_2 P_3)) (merge (merge (domain-P P_1) (domain-P P_2)) (domain-P P_3))]
   [(domain-P (and P_1 P_2)) (merge (domain-P P_1) (domain-P P_2))]
@@ -103,13 +94,13 @@
   [(domain-P (not P)) (domain-P P)])
 
 (define-metafunction WASMIndexTypes
-  domain-φ : φ -> (a ...)
+  domain-φ : φ -> (ivar ...)
   [(domain-φ empty) ()]
   [(domain-φ (φ P)) (merge (domain-φ φ) (domain-P P))])
 
 (define-metafunction WASMIndexTypes
-  domain-Γ : Γ -> (a ...)
+  domain-Γ : Γ -> (ivar ...)
   [(domain-Γ empty) ()]
-  [(domain-Γ (Γ (t a)))
-   (a a_rest ...)
-   (where (a_rest ...) (domain-Γ Γ))])
+  [(domain-Γ (Γ (t ivar)))
+   (ivar ivar_rest ...)
+   (where (ivar_rest ...) (domain-Γ Γ))])
