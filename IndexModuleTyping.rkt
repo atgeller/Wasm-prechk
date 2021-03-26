@@ -25,12 +25,12 @@
   #:contract (⊢-module-func C f ((ex ...) tfi))
 
   ;; Should (t _) ... be instiantiated in phi_1?
-  [(⊢ ((func (tfi_1 ...))
-       (global (tg ...))
-       (table (j_1 (tfi ...)) ...)
+  [(⊢ ((func tfi_1 ...)
+       (global tg ...)
+       (table (j_1 tfi ...) ...)
        (memory j_2 ...)
-       (local (t_1 ... t ...))
-       (label (((ti_2 ...) locals_2 Γ_3 φ_3)))
+       (local t_1 ... t ...)
+       (label ((ti_2 ...) locals_2 Γ_3 φ_3))
        (return ((ti_2 ...) locals_2 Γ_3 φ_3)))
       (e ...)
       ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
@@ -40,7 +40,7 @@
    (side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-Γ Γ_1)))) ;; domain(φ_1) subset of Γ_1
    (side-condition (satisfies Γ_3 φ_3 φ_4))
    --------------------------------------------------------------------------------------------------------
-   (⊢-module-func ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi ...)) ...) (memory j_2 ...) _ _ _)
+   (⊢-module-func ((func tfi_1 ...) (global tg ...) (table (j_1 tfi ...) ...) (memory j_2 ...) _ _ _)
                   (func (ex ...) ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4)) (local (t ...) (e ...)))
                   ((ex ...) ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4))))]
 
