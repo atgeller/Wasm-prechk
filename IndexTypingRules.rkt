@@ -124,21 +124,21 @@
 
   [(label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
    -------------------------------------------------------- "Br"
-   (⊢ (_ _ _ _ _ (label (ticond  ...)) _)
+   (⊢ (_ _ _ _ _ (label ticond  ...) _)
       ((br j))
       (((ti_1 ... ti ...) locals Γ_1 φ_1)
        -> ((ti_2 ...) locals Γ_2 φ_2)))]
 
   [(label-types (ticond ...) (j) ((ti ...) locals Γ_1 (φ_1 (not (= ivar (i32 0))))))
    ------------------------------------------------------------------------------ "Br-If"
-   (⊢ (_ _ _ _ _ (label (ticond  ...)) _)
+   (⊢ (_ _ _ _ _ (label ticond  ...) _)
       ((br-if j))
       (((ti ... (i32 ivar)) locals Γ_1 φ_1)
        -> ((ti ...) locals Γ_1 (φ_1 (= ivar (i32 0))))))]
 
   [(label-types (ticond ...) (j ...) ((ti_3 ...) locals Γ_1 φ_1))
    -------------------------------------------------------------- "Br-Table"
-   (⊢ ((_ _ _ _ (label (ticond ...)) _ _))
+   (⊢ ((_ _ _ _ (label ticond ...) _ _))
       ((br-table (j ...)))
       (((ti_1 ... ti_3 ... (i32 ivar)) locals Γ_1 φ_1)
        -> ((ti_2 ...) locals Γ_1 φ_2)))]
@@ -154,12 +154,12 @@
   ;;          have a type declaration in the context that they're called from.
   ;; Adam - This is the same as in the thesis
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  [(where (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3)) (do-get (tfi ...) j))
+  [(where (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3)) (index (tfi ...) j))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 Γ_3))
    --------------------------- "Call"
-   (⊢ ((func (tfi ...)) _ _ _ _ _ _) ((call j))
+   (⊢ ((func tfi ...) _ _ _ _ _ _) ((call j))
       (((ti_1 ...) locals Γ_1 φ_1)
        -> ((ti_2 ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -168,7 +168,7 @@
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 Γ_3))
    --------------------------- "Call-Indirect"
-   (⊢ (_ _ (table j _) _ _ _ _)
+   (⊢ (_ _ (table (j _ ...)) _ _ _ _)
       ((call-indirect (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
       (((ti_1 ... (i32 ivar)) locals_1 Γ_1 φ_1)
        -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
@@ -179,49 +179,49 @@
    (side-condition (valid-table-call (((ti_1 ...) () Γ_2 φ_2) -> ((ti_2 ...) () Γ_3 φ_3))
                                      ivar (tfi ...) Γ_1 φ_1))
    ------------------------------------------------------- "Call-Indirect-Prechk"
-   (⊢ (_ _ (table (j (tfi ...))) _ _ _ _)
+   (⊢ (_ _ (table (j tfi ...)) _ _ _ _)
       ((call-indirect/unsafe (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
       (((ti_1 ... (i32 ivar)) locals_1 Γ_1 φ_1)
        -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
 
-  [(where t_2 (do-get (t ...) j))
-   (where (t_2 ivar) (do-get locals j))
+  [(where t_2 (index (t ...) j))
+   (where (t_2 ivar) (index locals j))
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    --------------------------------- "Get-Local"
-   (⊢ (_ _ _ _ (local (t ...)) _ _)
+   (⊢ (_ _ _ _ (local t ...) _ _)
       ((get-local j))
       ((() locals Γ φ)
        -> (((t_2 ivar_2)) locals (Γ (t_2 ivar_2)) (φ (= ivar_2 ivar)))))]
 
-  [(where t_2 (do-get (t ...) j))
-   (where locals_2 (do-set locals_1 j (t_2 ivar)))
+  [(where t_2 (index (t ...) j))
+   (where locals_2 (with-index locals_1 j (t_2 ivar)))
    -------------------------------------------- "Set-Local"
-   (⊢ (_ _ _ _ (local (t ...)) _ _)
+   (⊢ (_ _ _ _ (local t ...) _ _)
       ((set-local j))
       ((((t_2 ivar)) locals_1 Γ φ)
        -> (() locals_2 Γ φ)))]
 
-  [(where t_2 (do-get (t ...) j))
-   (where locals_2 (do-set locals_1 j (t_2 ivar)))
+  [(where t_2 (index (t ...) j))
+   (where locals_2 (with-index locals_1 j (t_2 ivar)))
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ---------------------------------- "Tee-Local"
-   (⊢ (_ _ _ _ (local (t ...)) _ _)
+   (⊢ (_ _ _ _ (local t ...) _ _)
       ((tee-local j))
       ((((t_2 ivar)) locals_1 Γ φ)
        -> (((t_2 ivar_2)) locals_2 (Γ (t_2 ivar_2)) (φ (= ivar_2 ivar)))))]
 
-  [(where tg_2 (do-get (tg ...) j))
+  [(where tg_2 (index (tg ...) j))
    (where t_2 (erase-mut tg_2))
    (where #f (in ivar Γ)) ;; ivar fresh
    ------------------- "Get-Global"
-   (⊢ (_ (global (tg ...)) _ _ _ _ _ _)
+   (⊢ (_ (global tg ...) _ _ _ _ _ _)
       ((get-global j))
       ((() locals Γ φ)
        -> (((t_2 ivar)) locals (Γ (t_2 ivar)) φ)))]
 
-  [(where (#t t_2) (do-get (tg ...) j))
+  [(where (#t t_2) (index (tg ...) j))
    ------------------------------------ "Set-Global"
-   (⊢ (_ (global (tg ...)) _ _ _ _ _ _)
+   (⊢ (_ (global tg ...) _ _ _ _ _ _)
       ((set-global j))
       ((((t_2 ivar)) locals Γ φ)
        -> (() locals Γ φ)))]
