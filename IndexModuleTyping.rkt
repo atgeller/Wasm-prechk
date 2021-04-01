@@ -25,28 +25,30 @@
   #:contract (⊢-module-func C f ((ex ...) tfi))
 
   ;; Should (t _) ... be instiantiated in phi_1?
-  [(⊢ ((func tfi_1 ...)
+  [(⊢ ((func tfi_f ...)
        (global tg ...)
-       (table (j_1 tfi ...) ...)
-       (memory j_2 ...)
+       (table (n tfi_t ...) ...)
+       (memory m ...)
        (local t_1 ... t ...)
-       (label ((ti_2 ...) locals_2 Γ_3 φ_3))
-       (return ((ti_2 ...) locals_2 Γ_3 φ_3)))
+       (label ((ti_2 ...) locals_1 Γ_6 φ_4))
+       (return ((ti_2 ...) locals_1 Γ_6 φ_4)))
       (e ...)
       ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
    (where φ_5 (extend φ_1 (build-phi-zeros (t ...) (ivar ...))))
+   (side-condition (equiv-gammas Γ_6 (union Γ_4 (build-gamma locals_1))))
    (side-condition (equiv-gammas Γ_5 (union Γ_1 (build-gamma ((t ivar) ...)))))
    (side-condition (equiv-gammas Γ_1 (build-gamma ((t_1 ivar_1) ...)))) ;; Γ_2 = ((t_1 a_1) ...)
    (side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-Γ Γ_1)))) ;; domain(φ_1) subset of Γ_1
    (side-condition (satisfies Γ_3 φ_3 φ_4))
    --------------------------------------------------------------------------------------------------------
-   (⊢-module-func ((func tfi_1 ...) (global tg ...) (table (j_1 tfi ...) ...) (memory j_2 ...) _ _ _)
-                  (func (ex ...) ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4)) (local (t ...) (e ...)))
+   (⊢-module-func ((func tfi_f ...) (global tg ...) (table (n tfi_t ...) ...) (memory m ...) _ _ _)
+                  ((ex ...) (func ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4))
+                                  (local (t ...) (e ...))))
                   ((ex ...) ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4))))]
 
   ;; Imported function is easy
-  [-------------------------------------------------------
-   (⊢-module-func C (func (ex ...) tfi im) ((ex ...) tfi))])
+  [---------------------------------------------------------
+   (⊢-module-func C ((ex ...) (func tfi im)) ((ex ...) tfi))])
 
 ;; Validates the global variable definition and returns all exports and the type of the global
 (define-judgment-form WASMIndexTypes
@@ -90,13 +92,13 @@
                             (term (j ...))))
    -----------------------------------------
    (⊢-module-table C
-                   (table (ex ...) i (j ...))
+                   ((ex ...) (table i (j ...)))
                    ((ex ...) (i (tfi_2 ...))))]
 
   [(where i ,(length (term (tfi ...))))
    ------------------------------------
    (⊢-module-table C
-                   (table (ex ...) i im (tfi ...))
+                   ((ex ...) (table i im (tfi ...)))
                    ((ex ...) (i (tfi ...))))])
 
 ;; Returns all exports and the memory size
@@ -104,10 +106,10 @@
   #:contract (⊢-module-memory C mem ((ex ...) i))
 
   [----------------------------------------------------
-   (⊢-module-memory C (memory (ex ...) i) ((ex ...) i))]
+   (⊢-module-memory C ((ex ...) (memory i)) ((ex ...) i))]
 
   [-------------------------------------------------------
-   (⊢-module-memory C (memory (ex ...) i im) ((ex ...) i))])
+   (⊢-module-memory C ((ex ...) (memory i im)) ((ex ...) i))])
 
 ;; Validates all definitions in the module against the types declared in the module
 (define-judgment-form WASMIndexTypes
