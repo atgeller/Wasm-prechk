@@ -83,11 +83,11 @@
                                           (= ivar_3 ivar_2)
                                           (= ivar_3 ivar_1))))))]
   
-  [(where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
+  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
    (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
    (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
@@ -95,11 +95,11 @@
    (⊢ C_1 ((block (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
-  [(where C_2 (in-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
+  [(where C_2 (add-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
    (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
    (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
@@ -107,14 +107,14 @@
    (⊢ C_1 ((loop (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
-  [(where C_2 (in-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
+  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
    (⊢ C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
                      -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (⊢ C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
                      -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
    (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gamma Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
    (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
    (where Γ_5 (union Γ_1 Γ_3))
    (where φ_5 (union φ_1 φ_3))
@@ -122,31 +122,31 @@
    (⊢ C_1 ((if (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e_1 ...) (e_2 ...)))
       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
 
-  [(label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
+  [(where (ticond ...) (context-labels C))
+   (label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
    -------------------------------------------------------- "Br"
-   (⊢ (_ _ _ _ _ (label ticond  ...) _)
-      ((br j))
+   (⊢ C ((br j))
       (((ti_1 ... ti ...) locals Γ_1 φ_1)
        -> ((ti_2 ...) locals Γ_2 φ_2)))]
 
-  [(label-types (ticond ...) (j) ((ti ...) locals Γ_1 (φ_1 (not (= ivar (i32 0))))))
+  [(where (ticond ...) (context-labels C))
+   (label-types (ticond ...) (j) ((ti ...) locals Γ_1 (φ_1 (not (= ivar (i32 0))))))
    ------------------------------------------------------------------------------ "Br-If"
-   (⊢ (_ _ _ _ _ (label ticond  ...) _)
-      ((br-if j))
+   (⊢ C ((br-if j))
       (((ti ... (i32 ivar)) locals Γ_1 φ_1)
        -> ((ti ...) locals Γ_1 (φ_1 (= ivar (i32 0))))))]
 
-  [(label-types (ticond ...) (j ...) ((ti_3 ...) locals Γ_1 φ_1))
+  [(where (ticond ...) (context-labels C))
+   (label-types (ticond ...) (j ...) ((ti_3 ...) locals Γ_1 φ_1))
    -------------------------------------------------------------- "Br-Table"
-   (⊢ ((_ _ _ _ (label ticond ...) _ _))
-      ((br-table (j ...)))
+   (⊢ C ((br-table j ...))
       (((ti_1 ... ti_3 ... (i32 ivar)) locals Γ_1 φ_1)
        -> ((ti_2 ...) locals Γ_1 φ_2)))]
 
-  [(side-condition (satisfies Γ_1 φ_1 φ)) ;; Strengthen precondition
+  [(where ((ti ...) _ _ φ) (context-return C))
+   (side-condition (satisfies Γ_1 φ_1 φ)) ;; Strengthen precondition
    -------------------------------------- "Return"
-   (⊢ (_ _ _ _ _ _ (return ((ti ...) _ _ φ)))
-      ((return))
+   (⊢ C ((return))
       (((ti_1 ... ti ...) locals Γ_1 φ_1) -> ticond))]
 
   ;; Only works if Function is internal
@@ -154,12 +154,12 @@
   ;;          have a type declaration in the context that they're called from.
   ;; Adam - This is the same as in the thesis
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  [(where (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3)) (index (tfi ...) j))
+  [(where (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3)) (context-func C j))
    (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 Γ_3))
    --------------------------- "Call"
-   (⊢ ((func tfi ...) _ _ _ _ _ _) ((call j))
+   (⊢ C ((call j))
       (((ti_1 ...) locals Γ_1 φ_1)
        -> ((ti_2 ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -14,10 +14,6 @@
          valid-indices
          extract-module-type)
 
-(define-metafunction WASMIndexTypes
-  make-locals : (ti ...) -> (t ...)
-  [(make-locals ((t ivar) ...)) (t ...)])
-
 ;; Validates the function definition and returns all exports and the type of the function
 (define-judgment-form WASMIndexTypes
   #:contract (⊢-module-func C f ((ex ...) tfi))
@@ -34,7 +30,7 @@
    (side-condition (equiv-gammas Γ_1 (build-gamma ((t_1 ivar_1) ...)))) ;; Γ_2 = ((t_1 a_1) ...)
    (side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-Γ Γ_1)))) ;; domain(φ_1) subset of Γ_1
    (side-condition (satisfies Γ_3 φ_3 φ_4))
-   -----------------------------------------------------------------------------------------------
+   ----------------------------------------------------------------------------------------------------
    (⊢-module-func C ((ex ...) (func tfi (local (t ...) (e ...)))) ((ex ...) tfi))]
 
   ;; Imported function is easy

@@ -23,6 +23,8 @@
                       (and ,@constraints2)))
                    (assert (not satisfies))))))
 
+;; TODO: floating point operations
+;;       need to know type, or use different names for flops?
 (define (redex_op->z3_op expr)
   (match expr
     [`(add ,x ,y)   `(bvadd ,x ,y)]
@@ -50,6 +52,7 @@
     [`(gt-u ,x ,y)  `(bvugt ,x ,y)]
     [`(le-u ,x ,y)  `(bvule ,x ,y)]
     [`(ge-u ,x ,y)  `(bvuge ,x ,y)]
+    ;; TODO: what happens if x is 64 bit? Need type width?
     [`(eqz ,x)      `(= ,x (_ bv0 32))]))
 
 (define (parse-index x)

@@ -40,6 +40,14 @@
 
 ;; Metafunctions for getting data out of a context
 (define-metafunction WASMIndexTypes
+  context-funcs : C -> (tfi ...)
+  [(context-funcs ((func tfi ...) _ _ _ _ _ _)) (tfi ...)])
+
+(define-metafunction WASMIndexTypes
+  context-func : C i -> tfi
+  [(context-func C i) (index (context-funcs C) i)])
+
+(define-metafunction WASMIndexTypes
   context-locals : C -> (t ...)
   [(context-locals (_ _ _ _ (local t ...) _ _)) (t ...)])
 
