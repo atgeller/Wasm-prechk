@@ -97,4 +97,6 @@
                 #f
                 (list deriv3)))
 
-  #;(test-judgment-holds ⊢-module-func deriv4))
+  (test-judgment-holds ⊢-module-func deriv4)
+
+  )

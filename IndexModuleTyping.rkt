@@ -30,10 +30,10 @@
        (table (n tfi_t ...) ...)
        (memory m ...)
        (local t_1 ... t ...)
-       (label ((ti_2 ...) locals_1 Γ_6 φ_4))
-       (return ((ti_2 ...) locals_1 Γ_6 φ_4)))
+       (label ((ti_2 ..._1) locals_1 Γ_6 φ_4))
+       (return ((ti_2 ..._1) locals_1 Γ_6 φ_4)))
       (e ...)
-      ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
+      ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_5 φ_5) -> ((ti_2 ..._1) locals_2 Γ_3 φ_3)))
    (where φ_5 (extend φ_1 (build-phi-zeros (t ...) (ivar ...))))
    (side-condition (equiv-gammas Γ_6 (union Γ_4 (build-gamma locals_1))))
    (side-condition (equiv-gammas Γ_5 (union Γ_1 (build-gamma ((t ivar) ...)))))
@@ -42,9 +42,9 @@
    (side-condition (satisfies Γ_3 φ_3 φ_4))
    --------------------------------------------------------------------------------------------------------
    (⊢-module-func ((func tfi_f ...) (global tg ...) (table (n tfi_t ...) ...) (memory m ...) _ _ _)
-                  ((ex ...) (func ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4))
+                  ((ex ...) (func ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ..._1) () Γ_4 φ_4))
                                   (local (t ...) (e ...))))
-                  ((ex ...) ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4))))]
+                  ((ex ...) ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ..._1) () Γ_4 φ_4))))]
 
   ;; Imported function is easy
   [---------------------------------------------------------
