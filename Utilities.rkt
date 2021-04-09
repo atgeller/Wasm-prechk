@@ -1,7 +1,8 @@
 #lang racket
 
 (require redex
-         "IndexTypes.rkt")
+         "IndexTypes.rkt"
+         "WASM-Redex/Utilities.rkt")
 
 (provide (all-defined-out))
 
@@ -46,6 +47,22 @@
 (define-metafunction WASMIndexTypes
   context-func : C i -> tfi
   [(context-func C i) (index (context-funcs C) i)])
+
+(define-metafunction WASMIndexTypes
+  context-globals : C -> (tg ...)
+  [(context-globals (_ (global tg ...) _ _ _ _ _)) (tg ...)])
+
+(define-metafunction WASMIndexTypes
+  context-global : C i -> tg
+  [(context-global C i) (index (context-globals C) i)])
+
+(define-metafunction WASMIndexTypes
+  context-table : C -> (n tfi ...)
+  [(context-table (_ _ (table (n tfi ...)) _ _ _ _)) (n tfi ...)])
+
+(define-metafunction WASMIndexTypes
+  context-memory : C -> n
+  [(context-memory (_ _ _ (memory n) _ _ _)) n])
 
 (define-metafunction WASMIndexTypes
   context-locals : C -> (t ...)

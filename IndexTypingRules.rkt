@@ -164,69 +164,63 @@
        -> ((ti_2 ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
+  [(where (j _ ...) (context-table C))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 Γ_3))
    --------------------------- "Call-Indirect"
-   (⊢ (_ _ (table (j _ ...)) _ _ _ _)
-      ((call-indirect (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
+   (⊢ C ((call-indirect (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
       (((ti_1 ... (i32 ivar)) locals_1 Γ_1 φ_1)
        -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
   
-  [(side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
+  [(where (j tfi ...) (context-table C))
+   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 Γ_3))
    (side-condition (valid-table-call (((ti_1 ...) () Γ_2 φ_2) -> ((ti_2 ...) () Γ_3 φ_3))
                                      ivar (tfi ...) Γ_1 φ_1))
    ------------------------------------------------------- "Call-Indirect-Prechk"
-   (⊢ (_ _ (table (j tfi ...)) _ _ _ _)
-      ((call-indirect/unsafe (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
+   (⊢ C ((call-indirect/unsafe (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
       (((ti_1 ... (i32 ivar)) locals_1 Γ_1 φ_1)
        -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
 
-  [(where t_2 (index (t ...) j))
+  [(where t_2 (context-local C j))
    (where (t_2 ivar) (index locals j))
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    --------------------------------- "Get-Local"
-   (⊢ (_ _ _ _ (local t ...) _ _)
-      ((get-local j))
+   (⊢ C ((get-local j))
       ((() locals Γ φ)
        -> (((t_2 ivar_2)) locals (Γ (t_2 ivar_2)) (φ (= ivar_2 ivar)))))]
 
-  [(where t_2 (index (t ...) j))
+  [(where t_2 (context-local C j))
    (where locals_2 (with-index locals_1 j (t_2 ivar)))
    -------------------------------------------- "Set-Local"
-   (⊢ (_ _ _ _ (local t ...) _ _)
-      ((set-local j))
+   (⊢ C ((set-local j))
       ((((t_2 ivar)) locals_1 Γ φ)
        -> (() locals_2 Γ φ)))]
 
-  [(where t_2 (index (t ...) j))
+  [(where t_2 (context-local C j))
    (where locals_2 (with-index locals_1 j (t_2 ivar)))
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ---------------------------------- "Tee-Local"
-   (⊢ (_ _ _ _ (local t ...) _ _)
-      ((tee-local j))
+   (⊢ C ((tee-local j))
       ((((t_2 ivar)) locals_1 Γ φ)
        -> (((t_2 ivar_2)) locals_2 (Γ (t_2 ivar_2)) (φ (= ivar_2 ivar)))))]
 
-  [(where tg_2 (index (tg ...) j))
-   (where t_2 (erase-mut tg_2))
+  [(where (_ t_2) (context-global C j))
    (where #f (in ivar Γ)) ;; ivar fresh
    ------------------- "Get-Global"
-   (⊢ (_ (global tg ...) _ _ _ _ _ _)
-      ((get-global j))
+   (⊢ C ((get-global j))
       ((() locals Γ φ)
        -> (((t_2 ivar)) locals (Γ (t_2 ivar)) φ)))]
 
-  [(where (#t t_2) (index (tg ...) j))
+  [(where (var t_2) (context-global C j))
    ------------------------------------ "Set-Global"
-   (⊢ (_ (global tg ...) _ _ _ _ _ _)
-      ((set-global j))
+   (⊢ C ((set-global j))
       ((((t_2 ivar)) locals Γ φ)
        -> (() locals Γ φ)))]
 
-  [(where (_ _ _ (memory n) _ _ _) C)
+  [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    (side-condition (satisfies Γ φ_1 (empty
                                      (and (= (i32 1) (le-u (add (add ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
@@ -236,7 +230,7 @@
    (⊢ C ((t load/unsafe a o)) ((((i32 ivar)) locals Γ φ_1)
                                      -> (((t ivar_2)) locals (Γ (t ivar_2)) φ_1)))]
 
-  [(where (_ _ _ (memory n) _ _ _) C)
+  [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (side-condition (satisfies Γ φ_1 (empty
@@ -248,7 +242,7 @@
    (⊢ C ((t load/unsafe (tp sz) a o)) ((((i32 ivar)) locals Γ φ_1)
                                            -> (((t ivar_2)) locals (Γ (t ivar_2)) φ_1)))]
 
-  [(where (_ _ _ (memory n) _ _ _) C)
+  [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    (side-condition (satisfies Γ φ_1 (empty
                                      (and (= (i32 1) (le-u (add (add ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
@@ -257,7 +251,7 @@
    (⊢ C ((t store/unsafe a o)) ((((i32 ivar) (t ivar_1)) locals Γ φ_1)
                                     -> (() locals Γ φ_1)))]
 
-  [(where (_ _ _ (memory n) _ _ _) C)
+  [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (side-condition (satisfies Γ φ_1 (empty
