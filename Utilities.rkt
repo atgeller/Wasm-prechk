@@ -5,18 +5,59 @@
 
 (provide (all-defined-out))
 
+(define (list-ref-right lst pos)
+  (list-ref (reverse lst) pos))
+
+(define-metafunction WASMIndexTypes
+  reverse-get : (any ...) j -> any
+  [(reverse-get (any ...) j)
+   ,(list-ref-right (term (any ...)) (term j))])
+
 (define-metafunction WASMIndexTypes
   extend : φ_1 φ_2 -> φ
   [(extend φ_1 empty) φ_1]
   [(extend φ_1 (φ_2 P)) ((extend φ_1 φ_2) P)]
   [(extend φ_1 (φ_2 (t ivar))) ((extend φ_1 φ_2) (t ivar))])
 
+;; Sets the local variable types, used in the typing rule for functions to set up the context to type check the function body
 (define-metafunction WASMIndexTypes
-  in-label : C ticond -> C
-  [(in-label ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ...)) (return ticond_2)) ticond_3)
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ... ticond_3)) (return ticond_2))]
-  [(in-label ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ...)) (return)) ticond_3)
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ... ticond_3)) (return))])
+  with-locals : C (t ...) -> C
+  [(with-locals ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) _ (label ticond_l ...) (return ticond_r ...)) (t ...))
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t ...) (label ticond_l ...) (return ticond_r ...))])
+
+;; Adds a branch condition (the pre-condition of a branch instruction) onto the label stack.
+;; Used in typing rules for block, loop, and if to append the branching condition of the block
+(define-metafunction WASMIndexTypes
+  add-label : C ticond -> C
+  [(add-label ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return ticond_r ...)) ticond)
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ... ticond) (return ticond_r ...))])
+
+;; Sets the return condition, used in the typing rule for functions to set up the context to type check the function body
+(define-metafunction WASMIndexTypes
+  with-return : C ticond -> C
+  [(with-return ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return _ ...)) ticond)
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return ticond))])
+
+;; Metafunctions for getting data out of a context
+(define-metafunction WASMIndexTypes
+  context-locals : C -> (t ...)
+  [(context-locals (_ _ _ _ (local t ...) _ _)) (t ...)])
+
+(define-metafunction WASMIndexTypes
+  context-local : C i -> t
+  [(context-local C i) (index (context-locals C) i)])
+
+(define-metafunction WASMIndexTypes
+  context-labels : C -> (ticond ...)
+  [(context-labels (_ _ _ _ _ (label ticond ...) _)) (ticond ...)])
+
+(define-metafunction WASMIndexTypes
+  context-label : C i -> ticond
+  [(context-label C i) (reverse-get (context-labels C) i)])
+
+(define-metafunction WASMIndexTypes
+  context-return : C -> ticond
+  [(context-return (_ _ _ _ _ _ (return ticond))) ticond])
 
 (define-metafunction WASMIndexTypes
   erase-mut : tg -> t
@@ -104,3 +145,12 @@
   [(domain-Γ (Γ (t ivar)))
    (ivar ivar_rest ...)
    (where (ivar_rest ...) (domain-Γ Γ))])
+
+;; returns true if everything in the list is the same as the second argument,
+;; otherwise returns false
+(define-metafunction WASMIndexTypes
+  same : (any ...) any -> boolean
+  [(same () any) #t]
+  [(same (any_!_ any_rest ...) any_!_) #f]
+  [(same (any any_rest ...) any)
+   (same (any_rest ...) any)])

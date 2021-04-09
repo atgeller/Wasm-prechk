@@ -4,7 +4,8 @@
          "IndexTypes.rkt"
          "Satisfies.rkt"
          "Utilities.rkt"
-         "WASM-Redex/Validation/Utilities.rkt")
+         ;"WASM-Redex/Validation/Utilities.rkt"
+         )
 
 (provide satisfies <: label-types contains-all)
 

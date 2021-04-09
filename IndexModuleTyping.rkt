@@ -4,9 +4,7 @@
          "IndexTypes.rkt"
          "SubTyping.rkt"
          "IndexTypingRules.rkt"
-         "Utilities.rkt"
-         "WASM-Redex/Validation/ModuleTyping.rkt"
-         "WASM-Redex/Validation/Utilities.rkt")
+         "Utilities.rkt")
 
 (provide ⊢-module-func
          ⊢-module-global
@@ -25,26 +23,19 @@
   #:contract (⊢-module-func C f ((ex ...) tfi))
 
   ;; Should (t _) ... be instiantiated in phi_1?
-  [(⊢ ((func tfi_f ...)
-       (global tg ...)
-       (table (n tfi_t ...) ...)
-       (memory m ...)
-       (local t_1 ... t ...)
-       (label ((ti_2 ..._1) locals_1 Γ_6 φ_4))
-       (return ((ti_2 ..._1) locals_1 Γ_6 φ_4)))
-      (e ...)
-      ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_5 φ_5) -> ((ti_2 ..._1) locals_2 Γ_3 φ_3)))
+  [(where ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4)) tfi)
+   (⊢ C_2 (e ...) ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (where ((ti_2 ...) locals_1 Γ_6 φ_4) (context-return C_2))
+   (where (((ti_2 ...) locals_1 Γ_6 φ_4)) (context-labels C_2))
+   (where (t_1 ... t ...) (context-locals C_2))
    (where φ_5 (extend φ_1 (build-phi-zeros (t ...) (ivar ...))))
    (side-condition (equiv-gammas Γ_6 (union Γ_4 (build-gamma locals_1))))
    (side-condition (equiv-gammas Γ_5 (union Γ_1 (build-gamma ((t ivar) ...)))))
    (side-condition (equiv-gammas Γ_1 (build-gamma ((t_1 ivar_1) ...)))) ;; Γ_2 = ((t_1 a_1) ...)
    (side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-Γ Γ_1)))) ;; domain(φ_1) subset of Γ_1
    (side-condition (satisfies Γ_3 φ_3 φ_4))
-   --------------------------------------------------------------------------------------------------------
-   (⊢-module-func ((func tfi_f ...) (global tg ...) (table (n tfi_t ...) ...) (memory m ...) _ _ _)
-                  ((ex ...) (func ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ..._1) () Γ_4 φ_4))
-                                  (local (t ...) (e ...))))
-                  ((ex ...) ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ..._1) () Γ_4 φ_4))))]
+   -----------------------------------------------------------------------------------------------
+   (⊢-module-func C ((ex ...) (func tfi (local (t ...) (e ...)))) ((ex ...) tfi))]
 
   ;; Imported function is easy
   [---------------------------------------------------------
@@ -62,10 +53,8 @@
    (⊢-module-global C (global (ex ...) tg (e ...)) ((ex ...) tg))]
 
   [;; Can't import a mutable global
-   -------------------
-   (⊢-module-global C
-                    (global (ex ...) (const t) im)
-                    ((ex ...) (const t)))])
+   -----------------------------------------------------------------------
+   (⊢-module-global C (global (ex ...) (const t) im) ((ex ...) (const t)))])
 
 ;; Helper function to ensure a table is well-formed
 ;; Checks that there are exactly `i` indices (j ...), and that each one points to a valid function
@@ -84,50 +73,67 @@
 
 ;; Validates the table and returns all exports and the table size
 (define-judgment-form WASMIndexTypes
-  #:contract (⊢-module-table C tab ((ex ...) (i (tfi ...))))
+  #:contract (⊢-module-table C tab ((ex ...) (i tfi ...)))
 
-  [(where ((func (tfi ...)) _ _ _ _ _ _) C)
+  [(where ((func tfi ...) _ _ _ _ _ _) C)
    (valid-indices (tfi ...) (j ...) i)
    (where (tfi_2 ...) ,(map (curry list-ref (term (tfi ...)))
                             (term (j ...))))
    -----------------------------------------
    (⊢-module-table C
-                   ((ex ...) (table i (j ...)))
-                   ((ex ...) (i (tfi_2 ...))))]
+                   ((ex ...) (table i j ...))
+                   ((ex ...) (i tfi_2 ...)))]
 
   [(where i ,(length (term (tfi ...))))
    ------------------------------------
    (⊢-module-table C
-                   ((ex ...) (table i im (tfi ...)))
-                   ((ex ...) (i (tfi ...))))])
+                   ((ex ...) (table i im tfi ...))
+                   ((ex ...) (i tfi ...)))])
 
 ;; Returns all exports and the memory size
 (define-judgment-form WASMIndexTypes
   #:contract (⊢-module-memory C mem ((ex ...) i))
 
-  [----------------------------------------------------
+  [------------------------------------------------------
    (⊢-module-memory C ((ex ...) (memory i)) ((ex ...) i))]
 
-  [-------------------------------------------------------
+  [---------------------------------------------------------
    (⊢-module-memory C ((ex ...) (memory i im)) ((ex ...) i))])
 
 ;; Validates all definitions in the module against the types declared in the module
 (define-judgment-form WASMIndexTypes
   #:contract (⊢-module mod)
 
-  [(⊢-module-func C_f f ((ex_f ...) tf)) ...
+  [(⊢-module-func C_f f ((ex_f ...) tfi_f)) ...
    (⊢-module-global C_g glob ((ex_g ...) tg)) ...
-   (⊢-module-table C_t tab ((ex_t ...) n_t)) ...
+   (⊢-module-table C_t tab ((ex_t ...) (n_t tfi_t ...))) ...
    (⊢-module-memory C_m mem ((ex_m ...) n_m)) ...
 
    (where (C_g ...) (global-contexts (tg ...)))
 
-   (where C ((func tf ...) (global tg ...) (table n_t ...) (memory n_m ...) (local) (label) (return)))
+   (where C ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local) (label) (return)))
    (side-condition (same (C_f ... C_t ... C_m ...) C))
 
    (side-condition (distinct (ex_f ... ... ex_g ... ... ex_t ... ... ex_m ... ...)))
    ---------------------------------------------------------------------------------------------------
    (⊢-module (module (f ...) (glob ...) (tab ...) (mem ...)))])
+
+
+(define-metafunction WASMIndexTypes
+  global-contexts : (tg ...) -> (C ...)
+  [(global-contexts ()) ()]
+  [(global-contexts (tg_i-1 ... tg))
+   (C ... ((func) (global tg_i-1 ...) (table) (memory) (local) (label) (return)))
+   (where (C ...) (global-contexts (tg_i-1 ...)))])
+
+(define-metafunction WASMIndexTypes
+  distinct : (any ...) -> boolean
+  [(distinct ()) #t]
+  [(distinct (any any_rest ...))
+   (distinct (any_rest ...))
+   (side-condition (not (member (term any) (term (any_rest ...)))))
+   or
+   #f])
 
 
 ;; Helper metafunction to extract a function type declaration from the function definition
