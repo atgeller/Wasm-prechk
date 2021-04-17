@@ -22,8 +22,8 @@
   (displayln "Hello world")
   (let* ([typemap (construct-z3-table type typelist)]
          [vars (parse-defs gamma)]
-         [constraints (extract-constraints phi)]
-         [index-def (parse-index index)])
+         [constraints (extract-constraints gamma phi)]
+         [index-def (parse-index gamma index)])
     (let ([query (append (map index-var->z3-bitvec vars)
                          `((declare-const table (Array (_ BitVec 32) Bool))
                            (define-fun satisfies () Bool

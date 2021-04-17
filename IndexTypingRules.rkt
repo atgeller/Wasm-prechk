@@ -62,6 +62,31 @@
    (⊢ C ((t relop)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
                      -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 (relop ivar_1 ivar_2))))))]
 
+  [(where (t_!_1 t_!_1) (t_1 t_2))
+   (side-condition ,(or (and (term (inn? t_1)) (term (inn? t_2))
+                             (< (term (bit-width t_1)) (term (bit-width t_2))))
+                        (and (term (fnn? t_1)) (term (fnn? t_2)))))
+   (where #f (in ivar_1 Γ)) ;; ivar_1 fresh
+   ---------------------------------------------------------------------------- "Convert"
+   (⊢ C ((t_1 convert t_2)) ((((t_2 ivar_2)) locals Γ φ)
+                             -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (convert ivar_2 t_1))))))]
+
+  [(where (t_!_1 t_!_1) (t_1 t_2))
+   (side-condition ,(nor (and (term (inn? t_1)) (term (inn? t_2))
+                              (< (term (bit-width t_1)) (term (bit-width t_2))))
+                         (and (term (fnn? t_1)) (term (fnn? t_2)))))
+   (where #f (in ivar_1 Γ)) ;; ivar_1 fresh
+   ----------------------------------------------------------------------------- "Convert-SX"
+   (⊢ C ((t_1 convert t_2 sx)) ((((t_2 ivar_2)) locals Γ φ)
+                                -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (convert ivar_2 t_1 sx))))))]
+
+  [(where (t_!_1 t_!_1) (t_1 t_2))
+   (side-condition ,(= (term (bit-width t_1)) (term (bit-width t_2))))
+   (where #f (in ivar_1 Γ)) ;; ivar_1 fresh
+   ------------------------------------------------------------------- "Reinterpret"
+   (⊢ C ((t_1 reinterpret t_2)) ((((t_2 ivar_2)) locals Γ φ)
+                                 -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (reinterpret ivar_2 t_1))))))]
+
   [---
    "Unreachable"
    (⊢ C (unreachable) tfi)]

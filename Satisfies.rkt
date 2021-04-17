@@ -23,13 +23,24 @@
                       (and ,@constraints2)))
                    (assert (not satisfies))))))
 
+(define (lookup-gamma gamma x)
+  (match gamma
+    [`empty (error "Gamma lookup failed")]
+    [`(,gamma* (,t ,y))
+     (if (equal? x y)
+         t
+         (lookup-gamma gamma* x))]))
+
 ;; TODO: floating point operations
-;;       need to know type, or use different names for flops?
-(define (redex_op->z3_op expr)
+;;       shouldn't predicate functions produce bitvectors instead of booleans?
+(define (redex_op->z3_op gamma expr)
   (match expr
-    [`(add ,x ,y)   `(bvadd ,x ,y)]
-    [`(sub ,x ,y)   `(bvsub ,x ,y)]
-    [`(mul ,x ,y)   `(bvmul ,x ,y)]
+    [`(clz ,x) 'TODO]
+    [`(ctz ,x) 'TODO]
+    [`(popcnt ,x) 'TODO]
+    [`(add ,x ,y)   `(bvadd ,x ,y)] ;; TODO: FP
+    [`(sub ,x ,y)   `(bvsub ,x ,y)] ;; TODO: FP
+    [`(mul ,x ,y)   `(bvmul ,x ,y)] ;; TODO: FP
     [`(div-s ,x ,y) `(bvsdiv ,x ,y)]
     [`(rem-s ,x ,y) `(bvsrem ,x ,y)]
     [`(div-u ,x ,y) `(bvudiv ,x ,y)]
@@ -42,6 +53,13 @@
     [`(shr-u ,x ,y) `(bvlshr ,x ,y)]
     [`(rotl ,x ,y)  `(ext_rotate_left ,x ,y)]
     [`(rotr ,x ,y)  `(ext_rotate_right ,x ,y)]
+    [`(div ,x ,y) 'TODO]
+    [`(min ,x ,y) 'TODO]
+    [`(max ,x ,y) 'TODO]
+    [`(copysign ,x ,y) 'TODO]
+    [`(eqz ,x) (match (lookup-gamma x)
+                 [`i32 `(= ,x (_ bv0 32))]
+                 [`i64 `(= ,x (_ bv0 64))])]
     [`(eq ,x ,y)    `(= ,x ,y)]
     [`(ne ,x ,y)    `(not (= ,x ,y))]
     [`(lt-s ,x ,y)  `(bvslt ,x ,y)]
@@ -52,10 +70,16 @@
     [`(gt-u ,x ,y)  `(bvugt ,x ,y)]
     [`(le-u ,x ,y)  `(bvule ,x ,y)]
     [`(ge-u ,x ,y)  `(bvuge ,x ,y)]
-    ;; TODO: what happens if x is 64 bit? Need type width?
-    [`(eqz ,x)      `(= ,x (_ bv0 32))]))
+    [`(lt ,x ,y) 'TODO]
+    [`(gt ,x ,y) 'TODO]
+    [`(le ,x ,y) 'TODO]
+    [`(ge ,x ,y) 'TODO]
+    [`(convert ,x ,t) 'TODO]
+    [`(convert ,x ,t ,sx) 'TODO]
+    [`(reinterpret ,x ,t) 'TODO]
+    ))
 
-(define (parse-index x)
+(define (parse-index gamma x)
   (match x
     [(? symbol?) x]
     [`(,type ,n)
@@ -67,44 +91,44 @@
                                  ['i64 64])))]
     [`(,u_op ,x)
      #:when (redex-match? WASMIndexTypes unop u_op)
-     (let ([index (parse-index x)])
+     (let ([index (parse-index gamma x)])
        (redex_op->z3_op `(,u_op ,index)))]
     [`(,b_op ,x ,y)
      #:when (redex-match? WASMIndexTypes binop b_op)
-     (let ([index1 (parse-index x)]
-           [index2 (parse-index y)])
+     (let ([index1 (parse-index gamma x)]
+           [index2 (parse-index gamma y)])
        (redex_op->z3_op `(,b_op ,index1 ,index2)))]
     [`(,t_op ,x)
      #:when (redex-match? WASMIndexTypes testop t_op)
-     (let ([index (parse-index x)])
+     (let ([index (parse-index gamma x)])
        `(ite ,(redex_op->z3_op `(,t_op ,index)) (_ bv1 32) (_ bv0 32)))]
     [`(,r_op ,x ,y)
      #:when (redex-match? WASMIndexTypes relop r_op)
-     (let ([index1 (parse-index x)]
-           [index2 (parse-index y)])
+     (let ([index1 (parse-index gamma x)]
+           [index2 (parse-index gamma y)])
        `(ite ,(redex_op->z3_op `(,r_op ,index1 ,index2)) (_ bv1 32) (_ bv0 32)))]))
 
-(define (parse-proposition P)
+(define (parse-proposition gamma P)
   (match P
     [`(= ,x ,y)
-     (let ([index1 (parse-index x)]
-           [index2 (parse-index y)])
+     (let ([index1 (parse-index gamma x)]
+           [index2 (parse-index gamma y)])
        `(= ,index1 ,index2))]
     [`(not ,P*)
-     (let ([prop (parse-proposition P*)])
+     (let ([prop (parse-proposition gamma P*)])
        `(not ,prop))]
     [`(and ,P1 ,P2)
-     (let ([prop1 (parse-proposition P1)]
-           [prop2 (parse-proposition P2)])
+     (let ([prop1 (parse-proposition gamma P1)]
+           [prop2 (parse-proposition gamma P2)])
        `(and ,prop1 ,prop2))]
     [`(or ,P1 ,P2)
-     (let ([prop1 (parse-proposition P1)]
-           [prop2 (parse-proposition P2)])
+     (let ([prop1 (parse-proposition gamma P1)]
+           [prop2 (parse-proposition gamma P2)])
        `(or ,prop1 ,prop2))]
     [`(if ,P? ,P1 ,P2)
-     (let ([cond (parse-proposition P?)]
-           [true (parse-proposition P1)]
-           [false (parse-proposition P2)])
+     (let ([cond (parse-proposition gamma P?)]
+           [true (parse-proposition gamma P1)]
+           [false (parse-proposition gamma P2)])
        `(ite ,cond ,true ,false))]
     [`⊥
      `false]))
@@ -114,15 +138,15 @@
     [`empty null]
     [`(,gamma* (,t ,ivar)) (cons (cons ivar t) (parse-defs gamma*))]))
 
-(define (extract-constraints phi)
+(define (extract-constraints gamma phi)
   (match phi
     [`empty null]
-    [`(,phi* ,P) (cons (parse-proposition P) (extract-constraints phi*))]))
+    [`(,phi* ,P) (cons (parse-proposition gamma P) (extract-constraints phi*))]))
 
 (define (context-to-constraints gamma phi_1 phi_2)
   (let* ([vars (parse-defs gamma)]
-         [consts1 (extract-constraints phi_1)]
-         [consts2 (extract-constraints phi_2)])
+         [consts1 (extract-constraints gamma phi_1)]
+         [consts2 (extract-constraints gamma phi_2)])
     (values vars consts1 consts2)))
 
 (define (test-satisfaction gamma phi_1 phi_2)

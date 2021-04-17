@@ -85,7 +85,7 @@
    -------------------
    (⊢-inst-list S (inst ... inst_2) (C ... C_2))])
 
-(define-metafunction WASMIndexTypes
+#;(define-metafunction WASMIndexTypes
   check-memory-sizes : (meminst ...) (j ...) -> boolean
   [(check-memory-sizes ((bits any) ...) (j ...))
    ,(and (= (length (term (any ...))) (length (term (j ...))))
@@ -138,7 +138,7 @@
    --------------------------------------------------------------------------------------------------------------------------------------------------
    (⊢-return S i ((t const c) ...) (e ...) ((ti ...) locals Γ φ))])
 
-(define-judgment-form WASMIndexTypes
+(define-judgment-form WASMPrechkWithAdmin
   #:contract (⊢-admin S C (e ...) tfi)
 
   [(side-condition (satisfies Γ φ (empty (not (= a_2 (i32 0))))))
