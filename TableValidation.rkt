@@ -24,14 +24,14 @@
          [vars (parse-defs gamma)]
          [constraints (extract-constraints gamma phi)]
          [index-def (parse-index gamma index)])
-    (let ([query (append (map index-var->z3-bitvec vars)
+    (let ([query (append (map index-var->z3-const vars)
                          `((declare-const table (Array (_ BitVec 32) Bool))
                            (define-fun satisfies () Bool
                              (select table ,index-def))
                            (assert (not satisfies)))
                          (map (lambda (x) `(assert ,x)) constraints)
                          (for/list ([i (in-range 0 (length typelist))])
-                           `(assert (= (select table ,(string->symbol (format "(_ bv~a 32)" i))) ,(hash-ref typemap (list-ref typelist i))))))])
+                           `(assert (= (select table ,(integer->z3-bitvec i 32)) ,(hash-ref typemap (list-ref typelist i))))))])
       (not (solve query)))))
 
 (define-metafunction WASMIndexTypes

@@ -2,13 +2,17 @@
 
 (require redex "IndexTypes.rkt" "Solver.rkt")
 
-(provide test-satisfaction extract-constraints parse-index index-var->z3-bitvec parse-defs)
+(provide test-satisfaction extract-constraints parse-index index-var->z3-const integer->z3-bitvec parse-defs)
 
 (define debug #t)
 
-(define (index-var->z3-bitvec var)
+(define (index-var->z3-const var)
   (match-let ([(cons name type) var])
-    `(declare-const ,name (_ BitVec ,(match type ['i32 32] ['i64 64])))))
+    `(declare-const ,name ,(match type
+                             ['i32 '(_ BitVec 32)]
+                             ['i64 '(_ BitVec 64)]
+                             ['f32 '(_ FloatingPoint 8 24)]
+                             ['f64 '(_ FloatingPoint 11 53)]))))
 
 (define (ask-z3 vars constraints1 constraints2)
   (when debug
@@ -16,7 +20,7 @@
     (displayln constraints1)
     (displayln constraints2))
   
-  (solve (append (map index-var->z3-bitvec vars)
+  (solve (append (map index-var->z3-const vars)
                  `((define-fun satisfies () Bool
                      (=>
                       (and ,@constraints1)
@@ -58,8 +62,8 @@
     [`(max ,x ,y) 'TODO]
     [`(copysign ,x ,y) 'TODO]
     [`(eqz ,x) (match (lookup-gamma x)
-                 [`i32 `(= ,x (_ bv0 32))]
-                 [`i64 `(= ,x (_ bv0 64))])]
+                 [`i32 `(= ,x \#x00000000)]
+                 [`i64 `(= ,x \#x0000000000000000)])]
     [`(eq ,x ,y)    `(= ,x ,y)]
     [`(ne ,x ,y)    `(not (= ,x ,y))]
     [`(lt-s ,x ,y)  `(bvslt ,x ,y)]
@@ -79,34 +83,72 @@
     [`(reinterpret ,x ,t) 'TODO]
     ))
 
+(define (integer->z3-bitvec x n)
+  (string->symbol
+   (string-append*
+    "#x"
+    (map (λ (b) (if (< b 16)
+                    (format "0~x" b)
+                    (format "~x" b)))
+         (bytes->list (integer->integer-bytes x (/ n 8) #f #t))))))
+
+(define (byte-bits b start stop)
+  (if (> start stop)
+      ""
+      (string-append (byte-bits b start (sub1 stop))
+                     (if (zero? (bitwise-and b (expt 2 (- 8 (add1 stop)))))
+                         "0"
+                         "1"))))
+
+(define (bytes->z3-bitvec bytes start stop)
+  (string->symbol
+   (string-append*
+    "#b"
+    (map (λ (b n)
+           (cond
+             [(<= start (* 8 n) (* 8 (add1 n)) stop) (byte-bits b 0 7)]
+             [(<= (* 8 n) start (* 8 (add1 n)) stop) (byte-bits b (- start (* 8 n)) 7)]
+             [(<= start (* 8 n) stop (* 8 (add1 n))) (byte-bits b 0 (- stop (* 8 n)))]
+             [(<= (* 8 n) start stop (* 8 (add1 n))) (byte-bits b (- start (* 8 n)) (- stop (* 8 n)))]
+             [else ""]))
+         (bytes->list bytes)
+         (build-list (bytes-length bytes) values)))))
+
 (define (parse-index gamma x)
   (match x
     [(? symbol?) x]
     [`(,type ,n)
      #:when (and (redex-match? WASMIndexTypes t type)
                  (number? n))
-     (string->symbol (format "(_ bv~a ~a)"
-                             n (match type
-                                 ['i32 32]
-                                 ['i64 64])))]
+     (match type
+       ['i32 (integer->z3-bitvec n 32)]
+       ['i64 (integer->z3-bitvec n 64)]
+       ['f32 (let ([n-bytes (real->floating-point-bytes n 4 #t)])
+               `(fp ,(bytes->z3-bitvec n-bytes 0 0)
+                    ,(bytes->z3-bitvec n-bytes 1 8)
+                    ,(bytes->z3-bitvec n-bytes 9 31)))]
+       ['f64 (let ([n-bytes (real->floating-point-bytes n 4 #t)])
+               `(fp ,(bytes->z3-bitvec n-bytes 0 0)
+                    ,(bytes->z3-bitvec n-bytes 1 11)
+                    ,(bytes->z3-bitvec n-bytes 12 63)))])]
     [`(,u_op ,x)
      #:when (redex-match? WASMIndexTypes unop u_op)
      (let ([index (parse-index gamma x)])
-       (redex_op->z3_op `(,u_op ,index)))]
+       (redex_op->z3_op gamma `(,u_op ,index)))]
     [`(,b_op ,x ,y)
      #:when (redex-match? WASMIndexTypes binop b_op)
      (let ([index1 (parse-index gamma x)]
            [index2 (parse-index gamma y)])
-       (redex_op->z3_op `(,b_op ,index1 ,index2)))]
+       (redex_op->z3_op gamma `(,b_op ,index1 ,index2)))]
     [`(,t_op ,x)
      #:when (redex-match? WASMIndexTypes testop t_op)
      (let ([index (parse-index gamma x)])
-       `(ite ,(redex_op->z3_op `(,t_op ,index)) (_ bv1 32) (_ bv0 32)))]
+       `(ite ,(redex_op->z3_op gamma `(,t_op ,index)) \#x00000001 \#x00000000))]
     [`(,r_op ,x ,y)
      #:when (redex-match? WASMIndexTypes relop r_op)
      (let ([index1 (parse-index gamma x)]
            [index2 (parse-index gamma y)])
-       `(ite ,(redex_op->z3_op `(,r_op ,index1 ,index2)) (_ bv1 32) (_ bv0 32)))]))
+       `(ite ,(redex_op->z3_op gamma `(,r_op ,index1 ,index2)) \#x00000001 \#x00000000))]))
 
 (define (parse-proposition gamma P)
   (match P
@@ -141,7 +183,7 @@
 (define (extract-constraints gamma phi)
   (match phi
     [`empty null]
-    [`(,phi* ,P) (cons (parse-proposition gamma P) (extract-constraints phi*))]))
+    [`(,phi* ,P) (cons (parse-proposition gamma P) (extract-constraints gamma phi*))]))
 
 (define (context-to-constraints gamma phi_1 phi_2)
   (let* ([vars (parse-defs gamma)]
