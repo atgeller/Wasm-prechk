@@ -47,13 +47,13 @@
     [`(trunc ,x)          `(fp.roundToIntegral RTZ ,x)]
     [`(nearest ,x)        `(fp.roundToIntegral RNE ,x)]
     [`(sqrt ,x)           `(fp.sqrt RNE ,x)]
-    [`(add ,x ,y)         (match (lookup-gamma x)
+    [`(add ,x ,y)         (match (lookup-gamma gamma x)
                             [(or 'i32 'i64) `(bvadd ,x ,y)]
                             [(or 'f32 'f64) `(fp.add RNE ,x ,y)])]
-    [`(sub ,x ,y)         (match (lookup-gamma x)
+    [`(sub ,x ,y)         (match (lookup-gamma gamma x)
                             [(or 'i32 'i64) `(bvsub ,x ,y)]
                             [(or 'f32 'f64) `(fp.sub RNE ,x ,y)])]
-    [`(mul ,x ,y)         (match (lookup-gamma x)
+    [`(mul ,x ,y)         (match (lookup-gamma gamma x)
                             [(or 'i32 'i64) `(bvmul ,x ,y)]
                             [(or 'f32 'f64) `(fp.mul RNE ,x ,y)])]
     [`(div-s ,x ,y)       `(bvsdiv ,x ,y)]
