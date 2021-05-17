@@ -3,7 +3,9 @@
 (require redex
          "IndexTypes.rkt"
          "Satisfies.rkt"
-         "Utilities.rkt")
+         "Utilities.rkt"
+         ;"WASM-Redex/Validation/Utilities.rkt"
+         )
 
 (provide satisfies <: label-types contains-all)
 

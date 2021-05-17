@@ -2,30 +2,87 @@
 
 (require redex
          "IndexTypes.rkt"
-         "WASM-Redex/Utilities.rkt"
-         "WASM-Redex/Bits.rkt")
+         "WASM-Redex/Utilities.rkt")
 
 (provide (all-defined-out))
+
+(define (list-ref-right lst pos)
+  (list-ref (reverse lst) pos))
+
+(define-metafunction WASMIndexTypes
+  reverse-get : (any ...) j -> any
+  [(reverse-get (any ...) j)
+   ,(list-ref-right (term (any ...)) (term j))])
 
 (define-metafunction WASMIndexTypes
   extend : φ_1 φ_2 -> φ
   [(extend φ_1 empty) φ_1]
   [(extend φ_1 (φ_2 P)) ((extend φ_1 φ_2) P)]
-  [(extend φ_1 (φ_2 (t a))) ((extend φ_1 φ_2) (t a))])
+  [(extend φ_1 (φ_2 (t ivar))) ((extend φ_1 φ_2) (t ivar))])
+
+;; Sets the local variable types, used in the typing rule for functions to set up the context to type check the function body
+(define-metafunction WASMIndexTypes
+  with-locals : C (t ...) -> C
+  [(with-locals ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) _ (label ticond_l ...) (return ticond_r ...)) (t ...))
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t ...) (label ticond_l ...) (return ticond_r ...))])
+
+;; Adds a branch condition (the pre-condition of a branch instruction) onto the label stack.
+;; Used in typing rules for block, loop, and if to append the branching condition of the block
+(define-metafunction WASMIndexTypes
+  add-label : C ticond -> C
+  [(add-label ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return ticond_r ...)) ticond)
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ... ticond) (return ticond_r ...))])
+
+;; Sets the return condition, used in the typing rule for functions to set up the context to type check the function body
+(define-metafunction WASMIndexTypes
+  with-return : C ticond -> C
+  [(with-return ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return _ ...)) ticond)
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return ticond))])
+
+;; Metafunctions for getting data out of a context
+(define-metafunction WASMIndexTypes
+  context-funcs : C -> (tfi ...)
+  [(context-funcs ((func tfi ...) _ _ _ _ _ _)) (tfi ...)])
 
 (define-metafunction WASMIndexTypes
-  reverse-get : (any ...) j -> any
-  [(reverse-get (any ... any_1) j)
-   (reverse-get (any ...) ,(sub1 (term j)))
-   (side-condition (< 0 (term j)))]
-  [(reverse-get (any ... any_1) 0) any_1])
+  context-func : C i -> tfi
+  [(context-func C i) (index (context-funcs C) i)])
 
 (define-metafunction WASMIndexTypes
-  in-label : C ticond -> C
-  [(in-label ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ...)) (return ticond_2)) ticond_3)
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ... ticond_3)) (return ticond_2))]
-  [(in-label ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ...)) (return)) ticond_3)
-   ((func (tfi_1 ...)) (global (tg ...)) (table (j_1 (tfi_2 ...)) ...) (memory j_2 ...) (local (t ...)) (label (ticond_1 ... ticond_3)) (return))])
+  context-globals : C -> (tg ...)
+  [(context-globals (_ (global tg ...) _ _ _ _ _)) (tg ...)])
+
+(define-metafunction WASMIndexTypes
+  context-global : C i -> tg
+  [(context-global C i) (index (context-globals C) i)])
+
+(define-metafunction WASMIndexTypes
+  context-table : C -> (n tfi ...)
+  [(context-table (_ _ (table (n tfi ...)) _ _ _ _)) (n tfi ...)])
+
+(define-metafunction WASMIndexTypes
+  context-memory : C -> n
+  [(context-memory (_ _ _ (memory n) _ _ _)) n])
+
+(define-metafunction WASMIndexTypes
+  context-locals : C -> (t ...)
+  [(context-locals (_ _ _ _ (local t ...) _ _)) (t ...)])
+
+(define-metafunction WASMIndexTypes
+  context-local : C i -> t
+  [(context-local C i) (index (context-locals C) i)])
+
+(define-metafunction WASMIndexTypes
+  context-labels : C -> (ticond ...)
+  [(context-labels (_ _ _ _ _ (label ticond ...) _)) (ticond ...)])
+
+(define-metafunction WASMIndexTypes
+  context-label : C i -> ticond
+  [(context-label C i) (reverse-get (context-labels C) i)])
+
+(define-metafunction WASMIndexTypes
+  context-return : C -> ticond
+  [(context-return (_ _ _ _ _ _ (return ticond))) ticond])
 
 (define-metafunction WASMIndexTypes
   erase-mut : tg -> t
@@ -77,25 +134,25 @@
   [(equiv-gammas Γ_1 Γ_2) #t (where (#t #t) ((superset Γ_1 Γ_2) (subset Γ_1 Γ_2)))])
 
 (define-metafunction WASMIndexTypes
-  build-phi : (t ...) (a ...) (c ...) -> φ
+  build-phi : (t ...) (ivar ...) (c ...) -> φ
   [(build-phi () () ()) empty]
-  [(build-phi (t_1 ... t_2) (a_1 ... a_2) (c_1 ... c_2)) ((build-phi (t_1 ...) (a_1 ...) (c_1 ...)) (= a_2 (t_2 c_2)))])
+  [(build-phi (t_1 ... t_2) (ivar_1 ... ivar_2) (c_1 ... c_2)) ((build-phi (t_1 ...) (ivar_1 ...) (c_1 ...)) (= ivar_2 (t_2 c_2)))])
 
 (define-metafunction WASMIndexTypes
-  build-phi-zeros : (t ...) (a ...) -> φ
+  build-phi-zeros : (t ...) (ivar ...) -> φ
   [(build-phi-zeros () ()) empty]
-  [(build-phi-zeros (t_1 ... t_2) (a_1 ... a_2) ) ((build-phi-zeros (t_1 ...) (a_1 ...)) (= a_2 (t_2 0)))])
+  [(build-phi-zeros (t_1 ... t_2) (ivar_1 ... ivar_2) ) ((build-phi-zeros (t_1 ...) (ivar_1 ...)) (= ivar_2 (t_2 0)))])
 
 (define-metafunction WASMIndexTypes
-  domain-x : x -> (a ...)
+  domain-x : x -> (ivar ...)
   [(domain-x (t c)) ()]
-  [(domain-x a) (a)]
+  [(domain-x ivar) (ivar)]
   [(domain-x (binop x y)) (merge (domain-x x) (domain-x y))]
   [(domain-x (testop x)) (domain-x x)]
   [(domain-x (relop x y)) (merge (domain-x x) (domain-x y))])
 
 (define-metafunction WASMIndexTypes
-  domain-P : P -> (a ...)
+  domain-P : P -> (ivar ...)
   [(domain-P (= x y)) (merge (domain-x x) (domain-x y))]
   [(domain-P (if P_1 P_2 P_3)) (merge (merge (domain-P P_1) (domain-P P_2)) (domain-P P_3))]
   [(domain-P (and P_1 P_2)) (merge (domain-P P_1) (domain-P P_2))]
@@ -103,13 +160,22 @@
   [(domain-P (not P)) (domain-P P)])
 
 (define-metafunction WASMIndexTypes
-  domain-φ : φ -> (a ...)
+  domain-φ : φ -> (ivar ...)
   [(domain-φ empty) ()]
   [(domain-φ (φ P)) (merge (domain-φ φ) (domain-P P))])
 
 (define-metafunction WASMIndexTypes
-  domain-Γ : Γ -> (a ...)
+  domain-Γ : Γ -> (ivar ...)
   [(domain-Γ empty) ()]
-  [(domain-Γ (Γ (t a)))
-   (a a_rest ...)
-   (where (a_rest ...) (domain-Γ Γ))])
+  [(domain-Γ (Γ (t ivar)))
+   (ivar ivar_rest ...)
+   (where (ivar_rest ...) (domain-Γ Γ))])
+
+;; returns true if everything in the list is the same as the second argument,
+;; otherwise returns false
+(define-metafunction WASMIndexTypes
+  same : (any ...) any -> boolean
+  [(same () any) #t]
+  [(same (any_!_ any_rest ...) any_!_) #f]
+  [(same (any any_rest ...) any)
+   (same (any_rest ...) any)])

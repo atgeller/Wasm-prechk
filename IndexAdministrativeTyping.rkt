@@ -6,23 +6,22 @@
          "IndexTypingRules.rkt"
          "IndexModuleTyping.rkt"
          "Utilities.rkt"
-         "WASM-Redex/Utilities.rkt"
-         "WASM-Redex/Bits.rkt")
+         "WASM-Redex/Utilities.rkt")
 
 (define-extended-language WASMPrechkWithAdmin WASMIndexTypes
   (v ::= (t const c))
   (cl ::= (i f))
-  (e ::= .... (trap) (call cl)
+  (e ::= .... trap (call cl)
      (label n (e ...) (e ...)) (local n (i (v ...)) (e ...)))
 
   (S ::= ((C ...) (table ((j (tfi ...)) ...)) (memory (j ...))))
 
-  (inst ::= ((cl ...) (v ...) (table (j (tfi ...))) (memory j))
-        ((cl ...) (v ...) (table (j (tfi ...))) (memory))
-        ((cl ...) (v ...) (table) (memory j))
-        ((cl ...) (v ...) (table) (memory)))
+  (inst ::= ((cl ...) (v ...) (table (j tfi ...) ...) (memory j ...)))
   (tabinst ::= (cl ...))
-  (meminst ::= (bits any))
+  (meminst ::= bstr)
+
+  (bstr ::= (side-condition any_1 (bytes? (term any_1))))
+  
   (s ::= ((inst ...) (tabinst ...) (meminst ...))))
 
 (define-judgment-form WASMPrechkWithAdmin
@@ -86,7 +85,7 @@
    -------------------
    (⊢-inst-list S (inst ... inst_2) (C ... C_2))])
 
-(define-metafunction WASMIndexTypes
+#;(define-metafunction WASMIndexTypes
   check-memory-sizes : (meminst ...) (j ...) -> boolean
   [(check-memory-sizes ((bits any) ...) (j ...))
    ,(and (= (length (term (any ...))) (length (term (j ...))))
@@ -139,7 +138,7 @@
    --------------------------------------------------------------------------------------------------------------------------------------------------
    (⊢-return S i ((t const c) ...) (e ...) ((ti ...) locals Γ φ))])
 
-(define-judgment-form WASMIndexTypes
+(define-judgment-form WASMPrechkWithAdmin
   #:contract (⊢-admin S C (e ...) tfi)
 
   [(side-condition (satisfies Γ φ (empty (not (= a_2 (i32 0))))))
