@@ -12,6 +12,7 @@
          ⊢-module-memory
          ⊢-module
          valid-indices
+         global-contexts
          extract-module-type)
 
 ;; Validates the function definition and returns all exports and the type of the function
@@ -43,14 +44,14 @@
 
   [;; Can't have exports if global is mutable
    (where (mut t) tg)
-   (⊢ C (e ...) ((() () empty empty) -> ((t ivar) () Γ_2 φ_2)))
+   (⊢ C (e ...) ((() () empty empty) -> (((t ivar)) () Γ_2 φ_2)))
    (side-condition ,(or (empty? (term (ex ...))) (equal? (term (mut t)) (term (const t)))))
    ----------------------------------------------------------------------------------------
-   (⊢-module-global C (global (ex ...) tg (e ...)) ((ex ...) tg))]
+   (⊢-module-global C ((ex ...) (global tg (e ...))) ((ex ...) tg))]
 
   [;; Can't import a mutable global
    -----------------------------------------------------------------------
-   (⊢-module-global C (global (ex ...) (const t) im) ((ex ...) (const t)))])
+   (⊢-module-global C ((ex ...) (global (const t) im)) ((ex ...) (const t)))])
 
 ;; Helper function to ensure a table is well-formed
 ;; Checks that there are exactly `i` indices (j ...), and that each one points to a valid function
@@ -136,48 +137,56 @@
 (define-metafunction WASMIndexTypes
   extract-func-types : (f ...) -> (tfi ...)
   [(extract-func-types ()) ()]
-  [(extract-func-types ((func _ tfi _) f_2 ...))
+  [(extract-func-types ((_ (func tfi _)) f_2 ...))
    (tfi tfi_2 ...)
    (where (tfi_2 ...) (extract-func-types (f_2 ...)))])
+
+(define-metafunction WASMIndexTypes
+  extract-func-type : f -> tfi
+  [(extract-func-type (_ (func tfi _))) tfi])
 
 ;; Helper metafunction to extract a global variable's type from the global variable definition
 (define-metafunction WASMIndexTypes
   extract-global-types : (glob ...) -> (tg ...)
   [(extract-global-types ()) ()]
-  [(extract-global-types ((global _ tg _) glob_2 ...))
+  [(extract-global-types ((_ (global tg _)) glob_2 ...))
    (tg tg_2 ...)
    (where (tg_2 ...) (extract-global-types (glob_2 ...)))])
+
+(define-metafunction WASMIndexTypes
+  extract-global-type : glob -> tg
+  [(extract-global-type (_ (global tg _))) tg])
 
 ;; Helper metafunction to extract a tables type from the table and the function types
 ;; requires that the tables all have valid indices
 (define-metafunction WASMIndexTypes
   extract-table-types : (tfi ...) (tab ...) -> ((j (tfi ...)) ...)
   [(extract-table-types (tfi ...) ()) ()]
-  [(extract-table-types (tfi ...) ((table _ i (j ...)) tab ...))
-   ((i ,(map (curry list-ref (term (tfi ...))) (term (j ...)))) (i_2 (tfi_2 ...)) ...)
-   (where ((i_2 (tfi_2 ...)) ...) (extract-table-types (tfi ...) (tab ...)))]
+  [(extract-table-types (tfi ...) ((table _ i j ...) tab ...))
+   ((i ,@(map (curry list-ref (term (tfi ...))) (term (j ...)))) (i_2 tfi_2 ...) ...)
+   (where ((i_2 tfi_2 ...) ...) (extract-table-types (tfi ...) (tab ...)))]
   [(extract-table-types (tfi ...) ((table _ i (tfi_1 ...) _) tab ...))
-   ((i (tfi_1 ...)) (i_2 (tfi_2 ...)) ...)
-   (where ((i_2 (tfi_2 ...)) ...) (extract-table-types (tfi ...) (tab ...)))])
+   ((i tfi_1 ...) (i_2 tfi_2 ...) ...)
+   (where ((i_2 tfi_2 ...) ...) (extract-table-types (tfi ...) (tab ...)))])
 
 ;; Helper metafunction to extract a memories type
 (define-metafunction WASMIndexTypes
   extract-memory-type : mem -> j
-  [(extract-memory-type (memory _ j)) j]
-  [(extract-memory-type (memory _ j _)) j])
+  [(extract-memory-type (_ (memory j))) j]
+  [(extract-memory-type (_ (memory j _))) j])
 
 ;; Extracts the declared module type (consisting of all declared function and global types in that module,
 ;; as well as the size of table and memory if applicable)
 (define-metafunction WASMIndexTypes
-  extract-module-type : m -> C
+  extract-module-type : mod -> C
   [(extract-module-type (module (f ...) (glob ...) (tab ...) (mem ...)))
-   ((func (tfi ...))
-    (global (extract-global-types (glob ...)))
+   ((func tfi ...)
+    (global (extract-global-type glob) ...)
     (table (i (tfi_1 ...)) ...)
     (memory (extract-memory-type mem) ...)
-    (local ())
-    (label ())
+    (local)
+    (label)
     (return))
-   (where (tfi ...) (extract-func-types (f ...)))
-   (where ((i (tfi_1 ...)) ...) (extract-table-types (tfi ...) (tab ...)))])
+   (where (tfi ...) ((extract-func-type f) ...))
+   (where ((i tfi_1 ...) ...) (extract-table-types (tfi ...) (tab ...)))])
 

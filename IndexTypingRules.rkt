@@ -322,6 +322,7 @@
    (⊢ C (e_1 ... e_2) (ticond_1 -> ticond_3))]
 
   ;; Stack polymorphism
+  ;; TODO: check that ti ... are in Γ_1 and Γ_2
   [(⊢ C (e ...) (((ti_1 ...) locals Γ_1 φ_1)
                    -> ((ti_2 ...) locals Γ_2 φ_2)))
    ------------------------------------------------------ "Stack-Poly"
