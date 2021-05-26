@@ -6,6 +6,7 @@
          "IndexModuleTyping.rkt"
          "Utilities.rkt"
          "Erasure.rkt"
+         "SubTyping.rkt"
          (prefix-in plain- "WASM-Redex/Validation/Typechecking.rkt"))
 
 (define (typecheck-module module)
@@ -36,13 +37,18 @@
     [#f #f]))
 
 (define (typecheck-func C f plain-deriv)
-  #f)
+  (match f
+    [`(,exs (func ,tfi (import ,_ ,_)))
+     (derivation `(⊢-module-func ,C ,f (,exs ,tfi)) #f empty)]
+    
+    [`(,exs (func ,tfi (local ,ts ,ins)))
+     'TODO]))
 
 (define (typecheck-global C glob plain-deriv)
   (match glob
     [`(,exs (global (,mut ,t) (import ,_ ,_)))
      (if (equal? mut 'const)
-         (derivation `(⊢-module-global ,C ,glob (,exs (const ,t))) #f (list))
+         (derivation `(⊢-module-global ,C ,glob (,exs (const ,t))) #f empty)
          #f)]
     [`(,exs (global (,mut ,t) ,es))
      (if (or (empty? exs) (equal? mut 'const))
@@ -57,8 +63,7 @@
 (define (typecheck-table C tab plain-deriv)
   (match tab
     [`(,exs (table ,i (import ,_ ,_) ,tfis ...))
-     (derivation `(⊢-module-table ,C ,tab (,exs (,i ,@tfis)))
-                 #f (list))]
+     (derivation `(⊢-module-table ,C ,tab (,exs (,i ,@tfis))) #f empty)]
     [`(,exs (table ,i ,js ...))
      (redex-let WASMIndexTypes ([((func (tfi ...)) _ _ _ _ _ _) C])
                 (derivation `(⊢-module-table ,C ,tab (,exs (,i ,@(map (curry list-ref (term (tfi ...))) js))))
@@ -66,28 +71,140 @@
 
 (define (typecheck-memory C mem plain-deriv)
   (match mem
-    [`(,exs (memory ,i)) (derivation `(⊢-module-memory ,C ,mem (,exs ,i)) #f (list))]
-    [`(,exs (memory ,i (import ,_ ,_))) (derivation `(⊢-module-memory ,C ,mem (,exs ,i)) #f (list))]))
+    [`(,exs (memory ,i)) (derivation `(⊢-module-memory ,C ,mem (,exs ,i)) #f empty)]
+    [`(,exs (memory ,i (import ,_ ,_))) (derivation `(⊢-module-memory ,C ,mem (,exs ,i)) #f empty)]))
 
 (define (typecheck-ins C ins pre plain-deriv)
-  (define (typecheck-e C e pre plain-deriv)
+  
+  (define (stack-polyize deriv e-pre)
+    (match-let ([`(,e-pre-tis ,_ ,_ ,_) e-pre]
+                [(derivation `(⊢ ,d-C ,d-ins ((,d-pre-tis ,d-pre-locals ,d-pre-gamma ,d-pre-phi)
+                                              ->
+                                              (,d-post-tis ,d-post-locals ,d-post-gamma ,d-post-phi))) _ _) deriv])
+      (if (= (length e-pre-tis) (length d-pre-tis))
+          deriv
+          (derivation `(⊢ ,d-C ,d-ins ((,e-pre-tis ,d-pre-locals ,d-pre-gamma ,d-pre-phi)
+                                       ->
+                                       ((,@(drop-right e-pre-tis (length d-pre-tis)) ,@d-post-tis)
+                                        ,d-post-locals
+                                        ,d-post-gamma
+                                        ,d-post-phi)))
+                      "Stack-Poly" (list deriv)))))
+  
+  (define (typecheck-e e pre plain-deriv)
     (match-let ([`(,tis ,locals ,gamma ,phi) pre])
       (match e
         [`(,t const ,c)
-         (let* ([a (gensym)]
-                [post `(((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,t ,c))))]
-                [deriv (derivation `(⊢ ,C (,e) ((() ,locals ,gamma ,phi) -> ,post))
-                                   "Const"
-                                   empty)])
-           (if (empty? tis)
-               deriv
-               (derivation `(⊢ ,C (,e) (,pre -> ,post)) "Stack-Poly" (list deriv))))]
+         (let ([a (gensym)])
+           (stack-polyize
+            (derivation `(⊢ ,C (,e) ((() ,locals ,gamma ,phi)
+                                     ->
+                                     (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,t ,c))))))
+                        "Const"
+                        empty)
+            pre))]
+
+        [`(,t ,(? (redex-match? WASMIndexTypes unop) uop))
+         (match-let ([`(,_ ... (,_ ,a1)) tis])
+           (let ([a (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C (,e) ((((,t ,a1)) ,locals ,gamma ,phi)
+                                       ->
+                                       (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,uop ,a1))))))
+                          "Unop"
+                          empty)
+              pre)))]
+
+        [`(,t div-s/unsafe)
+         (match-let ([`(,_ ... (,_ ,a1) (,_ ,a2)) tis])
+           (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
+               (let ([a (gensym)])
+                 (stack-polyize
+                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                           ->
+                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (div-s ,a1 ,a2))))))
+                              "Div-S-Prechk"
+                              empty)
+                  pre))
+               #f))]
+
+        [`(,t div-u/unsafe)
+         (match-let ([`(,_ ... (,_ ,a1) (,_ ,a2)) tis])
+           (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
+               (let ([a (gensym)])
+                 (stack-polyize
+                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                           ->
+                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (div-u ,a1 ,a2))))))
+                              "Div-U-Prechk"
+                              empty)
+                  pre))
+               #f))]
+
+        [`(,t rem-s/unsafe)
+         (match-let ([`(,_ ... (,_ ,a1) (,_ ,a2)) tis])
+           (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
+               (let ([a (gensym)])
+                 (stack-polyize
+                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                           ->
+                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (rem-s ,a1 ,a2))))))
+                              "Rem-S-Prechk"
+                              empty)
+                  pre))
+               #f))]
+
+        [`(,t rem-u/unsafe)
+         (match-let ([`(,_ ... (,_ ,a1) (,_ ,a2)) tis])
+           (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
+               (let ([a (gensym)])
+                 (stack-polyize
+                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                           ->
+                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (rem-u ,a1 ,a2))))))
+                              "Rem-U-Prechk"
+                              empty)
+                  pre))
+               #f))]
+
+        [`(,t ,(? (redex-match? WASMIndexTypes binop) bop))
+         (match-let ([`(,_ ... (,_ ,a1) (,_ ,a2)) tis])
+           (let ([a (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                       ->
+                                       (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,bop ,a1 ,a2))))))
+                          "Binop"
+                          empty)
+              pre)))]
+
+        #;[`(,t ,(? (redex-match? WASMIndexTypes testop) _))
+           (stack-polyize (derivation `(⊢ ,C (,e) ((,t) -> (i32))) #f (list)) e-pre e-post)]
+
+        #;[`(,t ,(? (redex-match? WASMIndexTypes relop) _))
+           (stack-polyize (derivation `(⊢ ,C (,e) ((,t ,t) -> (i32))) #f (list)) e-pre e-post)]
+
+        [`unreachable
+         (let* ([post-tis (map (λ (t) `(,t (gensym))) (deriv-post plain-deriv))]
+                [post-gamma (term (build-gamma (merge ,post-tis ,locals)))])
+           (derivation `(⊢ ,C (,e) (,pre -> (,post-tis ,locals ,post-gamma (empty ⊥)))) "Unreachable" empty))]
+
+        [`nop
+         (stack-polyize
+          (derivation `(⊢ ,C (,e) ((() ,locals ,gamma ,phi) -> (() ,locals ,gamma ,phi))) "Nop" empty)
+          pre)]
+
+        [`drop
+         (match-let ([`(,_ ... (,t ,a)) tis])
+           (stack-polyize
+            (derivation `(⊢ ,C (,e) ((((,t ,a)) ,locals ,gamma ,phi) -> (() ,locals ,gamma ,phi))) "Drop" empty)
+            pre))]
 
         [_ #f])))
   
   (cond
-    [(empty? ins) (derivation `(⊢ ,C () (,pre -> ,pre)) "Empty" (list))]
-    [(empty? (rest ins)) (typecheck-e C (first ins) pre plain-deriv)]
+    [(empty? ins) (derivation `(⊢ ,C () (,pre -> ,pre)) "Empty" empty)]
+    [(empty? (rest ins)) (typecheck-e (first ins) pre plain-deriv)]
     [else
      ;; Note: this follows the recursive structure of the composition rule
      ;;       could make more efficient by flattening the derivation tree and folding over the instructions
@@ -95,7 +212,7 @@
      (match-let ([(derivation _ _ (list plain-es-deriv plain-e-deriv)) plain-deriv])
        (match (typecheck-ins C (drop-right ins 1) pre plain-es-deriv)
          [#f #f]
-         [es-deriv (match (typecheck-e C (last ins) (deriv-post es-deriv) plain-e-deriv)
+         [es-deriv (match (typecheck-e (last ins) (deriv-post es-deriv) plain-e-deriv)
                      [#f #f]
                      [e-deriv (derivation `(⊢ ,C ,ins (,pre -> ,(deriv-post e-deriv)))
                                           "Composition"
@@ -138,7 +255,7 @@
 ;; (listof glob) -> derivation of ⊢-module-global-list or #f
 #;(define (typecheck-globals globs)
   (match globs
-    [`() (derivation `(⊢-module-global-list () ()) #f (list))]
+    [`() (derivation `(⊢-module-global-list () ()) #f empty)]
     [`(,rest-globs ... ,glob)
      (let ([rest-deriv? (typecheck-globals rest-globs)])
        (match rest-deriv?
@@ -174,7 +291,7 @@
              [#f #f]))
          #f)]
     [`(global ,exs (#f ,t) im)
-     (derivation `(⊢-module-global ,C ,glob (,exs (#f ,t))) #f (list))]))
+     (derivation `(⊢-module-global ,C ,glob (,exs (#f ,t))) #f empty)]))
 
 ;; C tab -> derivation of ⊢-module-table
 ;; Requires that the table has valid indices and length
@@ -185,21 +302,20 @@
        (derivation `(⊢-module-table ,C ,tab (,exs (,i ,(map (curry list-ref (term (tfi ...))) js))))
                    #f (list (first (build-derivations (valid-indices (tfi ...) ,js ,i))))))]
     [`(table ,exs ,i ,_ ,tfis)
-     (derivation `(⊢-module-table ,C ,tab (,exs (,i ,tfis)))
-                 #f (list))]))
+     (derivation `(⊢-module-table ,C ,tab (,exs (,i ,tfis))) #f empty)]))
 
 ;; C mem -> derivation of ⊢-module-mem
 #;(define (build-memory-derivation C mem)
   (match mem
     [`(memory ,exs ,i)
-     (derivation `(⊢-module-mem ,C ,mem (,exs ,i)) #f (list))]
+     (derivation `(⊢-module-mem ,C ,mem (,exs ,i)) #f empty)]
     [`(memory ,exs ,i ,im)
-     (derivation `(⊢-module-mem ,C ,mem (,exs ,i)) #f (list))]))
+     (derivation `(⊢-module-mem ,C ,mem (,exs ,i)) #f empty)]))
 
 ;; C (listof func) -> derivation of ⊢-module-func-list or #f
 #;(define (typecheck-funcs C funcs)
   (match funcs
-    [`() (derivation `(⊢-module-func-list ,C () ()) #f (list))]
+    [`() (derivation `(⊢-module-func-list ,C () ()) #f empty)]
     [`(,func ,rest-funcs ...)
      (let ([func-deriv? (typecheck-func C func)]
            [rest-deriv? (typecheck-funcs C rest-funcs)])
@@ -238,7 +354,7 @@
               #f)])
          #f)]
     [`(func ,exs ,tfi (import ,_ ,_))
-     (derivation `(⊢-module-func ,C ,func (,exs ,tfi)) #f (list))]))
+     (derivation `(⊢-module-func ,C ,func (,exs ,tfi)) #f empty)]))
 
 ;; C (listof e) ticond -> derivation of ⊢ or #f
 ;; Typechecking takes the precondition for the instructions
@@ -254,7 +370,7 @@
                        `(⊢ ,C ,es ((() ,locals ,Γ ,φ)
                                      ->
                                      (((,t ,a)) ,locals (,Γ (,t ,a)) (,φ (= ,a (,t ,c))))))
-                       "Const" (list))])
+                       "Const" empty)])
           (if (empty? tis)
               deriv
               (derivation
@@ -268,7 +384,7 @@
 
        [`((nop))
         (let ([deriv (derivation `(⊢ ,C ,es ((() ,locals ,Γ ,φ) -> (() ,locals ,Γ ,φ)))
-                                 "Nop" (list))])
+                                 "Nop" empty)])
           (if (empty? tis)
               deriv
               (derivation `(⊢ ,C ,es (,ticond -> ,ticond)) "Stack-Poly" (list deriv))))]
@@ -276,7 +392,7 @@
        [`(drop)
         (if (not (empty? tis))
             (let ([deriv (derivation `(⊢ ,C ,es (((,(last tis)) ,locals ,Γ ,φ) -> (() ,locals ,Γ ,φ)))
-                                     "Drop" (list))])
+                                     "Drop" empty)])
               (if (= (length tis) 1)
                   deriv
                   (derivation `(⊢ ,C ,es (,ticond -> (,(drop-right tis 1) ,locals ,Γ ,φ)))
@@ -285,7 +401,7 @@
 
        [`()
         (let ([deriv (derivation `(⊢ ,C () ((() ,locals ,Γ ,φ) -> (() ,locals ,Γ ,φ)))
-                                 "Empty" (list))])
+                                 "Empty" empty)])
           (if (empty? tis)
               deriv
               (derivation

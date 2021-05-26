@@ -31,6 +31,10 @@
 
 (define (erase-e e)
   (match e
+    [`(,t div-s/unsafe) `(,t div-s)]
+    [`(,t div-u/unsafe) `(,t div-u)]
+    [`(,t rem-s/unsafe) `(,t rem-s)]
+    [`(,t rem-u/unsafe) `(,t rem-u)]
     [`(call-indirect/unsafe ,tfi) `(call-indirect ,(erase-tfi tfi))]
     [`(,t load/unsafe ,a ,o) `(,t load ,a ,o)]
     [`(,t load/unsafe (,tp ,sx) ,a ,o) `(,t load (,tp ,sx) ,a ,o)]

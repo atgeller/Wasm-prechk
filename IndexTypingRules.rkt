@@ -15,9 +15,12 @@
   #:contract (⊢ C (e ...) tfi)
 
   [(where #f (in ivar Γ)) ;; ivar fresh
-   ---
-   "Const"
+   --- "Const"
    (⊢ C ((t const c)) ((() locals Γ φ) -> (((t ivar)) locals (Γ (t ivar)) (φ (= ivar (t c))))))]
+
+  [(where #f (in ivar_2 Γ)) ;; ivar fresh
+   --- "Unop"
+   (⊢ C ((t unop)) ((((t ivar_1)) locals Γ φ) -> (((t ivar_2)) locals (Γ (t ivar_2)) (φ (= ivar_2 (unop ivar_1))))))]
 
   [(side-condition (satisfies Γ φ (empty (not (= ivar_2 (t 0))))))
    (where #f (in ivar_3 Γ)) ;; ivar_3 fresh
@@ -87,21 +90,18 @@
    (⊢ C ((t_1 reinterpret t_2)) ((((t_2 ivar_2)) locals Γ φ)
                                  -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (reinterpret ivar_2 t_1))))))]
 
-  [---
-   "Unreachable"
-   (⊢ C (unreachable) tfi)]
+  [(side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) locals))))
+   --- "Unreachable"
+   (⊢ C (unreachable) (((ti_1 ...) locals Γ_1 φ) -> ((ti_2 ...) locals Γ_2 (empty ⊥))))]
 
-  [---
-   "Nop"
+  [--- "Nop"
    (⊢ C (nop) ((() locals Γ φ) -> (() locals Γ φ)))]
 
-  [---
-   "Drop"
+  [--- "Drop"
    (⊢ C (drop) (((ti ... (t ivar)) locals Γ φ) -> ((ti ...) locals Γ φ)))]
 
   [(where #f (in ivar_3 Γ)) ;; ivar_3 fresh
-   ---
-   "Select"
+   --- "Select"
    (⊢ C (select) ((((t ivar_1) (t ivar_2) (i32 ivar)) locals Γ φ)
                   -> (((t ivar_3)) locals (Γ (t ivar))
                                    (φ (if (= ivar (i32 0))
