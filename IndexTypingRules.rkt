@@ -90,15 +90,16 @@
    (⊢ C ((t_1 reinterpret t_2)) ((((t_2 ivar_2)) locals Γ φ)
                                  -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (reinterpret ivar_2 t_1))))))]
 
-  [(side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) locals))))
+  [(side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t ivar) ...)))))
+   (where (t ...) (context-locals C))
    --- "Unreachable"
-   (⊢ C (unreachable) (((ti_1 ...) locals Γ_1 φ) -> ((ti_2 ...) locals Γ_2 (empty ⊥))))]
+   (⊢ C (unreachable) (((ti_1 ...) locals Γ_1 φ) -> ((ti_2 ...) ((t ivar) ...) Γ_2 (empty ⊥))))]
 
   [--- "Nop"
    (⊢ C (nop) ((() locals Γ φ) -> (() locals Γ φ)))]
 
   [--- "Drop"
-   (⊢ C (drop) (((ti ... (t ivar)) locals Γ φ) -> ((ti ...) locals Γ φ)))]
+   (⊢ C (drop) ((((t ivar)) locals Γ φ) -> (() locals Γ φ)))]
 
   [(where #f (in ivar_3 Γ)) ;; ivar_3 fresh
    --- "Select"
@@ -149,10 +150,12 @@
 
   [(where (ticond ...) (context-labels C))
    (label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t ivar) ...)))))
+   (where (t ...) (context-locals C))
    -------------------------------------------------------- "Br"
    (⊢ C ((br j))
       (((ti_1 ... ti ...) locals Γ_1 φ_1)
-       -> ((ti_2 ...) locals Γ_2 φ_2)))]
+       -> ((ti_2 ...) ((t ivar) ...) Γ_2 (empty ⊥))))]
 
   [(where (ticond ...) (context-labels C))
    (label-types (ticond ...) (j) ((ti ...) locals Γ_1 (φ_1 (not (= ivar (i32 0))))))
@@ -163,16 +166,20 @@
 
   [(where (ticond ...) (context-labels C))
    (label-types (ticond ...) (j ...) ((ti_3 ...) locals Γ_1 φ_1))
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t_l ivar_l) ...)))))
+   (where (t_l ...) (context-locals C))
    -------------------------------------------------------------- "Br-Table"
    (⊢ C ((br-table j ...))
       (((ti_1 ... ti_3 ... (i32 ivar)) locals Γ_1 φ_1)
-       -> ((ti_2 ...) locals Γ_1 φ_2)))]
+       -> ((ti_2 ...) ((t_l ivar_l) ...) Γ_2 (empty ⊥))))]
 
   [(where ((ti ...) _ _ φ) (context-return C))
    (side-condition (satisfies Γ_1 φ_1 φ)) ;; Strengthen precondition
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t ivar) ...)))))
+   (where (t ...) (context-locals C))
    -------------------------------------- "Return"
    (⊢ C ((return))
-      (((ti_1 ... ti ...) locals Γ_1 φ_1) -> ticond))]
+      (((ti_1 ... ti ...) locals Γ_1 φ_1) -> ((ti_2 ...) ((t ivar) ...) Γ_2 (empty ⊥))))]
 
   ;; Only works if Function is internal
   ;; Justin - Actually, I think this works fine, functions imported from other contexts have to
