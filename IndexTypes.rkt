@@ -24,7 +24,9 @@
   (locals ::= (ti ...))
   ;; Index-type pre/post-condition: types on stack, locals, and constraint context
   (ticond ::= ((ti ...) locals Γ φ))
-  (tfi ::= (ticond -> ticond))
+  (tficond ::= (ticond -> ticond))
+  (tiann ::= ((ti ...) locals φ))
+  (tfi ::= (tiann -> tiann))
 
   ;; Indexed module contexts
   (C ::= ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory j) (local t ...) (label ticond  ...) (return ticond))

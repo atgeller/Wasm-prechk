@@ -12,7 +12,7 @@
 ;; TODO: fresh metafunction
 
 (define-judgment-form WASMIndexTypes
-  #:contract (⊢ C (e ...) tfi)
+  #:contract (⊢ C (e ...) tficond)
 
   [(where #f (in ivar Γ)) ;; ivar fresh
    --- "Const"
@@ -120,6 +120,30 @@
    --------------------------- "Block"
    (⊢ C_1 ((block (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
+  
+  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
+   (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) locals_1 (ti_91 ...) locals_91 φ_2))) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_2 φ_4 (substitute-ivars (ti_2 ...) locals_2 (ti_92 ...) locals_92 φ_3))) ;; Weaken postcondition inside
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
+   (where Γ_5 (union Γ_1 Γ_3))
+   (where φ_5 (union φ_1 φ_3))
+   --------------------------- "Bloock"
+   (⊢ C_1 ((block (((ti_91 ...) locals_91 Γ_2 φ_2) -> ((ti_92 ...) locals_92 Γ_3 φ_3)) (e ...)))
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_3 φ_5)))]
+  
+  [(where C_2 (add-label C_1 ((ti_3 ...) locals_3 φ_3)))
+   ;; TODO: construct Γ_2 from annotation variables
+   (⊢ C_2 (e ...) (((ti_2 ...) locals_2 Γ_2 φ_2) -> ((ti_5 ...) locals_5 Γ_5 φ_5)))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) locals_1 (ti_2 ...) locals_2 φ_2))) ;; Strengthen precondition outside
+   (side-condition (satisfies Γ_5 φ_5 (substitute-ivars (ti_5 ...) locals_5 (ti_3 ...) locals_3 φ_3))) ;; Weak postcondition inside
+   (where Γ_4 (union Γ_1 (build-gamma (merge (ti_3 ...) locals_3))))
+   (where φ_4 (union φ_1 φ_3))
+   ;; where ti_2 ... locals_2 ti_3 ... locals_3 not in Γ_1
+   --------------------------- "Blooock"
+   (⊢ C_1 ((block (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)) (e ...)))
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_3 ...) locals_3 Γ_4 φ_4)))]
 
   [(where C_2 (add-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
    (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
@@ -186,14 +210,14 @@
   ;;          have a type declaration in the context that they're called from.
   ;; Adam - This is the same as in the thesis
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  [(where (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3)) (context-func C j))
-   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
+  [(where (((ti_2 ...) _ Γ_2 φ_2) -> ((ti_3 ...) _ Γ_3 φ_3)) (context-func C j))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 Γ_3))
    --------------------------- "Call"
    (⊢ C ((call j))
       (((ti_1 ...) locals Γ_1 φ_1)
-       -> ((ti_2 ...) locals Γ_4 φ_4)))]
+       -> ((ti_4 ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   [(where (j _ ...) (context-table C))
