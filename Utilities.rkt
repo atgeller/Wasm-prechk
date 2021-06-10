@@ -171,6 +171,10 @@
    (ivar ivar_rest ...)
    (where (ivar_rest ...) (domain-Γ Γ))])
 
+(define-metafunction WASMIndexTypes
+  domain-tis : (ti ...) -> (ivar ...)
+  [(domain-tis ((t ivar) ...)) (ivar ...)])
+
 ;; returns true if everything in the list is the same as the second argument,
 ;; otherwise returns false
 (define-metafunction WASMIndexTypes
@@ -179,3 +183,12 @@
   [(same (any_!_ any_rest ...) any_!_) #f]
   [(same (any any_rest ...) any)
    (same (any_rest ...) any)])
+
+(define-metafunction WASMIndexTypes
+  distinct : (any ...) -> boolean
+  [(distinct ()) #t]
+  [(distinct (any any_rest ...))
+   (distinct (any_rest ...))
+   (side-condition (not (member (term any) (term (any_rest ...)))))
+   or
+   #f])

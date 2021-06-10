@@ -123,15 +123,6 @@
    (C ... ((func) (global tg_i-1 ...) (table) (memory) (local) (label) (return)))
    (where (C ...) (global-contexts (tg_i-1 ...)))])
 
-(define-metafunction WASMIndexTypes
-  distinct : (any ...) -> boolean
-  [(distinct ()) #t]
-  [(distinct (any any_rest ...))
-   (distinct (any_rest ...))
-   (side-condition (not (member (term any) (term (any_rest ...)))))
-   or
-   #f])
-
 
 ;; Helper metafunction to extract a function type declaration from the function definition
 (define-metafunction WASMIndexTypes

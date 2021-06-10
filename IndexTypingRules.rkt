@@ -7,7 +7,18 @@
          "Utilities.rkt"
          "WASM-Redex/Utilities.rkt")
 
-(provide ⊢)
+(provide ⊢ tfi-ok)
+
+(define-judgment-form WASMIndexTypes
+  #:contract (tfi-ok tfi)
+  #:mode (tfi-ok I)
+
+  [(side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-tis (merge (ti_1 ...) locals_1)))))
+   (side-condition ,(subset? (term (domain-φ φ_2)) (term (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2))))))
+   (side-condition (distinct (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2)))))
+   -----------------------------------------------------------------
+   (tfi-ok (((ti_1 ...) locals_1 φ_1) -> ((ti_2 ...) locals_2 φ_2)))])
+  
 
 ;; TODO: fresh metafunction
 
@@ -109,68 +120,65 @@
                                           (= ivar_3 ivar_2)
                                           (= ivar_3 ivar_1))))))]
   
-  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
-   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
-   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
-   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
-   (where Γ_5 (union Γ_1 Γ_3))
-   (where φ_5 (union φ_1 φ_3))
-   --------------------------- "Block"
-   (⊢ C_1 ((block (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
-  
-  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
-   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) locals_1 (ti_91 ...) locals_91 φ_2))) ;; Strengthen precondition outside
-   (side-condition (satisfies Γ_2 φ_4 (substitute-ivars (ti_2 ...) locals_2 (ti_92 ...) locals_92 φ_3))) ;; Weaken postcondition inside
-   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
-   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
-   (where Γ_5 (union Γ_1 Γ_3))
-   (where φ_5 (union φ_1 φ_3))
-   --------------------------- "Bloock"
-   (⊢ C_1 ((block (((ti_91 ...) locals_91 Γ_2 φ_2) -> ((ti_92 ...) locals_92 Γ_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_3 φ_5)))]
-  
   [(where C_2 (add-label C_1 ((ti_3 ...) locals_3 φ_3)))
-   ;; TODO: construct Γ_2 from annotation variables
    (⊢ C_2 (e ...) (((ti_2 ...) locals_2 Γ_2 φ_2) -> ((ti_5 ...) locals_5 Γ_5 φ_5)))
-   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) locals_1 (ti_2 ...) locals_2 φ_2))) ;; Strengthen precondition outside
-   (side-condition (satisfies Γ_5 φ_5 (substitute-ivars (ti_5 ...) locals_5 (ti_3 ...) locals_3 φ_3))) ;; Weak postcondition inside
-   (where Γ_4 (union Γ_1 (build-gamma (merge (ti_3 ...) locals_3))))
-   (where φ_4 (union φ_1 φ_3))
-   ;; where ti_2 ... locals_2 ti_3 ... locals_3 not in Γ_1
-   --------------------------- "Blooock"
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) locals_2))))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (merge (ti_1 ...) locals_1)
+                                                        (merge (ti_2 ...) locals_2)
+                                                        φ_2))) ;; Strengthen precondition outside
+   (where φ_6 (substitute-ivars (merge (merge (ti_1 ...) locals_1) (merge (ti_5 ...) locals_5))
+                                (merge (merge (ti_2 ...) locals_2) (merge (ti_3 ...) locals_3))
+                                φ_3))
+   (side-condition (satisfies Γ_5 φ_5 φ_6)) ;; Weak postcondition inside
+   (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)))
+   (where Γ_4 (union Γ_1 (build-gamma (merge (ti_5 ...) locals_5))))
+   (where φ_4 (union φ_1 φ_6))
+   --------------------------- "Block"
    (⊢ C_1 ((block (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_3 ...) locals_3 Γ_4 φ_4)))]
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_5 ...) locals_5 Γ_4 φ_4)))]
 
-  [(where C_2 (add-label C_1 ((ti_1 ...) locals_1 Γ_2 φ_2)))
-   (⊢ C_2 (e ...) (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
-   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
-   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
-   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
-   (where Γ_5 (union Γ_1 Γ_3))
-   (where φ_5 (union φ_1 φ_3))
+  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 φ_2)))
+   (⊢ C_2 (e ...) (((ti_2 ...) locals_2 Γ_2 φ_2) -> ((ti_5 ...) locals_5 Γ_5 φ_5)))
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) locals_2))))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (merge (ti_1 ...) locals_1)
+                                                        (merge (ti_2 ...) locals_2)
+                                                        φ_2))) ;; Strengthen precondition outside
+   
+   (where φ_6 (substitute-ivars (merge (merge (ti_1 ...) locals_1) (merge (ti_5 ...) locals_5))
+                                (merge (merge (ti_2 ...) locals_2) (merge (ti_3 ...) locals_3))
+                                φ_3))
+   (side-condition (satisfies Γ_5 φ_5 φ_6)) ;; Weaken postcondition inside
+   (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)))
+   (where Γ_4 (union Γ_1 (build-gamma (merge (ti_5 ...) locals_5))))
+   (where φ_4 (union φ_1 φ_6))
    --------------------------- "Loop"
-   (⊢ C_1 ((loop (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
+   (⊢ C_1 ((loop (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)) (e ...)))
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_4 φ_4)))]
 
-  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   (⊢ C_2 (e_1 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
-                     -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
-   (⊢ C_2 (e_2 ...) (((ti_1 ...) locals_1 Γ_2 φ_2)
-                     -> ((ti_2 ...) locals_2 Γ_4 φ_4)))
-   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition outside
-   (side-condition (satisfies Γ_2 φ_4 φ_3)) ;; Weaken postcondition inside
-   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_1 ...) locals_1)))) ;; Γ_2 = ti_1 ... locals_1
-   (side-condition (subset (build-gamma (domain-φ φ_2)) Γ_2)) ;; domain(φ_2) subset of Γ_2
-   (where Γ_5 (union Γ_1 Γ_3))
+  [(where C_2 (add-label C_1 ((ti_2 ...) locals_2 φ_2)))
+   (⊢ C_2 (e_1 ...) (((ti_2 ...) locals_2 Γ_2 φ_2)
+                     -> ((ti_5 ...) locals_5 Γ_5 φ_5)))
+   (⊢ C_2 (e_2 ...) (((ti_2 ...) locals_2 Γ_2 φ_2)
+                     -> ((ti_6 ...) locals_6 Γ_6 φ_6)))
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) locals_2)))) ;; Γ_2 = ti_1 ... locals_1
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (merge (ti_1 ...) locals_1)
+                                                        (merge (ti_2 ...) locals_2)
+                                                        φ_2))) ;; Strengthen precondition outside
+   
+   (where φ_7 (substitute-ivars (merge (merge (ti_1 ...) locals_1) (merge (ti_5 ...) locals_5))
+                                (merge (merge (ti_2 ...) locals_2) (merge (ti_3 ...) locals_3))
+                                φ_3))
+   (where φ_8 (substitute-ivars (merge (merge (ti_1 ...) locals_1) (merge (ti_6 ...) locals_6))
+                                (merge (merge (ti_2 ...) locals_2) (merge (ti_3 ...) locals_3))
+                                φ_3))
+   (side-condition (satisfies Γ_5 φ_5 φ_7)) ;; Weaken postcondition inside then
+   (side-condition (satisfies Γ_6 φ_6 φ_8)) ;; Weaken postcondition inside else
+   (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)))
+   (where Γ_4 (union Γ_1 (build-gamma (merge (ti_5 ...) locals_5))))
    (where φ_5 (union φ_1 φ_3))
    --------------------------------------------------------------------- "If"
-   (⊢ C_1 ((if (((ti_1 ...) locals_1 Γ_2 φ_2) -> ((ti_2 ...) locals_2 Γ_3 φ_3)) (e_1 ...) (e_2 ...)))
-      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_2 ...) locals_2 Γ_5 φ_5)))]
+   (⊢ C_1 ((if (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)) (e_1 ...) (e_2 ...)))
+      (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_5 ...) locals_5 Γ_4 φ_4)))]
 
   [(where (ticond ...) (context-labels C))
    (label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
