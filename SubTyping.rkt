@@ -7,7 +7,7 @@
          ;"WASM-Redex/Validation/Utilities.rkt"
          )
 
-(provide satisfies satisfies-all <: contains-all substitute-ivars)
+(provide satisfies satisfies-all all-satisfies <: contains-all substitute-ivars)
 
 ;; Ensures index type context φ_1 satisfies φ_2
 (define-metafunction WASMIndexTypes
@@ -23,6 +23,15 @@
   [(satisfies-all Γ φ_1 (φ φ_2 ...))
    (satisfies-all Γ φ_1 (φ_2 ...))
    (side-condition (term (satisfies Γ φ_1 φ)))
+   or
+   #f])
+
+(define-metafunction WASMIndexTypes
+  all-satisfies : (Γ ...) (φ ...) φ -> boolean
+  [(all-satisfies Γ () φ_2) #t]
+  [(all-satisfies Γ (φ φ_1 ...) φ_2)
+   (all-satisfies Γ (φ_1 ...) φ_2)
+   (side-condition (term (satisfies Γ φ φ_2)))
    or
    #f])
 

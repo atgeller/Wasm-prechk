@@ -216,35 +216,39 @@
   ;;          have a type declaration in the context that they're called from.
   ;; Adam - This is the same as in the thesis
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  [(where (((ti_2 ...) _ Γ_2 φ_2) -> ((ti_3 ...) _ Γ_3 φ_3)) (context-func C j))
+  [(where (((ti_2 ...) _ φ_2) -> ((ti_3 ...) _ φ_3)) (context-func C j))
+   (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3)))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
-   (where Γ_4 (union Γ_1 Γ_3))
+   (where Γ_4 (union Γ_1 (build-gamma (ti_3 ...))))
    --------------------------- "Call"
    (⊢ C ((call j))
       (((ti_1 ...) locals Γ_1 φ_1)
-       -> ((ti_4 ...) locals Γ_4 φ_4)))]
+       -> ((ti_3 ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+  ;; TODO: Do we want to allow for indexed types on non-prechk call-indirect?
   [(where (j _ ...) (context-table C))
-   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
+   (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3)))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
-   (where Γ_4 (union Γ_1 Γ_3))
+   (where Γ_4 (union Γ_1 (build-gamma (ti_3 ...))))
    --------------------------- "Call-Indirect"
-   (⊢ C ((call-indirect (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
-      (((ti_1 ... (i32 ivar)) locals_1 Γ_1 φ_1)
-       -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
+   (⊢ C ((call-indirect (((ti_2 ...) _ φ_2) -> ((ti_3 ...) _ φ_3))))
+      (((ti_1 ... (i32 ivar)) locals Γ_1 φ_1)
+       -> ((ti_3 ...) locals Γ_4 φ_4)))]
   
-  [(where (j tfi ...) (context-table C))
-   (side-condition (satisfies Γ_1 φ_1 φ_2)) ;; Strengthen precondition
+  [(where (j (((ti_pre ...) _ φ_pre) -> ((ti_post ...) _ φ_post)) ...) (context-table C))
+   (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3)))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
-   (where Γ_4 (union Γ_1 Γ_3))
-   (side-condition (valid-table-call (((ti_1 ...) () Γ_2 φ_2) -> ((ti_2 ...) () Γ_3 φ_3))
-                                     ivar (tfi ...) Γ_1 φ_1))
+   (where Γ_4 (union Γ_1 (build-gamma (ti_3 ...))))
+   (side-condition (satisfies-all (build-gamma (ti_2 ...)) φ_1 ((substitute-ivars (ti_2 ...) (ti_pre ...) φ_pre) ...)))
+   (side-condition (all-satisfies (build-gamma (ti_3 ...)) ((substitute-ivars (ti_3 ...) (ti_post ...) φ_post) ...) φ_3))
    ------------------------------------------------------- "Call-Indirect-Prechk"
-   (⊢ C ((call-indirect/unsafe (((ti_1 ...) _ Γ_2 φ_2) -> ((ti_2 ...) _ Γ_3 φ_3))))
-      (((ti_1 ... (i32 ivar)) locals_1 Γ_1 φ_1)
-       -> ((ti_2 ...) locals_1 Γ_4 φ_4)))]
+   (⊢ C ((call-indirect/unsafe (((ti_2 ...) _ φ_2) -> ((ti_3 ...) _ φ_3))))
+      (((ti_1 ... (i32 ivar)) locals Γ_1 φ_1)
+       -> ((ti_3 ...) locals Γ_4 φ_4)))]
 
   [(where t_2 (context-local C j))
    (where (t_2 ivar) (index locals j))
