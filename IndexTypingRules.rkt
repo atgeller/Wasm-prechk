@@ -174,24 +174,27 @@
    (⊢ C_1 ((if (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)) (e_1 ...) (e_2 ...)))
       (((ti_1 ...) locals_1 Γ_1 φ_1) -> ((ti_3 ...) locals_3 Γ_4 φ_4)))]
 
-  [(where (ticond ...) (context-labels C))
-   (label-types (ticond ...) (j) ((ti ...) locals Γ_1 φ_1))
-   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t ivar) ...)))))
-   (where (t ...) (context-locals C))
+  [(where ((ti_pat ...) locals_pat φ) (reverse-get (context-labels C) j))
+   (side-condition ,(= (length (term (ti ...))) (length (term (ti_pat ...))))) ;; Not sure if this is needed
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (merge (ti ...) locals) (merge (ti_pat ...) locals_pat) φ)))
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t_l ivar_l) ...)))))
+   (where (t_l ...) (context-locals C))
    -------------------------------------------------------- "Br"
    (⊢ C ((br j))
       (((ti_1 ... ti ...) locals Γ_1 φ_1)
-       -> ((ti_2 ...) ((t ivar) ...) Γ_2 (empty ⊥))))]
+       -> ((ti_2 ...) ((t_l ivar_l) ...) Γ_2 (empty ⊥))))]
 
-  [(where (ticond ...) (context-labels C))
-   (label-types (ticond ...) (j) ((ti ...) locals Γ_1 (φ_1 (not (= ivar (i32 0))))))
+  [(where ((ti_pat ...) locals_pat φ) (reverse-get (context-labels C) j))
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (merge (ti ...) locals) (merge (ti_pat ...) locals_pat) (φ (not (= ivar (i32 0)))))))
    ------------------------------------------------------------------------------ "Br-If"
    (⊢ C ((br-if j))
       (((ti ... (i32 ivar)) locals Γ_1 φ_1)
        -> ((ti ...) locals Γ_1 (φ_1 (= ivar (i32 0))))))]
 
-  [(where (ticond ...) (context-labels C))
-   (label-types (ticond ...) (j ...) ((ti_3 ...) locals Γ_1 φ_1))
+  [(where (((ti_pat ...) locals_pat φ) ...) ((reverse-get (context-labels C) j) ...))
+   ;; TODO?: match lengths of ti_pat and ti_3?
+   (where (ti_s ...) (merge (ti_3 ...) locals))
+   (side-condition (satisfies-all Γ_1 φ_1 ((substitute-ivars (ti_s ...) (merge (ti_pat ...) locals_pat) φ) ...)))
    (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t_l ivar_l) ...)))))
    (where (t_l ...) (context-locals C))
    -------------------------------------------------------------- "Br-Table"
@@ -199,13 +202,14 @@
       (((ti_1 ... ti_3 ... (i32 ivar)) locals Γ_1 φ_1)
        -> ((ti_2 ...) ((t_l ivar_l) ...) Γ_2 (empty ⊥))))]
 
-  [(where ((ti ...) _ _ φ) (context-return C))
-   (side-condition (satisfies Γ_1 φ_1 φ)) ;; Strengthen precondition
-   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t ivar) ...)))))
-   (where (t ...) (context-locals C))
+  [(where ((ti_pat ...) _ φ) (context-return C))
+   (side-condition ,(= (length (term (ti ...))) (length (term (ti_pat ...))))) ;; Not sure if this is needed
+   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti ...) (ti_pat ...) φ))) ;; Strengthen precondition
+   (side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t_l ivar_l) ...)))))
+   (where (t_l ...) (context-locals C))
    -------------------------------------- "Return"
-   (⊢ C ((return))
-      (((ti_1 ... ti ...) locals Γ_1 φ_1) -> ((ti_2 ...) ((t ivar) ...) Γ_2 (empty ⊥))))]
+   (⊢ C (return)
+      (((ti_1 ... ti ...) locals Γ_1 φ_1) -> ((ti_2 ...) ((t_l ivar_l) ...) Γ_2 (empty ⊥))))]
 
   ;; Only works if Function is internal
   ;; Justin - Actually, I think this works fine, functions imported from other contexts have to

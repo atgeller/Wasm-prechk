@@ -29,14 +29,14 @@
   (tfi ::= (tiann -> tiann))
 
   ;; Indexed module contexts
-  (C ::= ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory j) (local t ...) (label ticond  ...) (return ticond))
-     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory j) (local t ...) (label ticond ...) (return))
-     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory) (local t ...) (label ticond  ...) (return ticond))
-     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory) (local t ...) (label ticond ...) (return))
-     ((func tfi ...) (global tg ...) (table) (memory j) (local t ...) (label ticond  ...) (return ticond))
-     ((func tfi ...) (global tg ...) (table) (memory j) (local t ...) (label ticond ...) (return))
-     ((func tfi ...) (global tg ...) (table) (memory) (local t ...) (label ticond  ...) (return ticond))
-     ((func tfi ...) (global tg ...) (table) (memory) (local t ...) (label ticond ...) (return)))
+  (C ::= ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory j) (local t ...) (label tiann  ...) (return tiann))
+     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory j) (local t ...) (label tiann ...) (return))
+     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory) (local t ...) (label tiann  ...) (return tiann))
+     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory) (local t ...) (label tiann ...) (return))
+     ((func tfi ...) (global tg ...) (table) (memory j) (local t ...) (label tiann  ...) (return tiann))
+     ((func tfi ...) (global tg ...) (table) (memory j) (local t ...) (label tiann ...) (return))
+     ((func tfi ...) (global tg ...) (table) (memory) (local t ...) (label tiann  ...) (return tiann))
+     ((func tfi ...) (global tg ...) (table) (memory) (local t ...) (label tiann ...) (return)))
 
   (S ::= ((C ...) (table ((j (tfi ...)) ...)) (memory (j ...))))
 
