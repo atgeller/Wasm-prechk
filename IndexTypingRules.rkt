@@ -9,7 +9,14 @@
 
 (provide ⊢ tfi-ok)
 
-(define-judgment-form WASMIndexTypes
+(define-metafunction WASMIndexTypes
+  tfi-ok : tfi -> boolean
+  [(tfi-ok (((ti_1 ...) locals_1 φ_1) -> ((ti_2 ...) locals_2 φ_2)))
+   ,(and (subset? (term (domain-φ φ_1)) (term (domain-tis (merge (ti_1 ...) locals_1))))
+         (subset? (term (domain-φ φ_2)) (term (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2)))))
+         (term (distinct (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2))))))])
+
+#;(define-judgment-form WASMIndexTypes
   #:contract (tfi-ok tfi)
   #:mode (tfi-ok I)
 
@@ -129,7 +136,7 @@
    (side-condition (satisfies Γ_5 φ_5 (substitute-ivars (merge (merge (ti_1 ...) locals_1) (merge (ti_5 ...) locals_5))
                                                         (merge (merge (ti_2 ...) locals_2) (merge (ti_3 ...) locals_3))
                                                         φ_3))) ;; Weak postcondition inside
-   (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)))
+   (side-condition (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3))))
    (where Γ_4 (union Γ_1 (build-gamma (merge (ti_3 ...) locals_3))))
    (where φ_4 (union φ_1 φ_3))
    --------------------------- "Block"
@@ -145,7 +152,7 @@
    (side-condition (satisfies Γ_5 φ_5 (substitute-ivars (merge (merge (ti_1 ...) locals_1) (merge (ti_5 ...) locals_5))
                                                         (merge (merge (ti_2 ...) locals_2) (merge (ti_3 ...) locals_3))
                                                         φ_3))) ;; Weaken postcondition inside
-   (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)))
+   (side-condition (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3))))
    (where Γ_4 (union Γ_1 (build-gamma (merge (ti_3 ...) locals_3))))
    (where φ_4 (union φ_1 φ_3))
    --------------------------- "Loop"
@@ -167,7 +174,7 @@
    (side-condition (satisfies Γ_6 φ_6 (substitute-ivars (merge (merge (ti_1 ...) locals_1) (merge (ti_6 ...) locals_6))
                                                         (merge (merge (ti_2 ...) locals_2) (merge (ti_3 ...) locals_3))
                                                         φ_3))) ;; Weaken postcondition inside else
-   (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3)))
+   (side-condition (tfi-ok (((ti_2 ...) locals_2 φ_2) -> ((ti_3 ...) locals_3 φ_3))))
    (where Γ_4 (union Γ_1 (build-gamma (merge (ti_3 ...) locals_3))))
    (where φ_5 (union φ_1 φ_3))
    --------------------------------------------------------------------- "If"
@@ -217,7 +224,7 @@
   ;; Adam - This is the same as in the thesis
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   [(where (((ti_2 ...) _ φ_2) -> ((ti_3 ...) _ φ_3)) (context-func C j))
-   (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3)))
+   (side-condition (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3))))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 (build-gamma (ti_3 ...))))
@@ -229,7 +236,7 @@
 
   ;; TODO: Do we want to allow for indexed types on non-prechk call-indirect?
   [(where (j _ ...) (context-table C))
-   (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3)))
+   (side-condition (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3))))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
    (where φ_4 (union φ_1 φ_3))
    (where Γ_4 (union Γ_1 (build-gamma (ti_3 ...))))
@@ -238,13 +245,12 @@
       (((ti_1 ... (i32 ivar)) locals Γ_1 φ_1)
        -> ((ti_3 ...) locals Γ_4 φ_4)))]
   
-  [(where (j (((ti_pre ...) _ φ_pre) -> ((ti_post ...) _ φ_post)) ...) (context-table C))
-   (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3)))
-   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
-   (where φ_4 (union φ_1 φ_3))
-   (where Γ_4 (union Γ_1 (build-gamma (ti_3 ...))))
-   (side-condition (satisfies-all (build-gamma (ti_2 ...)) φ_1 ((substitute-ivars (ti_2 ...) (ti_pre ...) φ_pre) ...)))
-   (side-condition (all-satisfies (build-gamma (ti_3 ...)) ((substitute-ivars (ti_3 ...) (ti_post ...) φ_post) ...) φ_3))
+  [(where (j tfi ...) (context-table C))
+   (side-condition (tfi-ok (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3))))
+   #;(side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ti_1 ...) (ti_2 ...) φ_2))) ;; Strengthen precondition
+   #;(side-condition (valid-table-call (((ti_2 ...) () φ_2) -> ((ti_3 ...) () φ_3)) ivar (tfi ...) Γ_1 φ_1))
+   #;(where φ_4 (union φ_1 φ_3))
+   #;(where Γ_4 (union Γ_1 (build-gamma (ti_3 ...))))
    ------------------------------------------------------- "Call-Indirect-Prechk"
    (⊢ C ((call-indirect/unsafe (((ti_2 ...) _ φ_2) -> ((ti_3 ...) _ φ_3))))
       (((ti_1 ... (i32 ivar)) locals Γ_1 φ_1)

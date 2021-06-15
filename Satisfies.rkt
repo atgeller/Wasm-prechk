@@ -29,7 +29,7 @@
 
 (define (lookup-gamma gamma x)
   (match gamma
-    [`empty (error "Gamma lookup failed")]
+    [`empty (error (format "Gamma lookup failed: ~a" x))]
     [`(,gamma* (,t ,y))
      (if (equal? x y)
          t
