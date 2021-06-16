@@ -38,50 +38,50 @@
 
   [(where #f (in ivar_2 Γ)) ;; ivar fresh
    --- "Unop"
-   (⊢ C ((t unop)) ((((t ivar_1)) locals Γ φ) -> (((t ivar_2)) locals (Γ (t ivar_2)) (φ (= ivar_2 (unop ivar_1))))))]
+   (⊢ C ((t unop)) ((((t ivar_1)) locals Γ φ) -> (((t ivar_2)) locals (Γ (t ivar_2)) (φ (= ivar_2 ((t unop) ivar_1))))))]
 
   [(side-condition (satisfies Γ φ (empty (not (= ivar_2 (t 0))))))
    (where #f (in ivar_3 Γ)) ;; ivar_3 fresh
    ---------------------------------------------------------- "Div-S-Prechk"
    (⊢ C ((t div-s/unsafe)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
-                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 (div-s ivar_1 ivar_2))))))]
+                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t div-s) ivar_1 ivar_2))))))]
 
   [(side-condition (satisfies Γ φ (empty (not (= ivar_2 (t 0))))))
    (where #f (in ivar_3 Γ)) ;; ivar_3 fresh
    ---------------------------------------------------------- "Div-U-Prechk"
    (⊢ C ((t div-u/unsafe)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
-                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 (div-u ivar_1 ivar_2))))))]
+                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t div-u) ivar_1 ivar_2))))))]
 
   [(side-condition (satisfies Γ φ (empty (not (= ivar_2 (t 0))))))
    (where #f (in ivar_3 Γ)) ;; ivar_3 fresh
    ---------------------------------------------------------- "Rem-S-Prechk"
    (⊢ C ((t rem-s/unsafe)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
-                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 (rem-s ivar_1 ivar_2))))))]
+                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t rem-s) ivar_1 ivar_2))))))]
 
   [(side-condition (satisfies Γ φ (empty (not (= ivar_2 (t 0))))))
    (where #f (in ivar_3 Γ)) ;; ivar_3 fresh
    ---------------------------------------------------------- "Rem-U-Prechk"
    (⊢ C ((t rem-u/unsafe)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
-                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 (rem-u ivar_1 ivar_2))))))]
+                            -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t rem-u) ivar_1 ivar_2))))))]
 
   [(where (binop_!_1 binop_!_1 binop_!_1) (binop div-s/unsafe div-u/unsafe))
    (where (binop_!_1 binop_!_1 binop_!_1) (binop rem-s/unsafe rem-u/unsafe))
    (where #f (in ivar_3 Γ)) ;; ivar_3 fresh
    ------------------------------------------------ "Binop"
    (⊢ C ((t binop)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
-                     -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 (binop ivar_1 ivar_2))))))]
+                     -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t binop) ivar_1 ivar_2))))))]
 
   [(where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    --------
    "Testop"
    (⊢ C ((t testop)) ((((t ivar)) locals Γ φ)
-                      -> (((t ivar_2)) locals (Γ (t ivar_2)) (φ (= ivar_2 (testop ivar))))))]
+                      -> (((t ivar_2)) locals (Γ (t ivar_2)) (φ (= ivar_2 ((t testop) ivar))))))]
 
   [(where #f (in ivar_3 Γ)) ;; ivar_3 fresh
    -------
    "Relop"
    (⊢ C ((t relop)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
-                     -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 (relop ivar_1 ivar_2))))))]
+                     -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t relop) ivar_1 ivar_2))))))]
 
   [(where (t_!_1 t_!_1) (t_1 t_2))
    (side-condition ,(or (and (term (inn? t_1)) (term (inn? t_2))
@@ -90,7 +90,7 @@
    (where #f (in ivar_1 Γ)) ;; ivar_1 fresh
    ---------------------------------------------------------------------------- "Convert"
    (⊢ C ((t_1 convert t_2)) ((((t_2 ivar_2)) locals Γ φ)
-                             -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (convert ivar_2 t_1))))))]
+                             -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 ((t_1 convert t_2) ivar_2))))))]
 
   [(where (t_!_1 t_!_1) (t_1 t_2))
    (side-condition ,(nor (and (term (inn? t_1)) (term (inn? t_2))
@@ -99,14 +99,14 @@
    (where #f (in ivar_1 Γ)) ;; ivar_1 fresh
    ----------------------------------------------------------------------------- "Convert-SX"
    (⊢ C ((t_1 convert t_2 sx)) ((((t_2 ivar_2)) locals Γ φ)
-                                -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (convert ivar_2 t_1 sx))))))]
+                                -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 ((t_1 convert t_2 sx) ivar_2))))))]
 
   [(where (t_!_1 t_!_1) (t_1 t_2))
    (side-condition ,(= (term (bit-width t_1)) (term (bit-width t_2))))
    (where #f (in ivar_1 Γ)) ;; ivar_1 fresh
    ------------------------------------------------------------------- "Reinterpret"
    (⊢ C ((t_1 reinterpret t_2)) ((((t_2 ivar_2)) locals Γ φ)
-                                 -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 (reinterpret ivar_2 t_1))))))]
+                                 -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 ((t_1 reinterpret t_2) ivar_2))))))]
 
   [(side-condition (equiv-gammas Γ_2 (build-gamma (merge (ti_2 ...) ((t ivar) ...)))))
    (where (t ...) (context-locals C))
@@ -295,8 +295,8 @@
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le-u (add (add ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
-                                          (= (i32 1) (ge-u (add ivar (i32 o)) (i32 0)))))))
+                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
+                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ----------------------------------------------------------------------- "Load-Prechk"
    (⊢ C ((t load/unsafe a o)) ((((i32 ivar)) locals Γ φ_1)
@@ -306,8 +306,8 @@
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le-u (add (add ivar (i32 o)) (i32 ,(/ (term (packed-bit-width tp)) 8))) (i32 n)))
-                                          (= (i32 1) (ge-u (add ivar (i32 o)) (i32 0)))))))
+                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (packed-bit-width tp)) 8))) (i32 n)))
+                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
    (where inn t)
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ----------------------------------------------------------------------- "Load-Packed-Prechk"
@@ -317,8 +317,8 @@
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le-u (add (add ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
-                                          (= (i32 1) (ge-u (add ivar (i32 o)) (i32 0)))))))
+                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
+                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
    ------------------------------------------------------------------------- "Store-Prechk"
    (⊢ C ((t store/unsafe a o)) ((((i32 ivar) (t ivar_1)) locals Γ φ_1)
                                     -> (() locals Γ φ_1)))]
@@ -327,8 +327,8 @@
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) (le-u (add (add ivar (i32 o)) (i32 ,(/ (term (packed-bit-width tp)) 8))) (i32 n)))
-                                          (= (i32 1) (ge-u (add ivar (i32 o)) (i32 0)))))))
+                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (packed-bit-width tp)) 8))) (i32 n)))
+                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
    (where inn t)
    ------------------------------------------------------------------------------ "Store-Packed-Prechk"
    (⊢ C ((t store/unsafe tp a o)) ((((i32 ivar) (t ivar_1)) locals Γ φ_1)
@@ -336,27 +336,29 @@
   
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
+   (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ------------------------------------------------------------- "Load"
-   (⊢ C ((t load a o)) ((i32) -> (t)))]
+   (⊢ C ((t load a o)) ((((i32 ivar_1)) locals Γ φ) -> (((t ivar)) locals (Γ (t ivar_2)) φ)))]
 
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (where inn t)
+   (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ----------------------------------------------------------------------- "Load-Packed"
-   (⊢ C ((t load (tp sx) a o)) ((i32) -> (t)))]
+   (⊢ C ((t load (tp sx) a o)) ((((i32 ivar_1)) locals Γ φ) -> (((t ivar)) locals (Γ (t ivar_2)) φ)))]
 
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    ------------------------------------------------------------- "Store"
-   (⊢ C ((t store a o)) ((i32 t) -> ()))]
+   (⊢ C ((t store a o)) ((((i32 ivar_1) (t ivar_2)) locals Γ φ) -> (() locals Γ φ)))]
 
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (where inn t)
    ----------------------------------------------------------------------- "Store-Packed"
-   (⊢ C ((t store tp a o)) ((i32 t) -> ()))]
+   (⊢ C ((t store tp a o)) ((((i32 ivar_1) (t ivar_2)) locals Γ φ) -> (() locals Γ φ)))]
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
