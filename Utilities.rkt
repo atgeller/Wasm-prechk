@@ -147,9 +147,11 @@
   domain-x : x -> (ivar ...)
   [(domain-x (t c)) ()]
   [(domain-x ivar) (ivar)]
-  [(domain-x (binop x y)) (merge (domain-x x) (domain-x y))]
-  [(domain-x (testop x)) (domain-x x)]
-  [(domain-x (relop x y)) (merge (domain-x x) (domain-x y))])
+  [(domain-x ((t binop) x y)) (merge (domain-x x) (domain-x y))]
+  [(domain-x ((t testop) x)) (domain-x x)]
+  [(domain-x ((t relop) x y)) (merge (domain-x x) (domain-x y))]
+  [(domain-x ((t cvtop t) x)) (domain-x x)]
+  [(domain-x ((t cvtop t sx) x)) (domain-x x)])
 
 (define-metafunction WASMIndexTypes
   domain-P : P -> (ivar ...)

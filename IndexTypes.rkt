@@ -14,7 +14,7 @@
 
   ;; Index language
   (ivar ::= variable-not-otherwise-mentioned)
-  (x y ::= ivar (t c) ((t binop) x y) ((t testop) x) ((t relop) x y) ((t cvtop t) x t) ((t cvtop t sx) x))
+  (x y ::= ivar (t c) ((t binop) x y) ((t testop) x) ((t relop) x y) ((t cvtop t) x) ((t cvtop t sx) x))
   (P ::= (= x y) (if P P P) (not P) (and P P) (or P P) ⊥)
   (φ ::= empty (φ P))
   (Γ ::= empty (Γ ti))
