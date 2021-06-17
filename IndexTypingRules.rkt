@@ -16,19 +16,6 @@
          (subset? (term (domain-φ φ_2)) (term (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2)))))
          (term (distinct (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2))))))])
 
-#;(define-judgment-form WASMIndexTypes
-  #:contract (tfi-ok tfi)
-  #:mode (tfi-ok I)
-
-  [(side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-tis (merge (ti_1 ...) locals_1)))))
-   (side-condition ,(subset? (term (domain-φ φ_2)) (term (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2))))))
-   (side-condition (distinct (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2)))))
-   -----------------------------------------------------------------
-   (tfi-ok (((ti_1 ...) locals_1 φ_1) -> ((ti_2 ...) locals_2 φ_2)))])
-  
-
-;; TODO: fresh metafunction
-
 (define-judgment-form WASMIndexTypes
   #:contract (⊢ C (e ...) tficond)
 
@@ -72,14 +59,12 @@
                      -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t binop) ivar_1 ivar_2))))))]
 
   [(where #f (in ivar_2 Γ)) ;; ivar_2 fresh
-   --------
-   "Testop"
+   -------- "Testop"
    (⊢ C ((t testop)) ((((t ivar)) locals Γ φ)
-                      -> (((t ivar_2)) locals (Γ (t ivar_2)) (φ (= ivar_2 ((t testop) ivar))))))]
+                      -> (((i32 ivar_2)) locals (Γ (i32 ivar_2)) (φ (= ivar_2 ((t testop) ivar))))))]
 
   [(where #f (in ivar_3 Γ)) ;; ivar_3 fresh
-   -------
-   "Relop"
+   ------- "Relop"
    (⊢ C ((t relop)) ((((t ivar_1) (t ivar_2)) locals Γ φ)
                      -> (((t ivar_3)) locals (Γ (t ivar_3)) (φ (= ivar_3 ((t relop) ivar_1 ivar_2))))))]
 

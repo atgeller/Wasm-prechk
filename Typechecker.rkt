@@ -41,8 +41,24 @@
     [`(,exs (func ,tfi (import ,_ ,_)))
      (derivation `(⊢-module-func ,C ,f (,exs ,tfi)) #f empty)]
     
-    [`(,exs (func ,tfi (local ,ts ,ins)))
-     'TODO]))
+    [`(,exs (func ((,tis-pre () ,φ-pre) -> (,tis-post () ,φ-post)) (local ,ts ,ins)))
+     (let* ([locals-pre (map (λ (t) `(,t ,(gensym))) ts)]
+            [locals-post (map (λ (t) `(,t ,(gensym))) ts)]
+            [φ-zeros (term (extend ,φ-pre (build-phi-zeros ,ts ,(map second locals-pre))))]
+            [C2 (term (with-return
+                          (add-label (with-locals ,C ,(append (map first tis-pre) ts))
+                                     (,tis-post ,locals-post ,φ-post))
+                        (,tis-post ,locals-post ,φ-post)))]
+            [Γ-pre (term (build-gamma (,@tis-pre ,@locals-pre)))])
+       (match (typecheck-ins C2 ins `(() ,(append tis-pre locals-pre) ,Γ-pre ,φ-pre) (first (derivation-subs plain-deriv)))
+         [#f #f]
+         [ins-deriv
+          (match-let ([`(,tis-ins-post ,_ ,Γ-post ,φ-ins-post) (deriv-post ins-deriv)])
+            (if (term (satisfies ,Γ-post ,φ-ins-post (substitute-ivars ,tis-ins-post ,tis-post ,φ-post)))
+                (derivation `(⊢-module-func ,C ,f (,exs ((,tis-pre () ,φ-pre) -> (,tis-post () ,φ-post))))
+                            #f
+                            (list ins-deriv))
+                #f))]))]))
 
 (define (typecheck-global C glob plain-deriv)
   (match glob
@@ -97,9 +113,10 @@
         [`(,t const ,c)
          (let ([a (gensym)])
            (stack-polyize
-            (derivation `(⊢ ,C (,e) ((() ,locals ,gamma ,phi)
-                                     ->
-                                     (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,t ,c))))))
+            (derivation `(⊢ ,C ((,t const ,c))
+                            ((() ,locals ,gamma ,phi)
+                             ->
+                             (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,t ,c))))))
                         "Const"
                         empty)
             pre))]
@@ -108,9 +125,10 @@
          (match-let ([`(,_ ... (,_ ,a1)) tis])
            (let ([a (gensym)])
              (stack-polyize
-              (derivation `(⊢ ,C (,e) ((((,t ,a1)) ,locals ,gamma ,phi)
-                                       ->
-                                       (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,uop ,a1))))))
+              (derivation `(⊢ ,C ((,t ,uop))
+                              ((((,t ,a1)) ,locals ,gamma ,phi)
+                               ->
+                               (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t ,uop) ,a1))))))
                           "Unop"
                           empty)
               pre)))]
@@ -120,9 +138,10 @@
            (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
                (let ([a (gensym)])
                  (stack-polyize
-                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
-                                           ->
-                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (div-s ,a1 ,a2))))))
+                  (derivation `(⊢ ,C ((,t div-s/unsafe))
+                                  ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                   ->
+                                   (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t div-s) ,a1 ,a2))))))
                               "Div-S-Prechk"
                               empty)
                   pre))
@@ -133,9 +152,10 @@
            (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
                (let ([a (gensym)])
                  (stack-polyize
-                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
-                                           ->
-                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (div-u ,a1 ,a2))))))
+                  (derivation `(⊢ ,C ((,t div-u/unsafe))
+                                  ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                   ->
+                                   (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t div-u) ,a1 ,a2))))))
                               "Div-U-Prechk"
                               empty)
                   pre))
@@ -146,9 +166,10 @@
            (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
                (let ([a (gensym)])
                  (stack-polyize
-                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
-                                           ->
-                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (rem-s ,a1 ,a2))))))
+                  (derivation `(⊢ ,C ((,t rem-s/unsafe))
+                                  ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                   ->
+                                   (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t rem-s) ,a1 ,a2))))))
                               "Rem-S-Prechk"
                               empty)
                   pre))
@@ -159,9 +180,10 @@
            (if (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
                (let ([a (gensym)])
                  (stack-polyize
-                  (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
-                                           ->
-                                           (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (rem-u ,a1 ,a2))))))
+                  (derivation `(⊢ ,C ((,t rem-u/unsafe))
+                                  ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                                   ->
+                                   (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t rem-u) ,a1 ,a2))))))
                               "Rem-U-Prechk"
                               empty)
                   pre))
@@ -171,33 +193,122 @@
          (match-let ([`(,_ ... (,_ ,a1) (,_ ,a2)) tis])
            (let ([a (gensym)])
              (stack-polyize
-              (derivation `(⊢ ,C (,e) ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
-                                       ->
-                                       (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a (,bop ,a1 ,a2))))))
+              (derivation `(⊢ ,C ((,t ,bop))
+                              ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                               ->
+                               (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t ,bop) ,a1 ,a2))))))
                           "Binop"
                           empty)
               pre)))]
 
-        #;[`(,t ,(? (redex-match? WASMIndexTypes testop) _))
-           (stack-polyize (derivation `(⊢ ,C (,e) ((,t) -> (i32))) #f (list)) e-pre e-post)]
+        [`(,t ,(? (redex-match? WASMIndexTypes testop) top))
+         (match-let ([`(,_ ... (,_ ,a1)) tis])
+           (let ([a2 (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C ((,t ,top))
+                              ((((,t ,a1)) ,locals ,gamma ,phi)
+                               ->
+                               (((i32 ,a2)) ,locals (,gamma (i32 ,a2)) (,phi (= ,a2 ((,t ,top) ,a1))))))
+                          "Testop"
+                          empty)
+              pre)))]
 
-        #;[`(,t ,(? (redex-match? WASMIndexTypes relop) _))
-           (stack-polyize (derivation `(⊢ ,C (,e) ((,t ,t) -> (i32))) #f (list)) e-pre e-post)]
+        [`(,t ,(? (redex-match? WASMIndexTypes relop) rop))
+         (match-let ([`(,_ ... (,_ ,a1) (,_ ,a2)) tis])
+           (let ([a (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C ((,t ,rop))
+                              ((((,t ,a1) (,t ,a2)) ,locals ,gamma ,phi)
+                               ->
+                               (((i32 ,a)) ,locals (,gamma (i32 ,a)) (,phi (= ,a ((,t ,rop) ,a1 ,a2))))))
+                          "Relop"
+                          empty)
+              pre)))]
+
+        [`(,t1 convert ,t2)
+         (match-let ([`(,_ ... (,_ ,a2)) tis])
+           (let ([a1 (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C ((,t1 convert ,t2))
+                              ((((,t2 ,a2)) ,locals ,gamma ,phi)
+                               ->
+                               (((,t1 ,a1)) ,locals (,gamma (,t1 ,a1)) (,phi (= ,a1 ((,t1 convert ,t2) ,a2))))))
+                          "Convert"
+                          empty)
+              pre)))]
+
+        [`(,t1 convert ,t2 ,sx)
+         (match-let ([`(,_ ... (,_ ,a2)) tis])
+           (let ([a1 (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C ((,t1 convert ,t2 ,sx))
+                              ((((,t2 ,a2)) ,locals ,gamma ,phi)
+                               ->
+                               (((,t1 ,a1)) ,locals (,gamma (,t1 ,a1)) (,phi (= ,a1 ((,t1 convert ,t2 ,sx) ,a2))))))
+                          "Convert-SX"
+                          empty)
+              pre)))]
+
+        [`(,t1 reinterpret ,t2)
+         (match-let ([`(,_ ... (,_ ,a2)) tis])
+           (let ([a1 (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C ((,t1 reinterpret ,t2))
+                              ((((,t2 ,a2)) ,locals ,gamma ,phi)
+                               ->
+                               (((,t1 ,a1)) ,locals (,gamma (,t1 ,a1)) (,phi (= ,a1 ((,t1 reinterpret ,t2) ,a2))))))
+                          "Reinterpret"
+                          empty)
+              pre)))]
 
         [`unreachable
-         (let* ([post-tis (map (λ (t) `(,t (gensym))) (deriv-post plain-deriv))]
+         (let* ([post-tis (map (λ (t) `(,t ,(gensym))) (deriv-post plain-deriv))]
                 [post-gamma (term (build-gamma (merge ,post-tis ,locals)))])
-           (derivation `(⊢ ,C (,e) (,pre -> (,post-tis ,locals ,post-gamma (empty ⊥)))) "Unreachable" empty))]
+           (derivation `(⊢ ,C (unreachable) (,pre -> (,post-tis ,locals ,post-gamma (empty ⊥)))) "Unreachable" empty))]
 
         [`nop
          (stack-polyize
-          (derivation `(⊢ ,C (,e) ((() ,locals ,gamma ,phi) -> (() ,locals ,gamma ,phi))) "Nop" empty)
+          (derivation `(⊢ ,C (nop) ((() ,locals ,gamma ,phi) -> (() ,locals ,gamma ,phi))) "Nop" empty)
           pre)]
 
         [`drop
          (match-let ([`(,_ ... (,t ,a)) tis])
            (stack-polyize
-            (derivation `(⊢ ,C (,e) ((((,t ,a)) ,locals ,gamma ,phi) -> (() ,locals ,gamma ,phi))) "Drop" empty)
+            (derivation `(⊢ ,C (drop) ((((,t ,a)) ,locals ,gamma ,phi) -> (() ,locals ,gamma ,phi))) "Drop" empty)
+            pre))]
+
+        [`select
+         (match-let ([`(,_ ... (,t ,a1) (,_ ,a2) (i32 ,a)) tis])
+           (let ([a3 (gensym)])
+             (stack-polyize
+              (derivation `(⊢ ,C (select) ((((,t ,a1) (,t ,a2) (i32 ,a3)) ,locals ,gamma ,phi)
+                                           ->
+                                           (((,t ,a3)) ,locals (,gamma (,t ,a3)) (,phi (if (= ,a3 (i32 0))
+                                                                                           (= ,a3 ,a1)
+                                                                                           (= ,a3 ,a2))))))
+                          "Select"
+                          empty)
+              pre)))]
+
+        [`(block ((,tis-pre ,locals-pre ,φ-pre) -> (,tis-post ,locals-pre ,φ-post)) ,ins)
+         'TODO]
+
+        [`(loop ((,tis-pre ,locals-pre ,φ-pre) -> (,tis-post ,locals-pre ,φ-post)) ,ins)
+         'TODO]
+
+        [`(if ((,tis-pre ,locals-pre ,φ-pre) -> (,tis-post ,locals-pre ,φ-post)) ,ins1 ,ins2)
+         'TODO]
+
+        [`(get-local ,j)
+         (let ([a (gensym)]
+               [t (term (context-local ,C ,j))])
+           (stack-polyize
+            (derivation `(⊢ ,C ((get-local ,j))
+                            ((() ,locals ,gamma ,phi)
+                             ->
+                             (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ,(second (list-ref locals j)))))))
+                        "Get-Local"
+                        empty)
             pre))]
 
         [_ #f])))
@@ -471,3 +582,32 @@
     `(() () empty empty)))
 
   )
+
+#;(typecheck-module
+   '(module
+        ((() (func ((((i32 a) (i32 b)) () empty)
+                    ->
+                    (((i32 c)) () (empty (= c (i32 1)))))
+                   (local ()
+                     ((i32 const 0)
+                      (i32 const 1)
+                      (i32 add))))))
+      () () ()))
+
+#;(typecheck-module
+   '(module
+        ((() (func ((((i32 a) (i32 b) (i32 c)) () empty)
+                    ->
+                    (((i32 d) (i32 e)) () (empty (= d e))))
+                   (local ()
+                     ((get-local 0)
+                      (get-local 1)
+                      (i32 add)
+                      (get-local 2)
+                      (i32 add)
+                      (get-local 0)
+                      (get-local 1)
+                      (get-local 2)
+                      (i32 add)
+                      (i32 add))))))
+      () () ()))

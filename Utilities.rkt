@@ -23,21 +23,21 @@
 ;; Sets the local variable types, used in the typing rule for functions to set up the context to type check the function body
 (define-metafunction WASMIndexTypes
   with-locals : C (t ...) -> C
-  [(with-locals ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) _ (label ticond_l ...) (return ticond_r ...)) (t ...))
-   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t ...) (label ticond_l ...) (return ticond_r ...))])
+  [(with-locals ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) _ (label tiann_l ...) (return tiann_r ...)) (t ...))
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t ...) (label tiann_l ...) (return tiann_r ...))])
 
 ;; Adds a branch condition (the pre-condition of a branch instruction) onto the label stack.
 ;; Used in typing rules for block, loop, and if to append the branching condition of the block
 (define-metafunction WASMIndexTypes
-  add-label : C ticond -> C
-  [(add-label ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return ticond_r ...)) ticond)
-   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ... ticond) (return ticond_r ...))])
+  add-label : C tiann -> C
+  [(add-label ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label tiann_l ...) (return tiann_r ...)) tiann)
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label tiann_l ... tiann) (return tiann_r ...))])
 
 ;; Sets the return condition, used in the typing rule for functions to set up the context to type check the function body
 (define-metafunction WASMIndexTypes
-  with-return : C ticond -> C
-  [(with-return ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return _ ...)) ticond)
-   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label ticond_l ...) (return ticond))])
+  with-return : C tiann -> C
+  [(with-return ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label tiann_l ...) (return _ ...)) tiann)
+   ((func tfi_f ...) (global tg ...) (table (n_t tfi_t ...) ...) (memory n_m ...) (local t_l ...) (label tiann_l ...) (return tiann))])
 
 ;; Metafunctions for getting data out of a context
 (define-metafunction WASMIndexTypes
@@ -73,16 +73,16 @@
   [(context-local C i) (index (context-locals C) i)])
 
 (define-metafunction WASMIndexTypes
-  context-labels : C -> (ticond ...)
-  [(context-labels (_ _ _ _ _ (label ticond ...) _)) (ticond ...)])
+  context-labels : C -> (tiann ...)
+  [(context-labels (_ _ _ _ _ (label tiann ...) _)) (tiann ...)])
 
 (define-metafunction WASMIndexTypes
-  context-label : C i -> ticond
+  context-label : C i -> tiann
   [(context-label C i) (reverse-get (context-labels C) i)])
 
 (define-metafunction WASMIndexTypes
-  context-return : C -> ticond
-  [(context-return (_ _ _ _ _ _ (return ticond))) ticond])
+  context-return : C -> tiann
+  [(context-return (_ _ _ _ _ _ (return tiann))) tiann])
 
 (define-metafunction WASMIndexTypes
   erase-mut : tg -> t
