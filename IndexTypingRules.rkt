@@ -139,7 +139,7 @@
 
   [(side-condition (tfi-ok ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3))))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... φ_2))) ;; Strengthen precondition outside
-   (where C_2 (add-label C_1 (((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2)))
+   (where C_2 (add-label C_1 (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)))
    (⊢ C_2 (e_1 ...) ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2) -> (((t_post ivar_5) ...) ((t_l ivar_l_5) ...) Γ_5 φ_5)))
    (⊢ C_2 (e_2 ...) ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2) -> (((t_post ivar_6) ...) ((t_l ivar_l_6) ...) Γ_6 φ_6)))
    (side-condition (equiv-gammas Γ_2 (build-gamma (merge ((t_pre ivar_2) ...) ((t_l ivar_l_2) ...)))))
