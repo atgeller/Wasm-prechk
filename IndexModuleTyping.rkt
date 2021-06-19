@@ -20,15 +20,15 @@
   #:contract (⊢-module-func C f ((ex ...) tfi))
 
   ;; Should (t _) ... be instiantiated in phi_1?
-  [(where ((((t_1 ivar_1) ...) () φ_1) -> ((ti_2 ...) () φ_2)) tfi)
-   (⊢ C_2 (e ...) ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_3 φ_3) -> ((ti_4 ...) locals_4 Γ_4 φ_4)))
-   (where ((ti_2 ...) locals_2 φ_2) (context-return C_2))
-   (where (((ti_2 ...) locals_2 φ_2)) (context-labels C_2))
-   (where C_2 (with-return (add-label (with-locals C (t_1 ... t ...)) ((ti_2 ...) locals_2 φ_2)) ((ti_2 ...) locals_2 φ_2)))
+  [(where ((((t_1 ivar_1) ...) () φ_1) -> (((t_2 ivar_2) ...) () φ_2)) tfi)
+   (⊢ C_2 (e ...) ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_3 φ_3) -> (((t_2 ivar_4) ...) locals_4 Γ_4 φ_4)))
+   (where (((t_2 ivar_2) ...) locals_2 φ_2) (context-return C_2))
+   (where ((((t_2 ivar_2) ...) locals_2 φ_2)) (context-labels C_2))
+   (where C_2 (with-return (add-label (with-locals C (t_1 ... t ...)) (((t_2 ivar_2) ...) locals_2 φ_2)) (((t_2 ivar_2) ...) locals_2 φ_2)))
    (where Γ_3 (build-gamma ((t_1 ivar_1) ... (t ivar) ...)))
    (where φ_3 (extend φ_1 (build-phi-zeros (t ...) (ivar ...))))
    (side-condition (tfi-ok tfi))
-   (side-condition (satisfies Γ_4 φ_4 (substitute-ivars (ti_4 ...) (ti_2 ...) φ_2)))
+   (side-condition (satisfies Γ_4 φ_4 (substitute-ivars (ivar_4 ivar_2) ... φ_2)))
    ----------------------------------------------------------------------------------------------------
    (⊢-module-func C ((ex ...) (func tfi (local (t ...) (e ...)))) ((ex ...) tfi))]
 

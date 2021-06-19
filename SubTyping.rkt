@@ -53,6 +53,7 @@
 
 (define-metafunction WASMIndexTypes
   substitute-ivars-xy : (ivar ivar) ... x -> x
+  [(substitute-ivars-xy (ivar_1 ivar_2) ... ivar) ivar (where (ivar_!_ ...) (ivar_2 ... ivar))]
   [(substitute-ivars-xy (ivar_1 ivar_2) ... (ivar_new ivar) (ivar_3 ivar_4) ... ivar) ivar_new]
   [(substitute-ivars-xy (ivar_1 ivar_2) ... (t c)) (t c)]
   [(substitute-ivars-xy (ivar_1 ivar_2) ... ((t binop) x y))
@@ -92,46 +93,3 @@
   [(substitute-ivars (ivar_1 ivar_2) ... empty) empty]
   [(substitute-ivars (ivar_1 ivar_2) ... (φ P))
    ((substitute-ivars (ivar_1 ivar_2) ... φ) (substitute-ivars-P (ivar_1 ivar_2) ... P))])
-
-#;(define-metafunction WASMIndexTypes
-  substitute-ivar : (ivar ...) (ivar ...) ivar -> ivar
-  [(substitute-ivar () () ivar) ivar]
-  [(substitute-ivar (ivar_1 ivar_2 ...) (ivar ivar_4 ...) ivar) ivar_1]
-  [(substitute-ivar (ivar_1 ivar_2 ...) (ivar_3 ivar_4 ...) ivar)
-   (substitute-ivar (ivar_2 ...) (ivar_4 ...) ivar)
-   (where (ivar_!_1 ivar_!_1) (ivar ivar_3))])
-
-#;(define-metafunction WASMIndexTypes
-  substitute-ivars-xy : (ivar ...) (ivar ...) x -> x
-  [(substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) ivar) (substitute-ivar (ivar_1 ...) (ivar_2 ...) ivar)]
-  [(substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) (t c)) #f]
-  [(substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) ((t binop) x y)) #f]
-  [(substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) ((t testop) x)) #f]
-  [(substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) ((t relop) x y)) #f]
-  [(substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) ((t cvtop t) x)) #f]
-  [(substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) ((t cvtop t sx) x)) #f])
-
-#;(define-metafunction WASMIndexTypes
-  substitute-ivars-P : (ivar ...) (ivar ...) P -> P
-  [(substitute-ivars-P (ivar_1 ...) (ivar_2 ...) (= x y))
-   (= (substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) x)
-      (substitute-ivars-xy (ivar_1 ...) (ivar_2 ...) y))]
-  [(substitute-ivars-P (ivar_1 ...) (ivar_2 ...) (if P_p P_t P_e))
-   (if (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P_p)
-       (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P_t)
-       (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P_e))]
-  [(substitute-ivars-P (ivar_1 ...) (ivar_2 ...) (not P))
-   (not (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P))]
-  [(substitute-ivars-P (ivar_1 ...) (ivar_2 ...) (and P_1 P_2))
-   (and (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P_1)
-        (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P_2))]
-  [(substitute-ivars-P (ivar_1 ...) (ivar_2 ...) (or P_1 P_2))
-   (or (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P_1)
-       (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P_2))]
-  [(substitute-ivars-P (ivar_1 ...) (ivar_2 ...) ⊥) ⊥])
-
-#;(define-metafunction WASMIndexTypes
-  substitute-ivars : (ivar ...) (ivar ...) φ -> φ
-  [(substitute-ivars (ivar_1 ...) (ivar_2 ...) empty) empty]
-  [(substitute-ivars (ivar_1 ...) (ivar_2 ...) (φ P))
-   ((substitute-ivars (ivar_1 ...) (ivar_2 ...) φ) (substitute-ivars-P (ivar_1 ...) (ivar_2 ...) P))])
