@@ -458,7 +458,21 @@
                 pre)
                #f))]
 
-        [`(br-table ,j) 'TODO]
+        [`(br-table ,js ...)
+         (match-let* ([`((,l-tis ,l-locals ,l-phi) ...) (map (λ (j) (term (context-label ,C ,j))) js)] 
+                      [`(,br-tis ... (i32 ,ivar)) (take-right tis (add1 (length (first l-tis))))])
+           (if (term (satisfies-all ,gamma ,phi ,(map (λ (ll-tis ll-locals ll-phi)
+                                                        (term (substitute-ivars ,@(ivar-pairs (append br-tis locals)
+                                                                                              (append ll-tis ll-locals))
+                                                                                ,ll-phi))
+                                                        l-tis l-locals l-phi))))
+               (let* ([post-tis (map (λ (t) `(,t ,(gensym))) (deriv-post plain-deriv))]
+                      [post-gamma (term (build-gamma (merge ,post-tis ,locals)))])
+                 (derivation `(⊢ ,C ((br-table ,@js))
+                                 (,pre -> (,post-tis ,locals ,post-gamma (empty ⊥))))
+                             "Br-Table"
+                             empty))
+               #f))]
         
         [`return
          (match-let ([`(,ret-tis () ,ret-phi) (term (context-return ,C))])

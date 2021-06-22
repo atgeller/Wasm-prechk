@@ -172,6 +172,7 @@
   [(where ((((t_lbl ivar_pat) ...) ((t_l_lbl ivar_l_pat) ...) φ) ...) ((reverse-get (context-labels C) j) ...))
    (side-condition (same ((t_lbl ...) ...) (t ...)))
    (side-condition (same ((t_l_lbl ...) ...) (t_l ...)))
+   ;; TODO: could extend φ_1 with the knowledge that ivar is equal to that index?
    (side-condition (satisfies-all Γ_1 φ_1 ((substitute-ivars (ivar_3 ivar_pat) ... (ivar_l ivar_l_pat) ... φ) ...)))
    (side-condition (equiv-gammas Γ_2 (build-gamma (ti_2 ... (t_l ivar_l_post) ...))))
    (where (t_l ...) (context-locals C))
