@@ -109,6 +109,9 @@
                                         ,d-post-gamma
                                         ,d-post-phi)))
                       "Stack-Poly" (list deriv)))))
+
+  (define (ivar-pairs tis-a tis-b)
+    (map (λ (ti-a ti-b) (list (second ti-a) (second ti-b))) tis-a tis-b))
   
   (define (typecheck-e e pre plain-deriv)
     (match-let ([`(,tis ,locals ,gamma ,phi) pre])
@@ -293,12 +296,11 @@
               pre)))]
 
         [`(block ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post)) ,b-ins)
-         (let ([tis (take tis (length tis-pre))])
+         (let ([tis (take-right tis (length tis-pre))])
            (if (and (term (tfi-ok ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post))))
                     (term (satisfies ,gamma ,phi (substitute-ivars
-                                                  ,@(map (λ (ti-a ti-b) (list (second ti-a) (second ti-b)))
-                                                         (append tis locals)
-                                                         (append tis-pre locals-pre))
+                                                  ,@(ivar-pairs (append tis locals)
+                                                                (append tis-pre locals-pre))
                                                   ,phi-pre))))
                (match (typecheck-ins (term (add-label ,C (,tis-post ,locals-post ,phi-post)))
                                      b-ins
@@ -308,9 +310,8 @@
                  [b-ins-deriv
                   (match-let ([`(,d-tis ,d-locals ,d-gamma ,d-phi) (deriv-post b-ins-deriv)])
                     (if (term (satisfies ,d-gamma ,d-phi (substitute-ivars
-                                                          ,@(map (λ (ti-a ti-b) (list (second ti-a) (second ti-b)))
-                                                                 (append d-tis d-locals)
-                                                                 (append tis-post locals-post))
+                                                          ,@(ivar-pairs (append d-tis d-locals)
+                                                                        (append tis-post locals-post))
                                                           ,phi-post)))
                         (let ([f-tis (map (λ (ti) `(,(first ti) ,(gensym))) tis-post)]
                               [f-locals (map (λ (ti) `(,(first ti) ,(gensym))) locals-post)])
@@ -324,9 +325,8 @@
                                              ,f-locals
                                              ,(term (union ,gamma (build-gamma ,(append f-tis f-locals))))
                                              ,(term (union ,phi (substitute-ivars
-                                                                 ,@(map (λ (ti-a ti-b) (list (second ti-a) (second ti-b)))
-                                                                        (append tis locals f-tis f-locals)
-                                                                        (append tis-pre locals-pre tis-post locals-post))
+                                                                 ,@(ivar-pairs (append tis locals f-tis f-locals)
+                                                                               (append tis-pre locals-pre tis-post locals-post))
                                                                  ,phi-post))))))
                                        "Block"
                                        (list b-ins-deriv))
@@ -335,9 +335,12 @@
                #f))]
 
         [`(loop ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post)) ,l-ins)
-         (let ([tis (take tis (length tis-pre))])
+         (let ([tis (take-right tis (length tis-pre))])
            (if (and (term (tfi-ok ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post))))
-                    (term (satisfies ,gamma ,phi (substitute-ivars ,(append tis locals) ,(append tis-pre locals-pre) ,phi-pre))))
+                    (term (satisfies ,gamma ,phi (substitute-ivars
+                                                  ,@(ivar-pairs (append tis locals)
+                                                                (append tis-pre locals-pre))
+                                                  ,phi-pre))))
                (match (typecheck-ins (term (add-label ,C (,tis-pre ,locals-pre ,phi-pre)))
                                      l-ins
                                      (term (,tis-pre ,locals-pre (build-gamma ,(append tis-pre locals-pre)) ,phi-pre))
@@ -345,7 +348,10 @@
                  [#f #f]
                  [l-ins-deriv
                   (match-let ([`(,d-tis ,d-locals ,d-gamma ,d-phi) (deriv-post l-ins-deriv)])
-                    (if (term (satisfies ,d-gamma ,d-phi (substitute-ivars ,(append d-tis d-locals) ,(append tis-post locals-post) ,phi-post)))
+                    (if (term (satisfies ,d-gamma ,d-phi (substitute-ivars
+                                                          ,@(ivar-pairs (append d-tis d-locals)
+                                                                        (append tis-post locals-post))
+                                                          ,phi-post)))
                         (let ([f-tis (map (λ (ti) `(,(first ti) ,(gensym))) tis-post)]
                               [f-locals (map (λ (ti) `(,(first ti) ,(gensym))) locals-post)])
                           (stack-polyize
@@ -358,8 +364,8 @@
                                              ,f-locals
                                              ,(term (union ,gamma (build-gamma ,(append f-tis f-locals))))
                                              ,(term (union ,phi (substitute-ivars
-                                                                 ,(append tis locals f-tis f-locals)
-                                                                 ,(append tis-pre locals-pre tis-post locals-post)
+                                                                 ,@(ivar-pairs (append tis locals f-tis f-locals)
+                                                                               (append tis-pre locals-pre tis-post locals-post))
                                                                  ,phi-post))))))
                                        "Loop"
                                        (list l-ins-deriv))
@@ -367,7 +373,68 @@
                         #f))])
                #f))]
 
-        [`(if ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-pre ,phi-post)) ,ins-then ,ins-else)
+        [`(if ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post)) ,then-ins ,else-ins)
+         (let ([tis (take-right tis (length tis-pre))])
+           (if (and (term (tfi-ok ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post))))
+                    (term (satisfies ,gamma ,phi (substitute-ivars
+                                                  ,@(ivar-pairs (append tis locals)
+                                                                (append tis-pre locals-pre))
+                                                  ,phi-pre))))
+               (match (typecheck-ins (term (add-label ,C (,tis-pre ,locals-pre ,phi-pre)))
+                                     then-ins
+                                     (term (,tis-pre ,locals-pre (build-gamma ,(append tis-pre locals-pre)) ,phi-pre))
+                                     (first (derivation-subs plain-deriv)))
+                 [#f #f]
+                 [then-ins-deriv
+                  (match-let ([`(,t-tis ,t-locals ,t-gamma ,t-phi) (deriv-post then-ins-deriv)])
+                    (if (term (satisfies ,t-gamma ,t-phi (substitute-ivars
+                                                          ,@(ivar-pairs (append t-tis t-locals)
+                                                                        (append tis-post locals-post))
+                                                          ,phi-post)))
+                        (match (typecheck-ins (term (add-label ,C (,tis-pre ,locals-pre ,phi-pre)))
+                                              else-ins
+                                              (term (,tis-pre ,locals-pre (build-gamma ,(append tis-pre locals-pre)) ,phi-pre))
+                                              (second (derivation-subs plain-deriv)))
+                          [#f #f]
+                          [else-ins-deriv
+                           (match-let ([`(,e-tis ,e-locals ,e-gamma ,e-phi) (deriv-post else-ins-deriv)])
+                             (if (term (satisfies ,e-gamma ,e-phi (substitute-ivars
+                                                                   ,@(ivar-pairs (append e-tis e-locals)
+                                                                                 (append tis-post locals-post))
+                                                                   ,phi-post)))
+                                 (let ([f-tis (map (λ (ti) `(,(first ti) ,(gensym))) tis-post)]
+                                       [f-locals (map (λ (ti) `(,(first ti) ,(gensym))) locals-post)])
+                                   (stack-polyize
+                                    (derivation `(⊢ ,C ((if ((,tis-pre ,locals-pre ,phi-pre)
+                                                             ->
+                                                             (,tis-post ,locals-post ,phi-post))
+                                                            ,then-ins ,else-ins))
+                                                    ((,tis ,locals ,gamma ,phi)
+                                                     ->
+                                                     (,f-tis
+                                                      ,f-locals
+                                                      ,(term (union ,gamma (build-gamma ,(append f-tis f-locals))))
+                                                      ,(term (union ,phi (substitute-ivars
+                                                                          ,@(ivar-pairs (append tis locals f-tis f-locals)
+                                                                                        (append tis-pre locals-pre tis-post locals-post))
+                                                                          ,phi-post))))))
+                                                "If"
+                                                (list then-ins-deriv else-ins-deriv))
+                                    pre))
+                                 #f))])
+                        #f))])
+               #f))]
+        
+        [`return
+         (match-let ([`(,ret-tis () ,ret-phi) (term (context-return ,C))])
+           (let ([tis (take-right tis (length ret-tis))])
+             (if (term (satisfies ,gamma ,phi (substitute-ivars ,@(ivar-pairs tis ret-tis) ,ret-phi)))
+                 (let* ([post-tis (map (λ (t) `(,t ,(gensym))) (deriv-post plain-deriv))]
+                        [post-gamma (term (build-gamma (merge ,post-tis ,locals)))])
+                   (derivation `(⊢ ,C (return) (,pre -> (,post-tis ,locals ,post-gamma (empty ⊥)))) "Return" empty))
+                 #f)))]
+
+        [`(call ,j)
          'TODO]
 
         [`(get-local ,j)
@@ -380,6 +447,56 @@
                              (((,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ,(second (list-ref locals j)))))))
                         "Get-Local"
                         empty)
+            pre))]
+
+        [`(set-local ,j)
+         (let ([ti (last tis)])
+           (stack-polyize
+            (derivation `(⊢ ,C ((set-local ,j))
+                            (((,ti) ,locals ,gamma ,phi)
+                             ->
+                             (() ,(term (with-index ,locals ,j ,ti)) ,gamma ,phi)))
+                        "Set-Local"
+                        empty)
+            pre))]
+
+        [`(tee-local ,j)
+         (let ([a (gensym)]
+               [t (term (context-local ,C ,j))]
+               [ti (last tis)])
+           (stack-polyize
+            (derivation `(⊢ ,C ((tee-local ,j))
+                            (((,ti) ,locals ,gamma ,phi)
+                             ->
+                             (((,t ,a))
+                              ,(term (with-index ,locals ,j ,ti))
+                              (,gamma (,t ,a))
+                              (,phi (= ,a ,(second ti))))))
+                        "Tee-Local"
+                        empty)
+            pre))]
+
+        [`(get-global ,j)
+         (let ([a (gensym)]
+               [t (term (context-global ,C ,j))])
+           (stack-polyize
+            (derivation `(⊢ ,C ((get-global ,j))
+                            ((() ,locals ,gamma ,phi)
+                             ->
+                             (((,t ,a)) ,locals (,gamma (,t ,a)) ,phi)))
+                        "Get-Global"
+                        empty)
+            pre))]
+
+        [`(set-global ,j)
+         (let ([ti (last tis)])
+           (stack-polyize
+            (derivation `(⊢ ,C ((set-global ,j))
+                            (((,ti) ,locals ,gamma ,phi)
+                             ->
+                             (() ,locals ,gamma ,phi)))
+                            "Set-Global"
+                            empty)
             pre))]
 
         [_ #f])))
