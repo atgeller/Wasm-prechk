@@ -435,7 +435,63 @@
                  #f)))]
 
         [`(call ,j)
-         'TODO]
+         (match-let ([`((,func-tis-pre () ,func-phi-pre) -> (,func-tis-post () ,func-phi-post)) (term (context-func ,C ,j))])
+           (let ([tis (take-right tis (length func-tis-pre))])
+             (if (term (satisfies ,gamma ,phi (substitute-ivars ,@(ivar-pairs tis func-tis-pre) ,func-phi-pre)))
+                 (let* ([post-tis (map (λ (ti) `(,(first ti) ,(gensym))) func-tis-post)]
+                        [post-gamma (term (union ,gamma (build-gamma ,post-tis)))])
+                   (derivation `(⊢ ,C ((call ,j)) ((,tis ,locals ,gamma ,phi)
+                                                   ->
+                                                   (,post-tis
+                                                    ,locals
+                                                    ,post-gamma
+                                                    ,(term (union ,phi (substitute-ivars
+                                                                        ,@(ivar-pairs post-tis func-tis-post)
+                                                                        ,func-phi-post))))))
+                               "Call"
+                               empty))
+                 #f)))]
+
+        [`(call-indirect ((,ann-tis-pre () ,ann-phi-pre) -> (,ann-tis-post () ,ann-phi-post)))
+         (let ([tis (take-right tis (length ann-tis-pre))])
+           (if (and (term (tfi-ok ((,ann-tis-pre () ,ann-phi-pre) -> (,ann-tis-post () ,ann-phi-post))))
+                    (term (satisfies ,gamma ,phi (substitute-ivars ,@(ivar-pairs tis ann-tis-pre) ,ann-phi-pre))))
+               (let* ([post-tis (map (λ (ti) `(,(first ti) ,(gensym))) ann-tis-post)]
+                      [post-gamma (term (union ,gamma (build-gamma ,post-tis)))])
+                 (derivation `(⊢ ,C ((call-indirect ((,ann-tis-pre () ,ann-phi-pre) -> (,ann-tis-post () ,ann-phi-post))))
+                                 ((,tis ,locals ,gamma ,phi)
+                                  ->
+                                  (,post-tis
+                                   ,locals
+                                   ,post-gamma
+                                   ,(term (union ,phi (substitute-ivars
+                                                       ,@(ivar-pairs post-tis ann-tis-post)
+                                                       ,ann-phi-post))))))
+                             "Call-Indirect"
+                             empty))
+               #f))]
+
+        [`(call-indirect/unsafe ((,ann-tis-pre () ,ann-phi-pre) -> (,ann-tis-post () ,ann-phi-post)))
+         (let ([tis (take-right tis (add1 (length ann-tis-pre)))]
+               [tfis (drop (term (context-table ,C)) 1)])
+           (if (and (term (tfi-ok ((,ann-tis-pre () ,ann-phi-pre) -> (,ann-tis-post () ,ann-phi-post))))
+                    (term (satisfies ,gamma ,phi (substitute-ivars ,@(ivar-pairs (drop-right tis 1) ann-tis-pre) ,ann-phi-pre)))
+                    (term (valid-table-call ((,ann-tis-pre () ,ann-phi-pre) -> (,ann-tis-post () ,ann-phi-post))
+                                            ,(second (last tis)) ,tfis ,gamma ,phi)))
+               (let* ([post-tis (map (λ (ti) `(,(first ti) ,(gensym))) ann-tis-post)]
+                      [post-gamma (term (union ,gamma (build-gamma ,post-tis)))])
+                 (derivation `(⊢ ,C ((call-indirect/unsafe ((,ann-tis-pre () ,ann-phi-pre) -> (,ann-tis-post () ,ann-phi-post))))
+                                 ((,tis ,locals ,gamma ,phi)
+                                  ->
+                                  (,post-tis
+                                   ,locals
+                                   ,post-gamma
+                                   ,(term (union ,phi (substitute-ivars
+                                                       ,@(ivar-pairs post-tis ann-tis-post)
+                                                       ,ann-phi-post))))))
+                             "Call-Indirect-Prechk"
+                             empty))
+               #f))]
 
         [`(get-local ,j)
          (let ([a (gensym)]
