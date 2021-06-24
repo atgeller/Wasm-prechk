@@ -230,7 +230,7 @@
      `(and (bvule (bvadd (bvadd (_ bv33 ,offset)
                                 ((_ zero_extend 1) ,index))
                          (bvlshr (_ bv33 ,width) (_ bv33 3)))
-                  (_ bv33 ,n))
+                  (bvmul (_ bv33 ,n) (_ bv33 65536)))
            (or (bvugt (_ bv32 ,offset) (_ bv32 0))
                (bvugt ,index (_ bv32 0))))]
     [`⊥

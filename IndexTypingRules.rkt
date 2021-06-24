@@ -327,6 +327,16 @@
    ----------------------------------------------------------------------- "Store-Packed"
    (⊢ C ((t store tp a o)) ((((i32 ivar_1) (t ivar_2)) locals Γ φ) -> (() locals Γ φ)))]
 
+  [(where n (context-memory C))
+   (where #f (in ivar Γ))
+   ---------------------------- "Current-Memory"
+   (⊢ C (current-memory) ((() locals Γ φ) -> (((i32 ivar)) locals (Γ (i32 ivar)) φ)))]
+
+  [(where n (context-memory C))
+   (where #f (in ivar_2 Γ))
+   ---------------------------- "Grow-Memory"
+   (⊢ C (grow-memory) ((((i32 ivar_1)) locals Γ φ) -> (((i32 ivar_2)) locals (Γ (i32 ivar_2)) φ)))]
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   [------------------------------------------ "Empty"
