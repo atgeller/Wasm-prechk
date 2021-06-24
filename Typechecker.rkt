@@ -374,7 +374,7 @@
                         #f))])
                #f))]
 
-        [`(if ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post)) ,then-ins ,else-ins)
+        [`(if ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post)) ,then-ins else ,else-ins)
          (let ([tis (take-right tis (add1 (length tis-pre)))])
            (if (and (term (tfi-ok ((,tis-pre ,locals-pre ,phi-pre) -> (,tis-post ,locals-post ,phi-post))))
                     (term (satisfies ,gamma ,phi (substitute-ivars
@@ -409,7 +409,7 @@
                                     (derivation `(⊢ ,C ((if ((,tis-pre ,locals-pre ,phi-pre)
                                                              ->
                                                              (,tis-post ,locals-post ,phi-post))
-                                                            ,then-ins ,else-ins))
+                                                            ,then-ins else ,else-ins))
                                                     ((,tis ,locals ,gamma ,phi)
                                                      ->
                                                      (,f-tis
@@ -594,14 +594,114 @@
             pre))]
 
         [`(set-global ,j)
-         (let ([ti (last tis)])
+         (stack-polyize
+          (derivation `(⊢ ,C ((set-global ,j))
+                          (((,(last tis)) ,locals ,gamma ,phi)
+                           ->
+                           (() ,locals ,gamma ,phi)))
+                      "Set-Global"
+                      empty)
+          pre)]
+
+        [`(,t load/unsafe ,a ,o)
+         (let ([n (term (context-memory ,C))]
+               [ivar-a (second (last tis))])
+           (if (term (satisfies ,gamma ,phi (empty (valid-address ,ivar-a ,o (bit-width ,t) ,n))))
+               (let ([ivar (gensym)])
+                 (stack-polyize
+                  (derivation `(⊢ ,C ((,t load/unsafe ,a ,o))
+                                  ((((i32 ,ivar-a)) ,locals ,gamma ,phi)
+                                   ->
+                                   (((,t ,ivar)) ,locals (,gamma (,t ,ivar)) ,phi)))
+                              "Load"
+                              empty)
+                  pre))
+               #f))]
+
+        [`(,t load/unsafe (,tp ,sx) ,a ,o)
+         (let ([n (term (context-memory ,C))]
+               [ivar-a (second (last tis))])
+           (if (term (satisfies ,gamma ,phi (empty (valid-address ,ivar-a ,o (packed-bit-width ,tp) ,n))))
+               (let ([ivar (gensym)])
+                 (stack-polyize
+                  (derivation `(⊢ ,C ((,t load/unsafe (,tp ,sx) ,a ,o))
+                                  ((((i32 ,ivar-a)) ,locals ,gamma ,phi)
+                                   ->
+                                   (((,t ,ivar)) ,locals (,gamma (,t ,ivar)) ,phi)))
+                              "Load"
+                              empty)
+                  pre))
+               #f))]
+
+        [`(,t store/unsafe ,a ,o)
+         (match-let ([n (term (context-memory ,C))]
+                     [`(,_ ... (i32 ,ivar-a) (,_ ,ivar)) tis])
+           (if (term (satisfies ,gamma ,phi (empty (valid-address ,ivar-a ,o (bit-width ,t) ,n))))
+               (stack-polyize
+                (derivation `(⊢ ,C ((,t store/unsafe ,a ,o))
+                                ((((i32 ,ivar-a) (,t ,ivar)) ,locals ,gamma ,phi)
+                                 ->
+                                 (() ,locals ,gamma ,phi)))
+                            "Store"
+                            empty)
+                pre)
+               #f))]
+
+        [`(,t store/unsafe ,tp ,a ,o)
+         (match-let ([n (term (context-memory ,C))]
+                     [`(,_ ... (i32 ,ivar-a) (,_ ,ivar)) tis])
+           (if (term (satisfies ,gamma ,phi (empty (valid-address ,ivar-a ,o (packed-bit-width ,tp) ,n))))
+               (stack-polyize
+                (derivation `(⊢ ,C ((,t store/unsafe ,tp ,a ,o))
+                                ((((i32 ,ivar-a) (,t ,ivar)) ,locals ,gamma ,phi)
+                                 ->
+                                 (() ,locals ,gamma ,phi)))
+                            "Store"
+                            empty)
+                pre)
+               #f))]
+
+        [`(,t load ,a ,o)
+         (let ([ivar (gensym)])
            (stack-polyize
-            (derivation `(⊢ ,C ((set-global ,j))
-                            (((,ti) ,locals ,gamma ,phi)
+            (derivation `(⊢ ,C ((,t load ,a ,o))
+                            (((,(last tis)) ,locals ,gamma ,phi)
+                             ->
+                             (((,t ,ivar)) ,locals (,gamma (,t ,ivar)) ,phi)))
+                        "Load"
+                        empty)
+            pre))]
+
+        [`(,t load (,tp ,sx) ,a ,o)
+         (let ([ivar (gensym)])
+           (stack-polyize
+            (derivation `(⊢ ,C ((,t load (,tp ,sx) ,a ,o))
+                            (((,(last tis)) ,locals ,gamma ,phi)
+                             ->
+                             (((,t ,ivar)) ,locals (,gamma (,t ,ivar)) ,phi)))
+                        "Load"
+                        empty)
+            pre))]
+
+        [`(,t store ,a ,o)
+         (stack-polyize
+          (derivation `(⊢ ,C ((,t store ,a ,o))
+                          ((,(take-right tis 2) ,locals ,gamma ,phi)
+                           ->
+                           (() ,locals ,gamma ,phi)))
+                      "Store"
+                      empty)
+          pre)]
+
+        [`(,t store ,tp ,a ,o)
+         (let ([tis (take-right tis 2)])
+           (stack-polyize
+            (derivation `(⊢ ,C ((,t store ,tp ,a ,o))
+                            ((,tis ,locals ,gamma ,phi)
                              ->
                              (() ,locals ,gamma ,phi)))
-                            "Set-Global"
-                            empty)
+                        "Store"
+                        empty)
             pre))]
 
         [_ #f])))

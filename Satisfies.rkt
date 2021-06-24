@@ -226,6 +226,13 @@
            [true (parse-proposition P1)]
            [false (parse-proposition P2)])
        `(ite ,cond ,true ,false))]
+    [`(valid-address ,index ,offset ,width ,n)
+     `(and (bvule (bvadd (bvadd (_ bv33 ,offset)
+                                ((_ zero_extend 1) ,index))
+                         (bvlshr (_ bv33 ,width) (_ bv33 3)))
+                  (_ bv33 ,n))
+           (or (bvugt (_ bv32 ,offset) (_ bv32 0))
+               (bvugt ,index (_ bv32 0))))]
     [`⊥
      `false]))
 

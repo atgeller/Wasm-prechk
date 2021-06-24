@@ -149,7 +149,7 @@
    (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ... (t_l ivar_l_4) ...)))))
    (where φ_4 (union φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... (ivar_4 ivar_3) ... (ivar_l_4 ivar_l_3) ... φ_3)))
    --------------------------------------------------------------------- "If"
-   (⊢ C_1 ((if ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)) (e_1 ...) (e_2 ...)))
+   (⊢ C_1 ((if ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)) (e_1 ...) else (e_2 ...)))
       ((((t_pre ivar_1) ... (i32 ivar_s)) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_4) ...) ((t_l ivar_l_4) ...) Γ_4 φ_4)))]
 
   [(where (((t ivar_pat) ...) ((t_l ivar_l_pat) ...) φ) (reverse-get (context-labels C) j))
@@ -269,9 +269,7 @@
 
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
-   (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
-                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
+   (side-condition (satisfies Γ φ_1 (empty (valid-address ivar o (bit-width t) n))))
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ----------------------------------------------------------------------- "Load-Prechk"
    (⊢ C ((t load/unsafe a o)) ((((i32 ivar)) locals Γ φ_1)
@@ -280,20 +278,16 @@
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
-   (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (packed-bit-width tp)) 8))) (i32 n)))
-                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
+   (side-condition (satisfies Γ φ_1 (empty (valid-address ivar o (packed-bit-width t) n))))
    (where inn t)
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ----------------------------------------------------------------------- "Load-Packed-Prechk"
-   (⊢ C ((t load/unsafe (tp sz) a o)) ((((i32 ivar)) locals Γ φ_1)
+   (⊢ C ((t load/unsafe (tp sx) a o)) ((((i32 ivar)) locals Γ φ_1)
                                            -> (((t ivar_2)) locals (Γ (t ivar_2)) φ_1)))]
 
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
-   (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (bit-width t)) 8))) (i32 n)))
-                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
+   (side-condition (satisfies Γ φ_1 (empty (valid-address ivar o (bit-width t) n))))
    ------------------------------------------------------------------------- "Store-Prechk"
    (⊢ C ((t store/unsafe a o)) ((((i32 ivar) (t ivar_1)) locals Γ φ_1)
                                     -> (() locals Γ φ_1)))]
@@ -301,9 +295,7 @@
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
-   (side-condition (satisfies Γ φ_1 (empty
-                                     (and (= (i32 1) ((i32 le-u) ((i32 add) ((i32 add) ivar (i32 o)) (i32 ,(/ (term (packed-bit-width tp)) 8))) (i32 n)))
-                                          (= (i32 1) ((i32 ge-u) ((i32 add) ivar (i32 o)) (i32 0)))))))
+   (side-condition (satisfies Γ φ_1 (empty (valid-address ivar o (packed-bit-width t) n))))
    (where inn t)
    ------------------------------------------------------------------------------ "Store-Packed-Prechk"
    (⊢ C ((t store/unsafe tp a o)) ((((i32 ivar) (t ivar_1)) locals Γ φ_1)
@@ -313,7 +305,7 @@
    (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
    ------------------------------------------------------------- "Load"
-   (⊢ C ((t load a o)) ((((i32 ivar_1)) locals Γ φ) -> (((t ivar)) locals (Γ (t ivar_2)) φ)))]
+   (⊢ C ((t load a o)) ((((i32 ivar_1)) locals Γ φ) -> (((t ivar_2)) locals (Γ (t ivar_2)) φ)))]
 
   [(where n (context-memory C))
    (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))

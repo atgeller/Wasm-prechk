@@ -8,14 +8,14 @@
   (ibinop ::= .... div-u/unsafe div-s/unsafe rem-u/unsafe rem-s/unsafe)
   
   (e ::= .... (call-indirect/unsafe tfi)
-     (t load/unsafe j j) (t load/unsafe (tp sx) j j)
-     (t store/unsafe j j) (t store/unsafe tp j j)
+     (t load/unsafe a o) (t load/unsafe (tp sx) a o)
+     (t store/unsafe a o) (t store/unsafe tp a o)
      (if tfi (e ...) else (e ...)) (block tfi (e ...)) (loop tfi (e ...)))
 
   ;; Index language
   (ivar ::= variable-not-otherwise-mentioned)
   (x y ::= ivar (t c) ((t binop) x y) ((t testop) x) ((t relop) x y) ((t cvtop t) x) ((t cvtop t sx) x))
-  (P ::= (= x y) (if P P P) (not P) (and P P) (or P P) ⊥)
+  (P ::= (= x y) (if P P P) (not P) (and P P) (or P P) (valid-address ivar o n n) ⊥)
   (φ ::= empty (φ P))
   (Γ ::= empty (Γ ti))
   (ti ::= (t ivar))
