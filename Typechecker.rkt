@@ -10,34 +10,30 @@
          "SubTyping.rkt"
          (prefix-in plain- "WASM-Redex/Validation/Typechecking.rkt"))
 
-(define (typecheck-module module)
-  (match (plain-typecheck-module (erase module))
-    [(derivation _ _ sub-derivs)
-     (let* ([C (term (extract-module-type ,module))]
-            [glob-Cs (term (global-contexts (context-globals ,C)))]
-            [plain-fs-derivs (filter (λ (d) (match d [(derivation `(⊢-module-func ,_ ,_ ,_) _ _) #t] [_ #f])) sub-derivs)]
-            [plain-globs-derivs (filter (λ (d) (match d [(derivation `(⊢-module-global ,_ ,_ ,_) _ _) #t] [_ #f])) sub-derivs)]
-            [plain-tabs-derivs (filter (λ (d) (match d [(derivation `(⊢-module-table ,_ ,_ ,_) _ _) #t] [_ #f])) sub-derivs)]
-            [plain-mems-derivs (filter (λ (d) (match d [(derivation `(⊢-module-memory ,_ ,_ ,_) _ _) #t] [_ #f])) sub-derivs)])
-       (match module
-         [`(module ,fs ,globs ,tabs ,mems)
-          (let ([fs-derivs (map (curry typecheck-func C) fs plain-fs-derivs)]
-                [globs-derivs (map typecheck-global glob-Cs globs plain-globs-derivs)]
-                [tab-derivs (map (curry typecheck-table C) tabs plain-tabs-derivs)]
-                [mem-derivs (map (curry typecheck-memory C) mems plain-mems-derivs)])
-            (if (and (andmap identity fs-derivs)
-                     (andmap identity globs-derivs)
-                     (andmap identity tab-derivs)
-                     (andmap identity mem-derivs))
-                (derivation `(⊢-module ,module)
-                            #f (append fs-derivs
-                                       globs-derivs
-                                       tab-derivs
-                                       mem-derivs))
-                #f))]))]
-    [#f #f]))
+(define (ivar-pairs tis-a tis-b)
+  (map (λ (ti-a ti-b) (list (second ti-a) (second ti-b))) tis-a tis-b))
 
-(define (typecheck-func C f plain-deriv)
+(define (typecheck-module module)
+  (let* ([C (term (extract-module-type ,module))]
+         [glob-Cs (term (global-contexts (context-globals ,C)))])
+    (match module
+      [`(module ,fs ,globs ,tabs ,mems)
+       (let ([fs-derivs (map (curry typecheck-func C) fs)]
+             [globs-derivs (map typecheck-global glob-Cs globs)]
+             [tab-derivs (map (curry typecheck-table C) tabs)]
+             [mem-derivs (map (curry typecheck-memory C) mems)])
+         (if (and (andmap identity fs-derivs)
+                  (andmap identity globs-derivs)
+                  (andmap identity tab-derivs)
+                  (andmap identity mem-derivs))
+             (derivation `(⊢-module ,module)
+                         #f (append fs-derivs
+                                    globs-derivs
+                                    tab-derivs
+                                    mem-derivs))
+             #f))])))
+
+(define (typecheck-func C f)
   (match f
     [`(,exs (func ,tfi (import ,_ ,_)))
      (derivation `(⊢-module-func ,C ,f (,exs ,tfi)) #f empty)]
@@ -51,20 +47,20 @@
                                      (,tis-post ,locals-post ,φ-post))
                         (,tis-post ,locals-post ,φ-post)))]
             [Γ-pre (term (build-gamma (,@tis-pre ,@locals-pre)))])
-       (match (typecheck-ins C2 ins `(() ,(append tis-pre locals-pre) ,Γ-pre ,φ-pre) (first (derivation-subs plain-deriv)))
+       (match (plain-typecheck-ins (erase-C C2) (map erase-e ins) empty (map first tis-post))
          [#f #f]
-         [ins-deriv
-          (match-let ([`(,tis-ins-post ,_ ,Γ-post ,φ-ins-post) (deriv-post ins-deriv)])
-            (if (term (satisfies ,Γ-post ,φ-ins-post (substitute-ivars ,@(map (λ (ti-a ti-b) (list (second ti-a) (second ti-b)))
-                                                                              tis-ins-post
-                                                                              tis-post)
-                                                                       ,φ-post)))
-                (derivation `(⊢-module-func ,C ,f (,exs ((,tis-pre () ,φ-pre) -> (,tis-post () ,φ-post))))
-                            #f
-                            (list ins-deriv))
-                #f))]))]))
+         [plain-deriv
+          (match (typecheck-ins C2 ins `(() ,(append tis-pre locals-pre) ,Γ-pre ,φ-pre) plain-deriv)
+            [#f #f]
+            [ins-deriv
+             (match-let ([`(,tis-ins-post ,_ ,Γ-post ,φ-ins-post) (deriv-post ins-deriv)])
+               (if (term (satisfies ,Γ-post ,φ-ins-post (substitute-ivars ,@(ivar-pairs tis-ins-post tis-post) ,φ-post)))
+                   (derivation `(⊢-module-func ,C ,f (,exs ((,tis-pre () ,φ-pre) -> (,tis-post () ,φ-post))))
+                               #f
+                               (list ins-deriv))
+                   #f))])]))]))
 
-(define (typecheck-global C glob plain-deriv)
+(define (typecheck-global C glob)
   (match glob
     [`(,exs (global (,mut ,t) (import ,_ ,_)))
      (if (equal? mut 'const)
@@ -72,24 +68,29 @@
          #f)]
     [`(,exs (global (,mut ,t) ,es))
      (if (or (empty? exs) (equal? mut 'const))
-         (match (typecheck-ins C es `(() () empty empty) (first (derivation-subs plain-deriv)))
+         (match (plain-typecheck-ins (erase-C C) (map erase-e es) empty (list t))
            [#f #f]
-           [ins-deriv ;; We don't have to check the produced type since plain-typechecking verifies it
-            (derivation `(⊢-module-global ,C ,glob (,exs (,mut ,t)))
-                        #f
-                        (list ins-deriv))])
+           [plain-deriv
+            (match (typecheck-ins C es `(() () empty empty) plain-deriv)
+              [#f #f]
+              [ins-deriv ;; We don't have to check the produced type since plain-typechecking verifies it
+               (derivation `(⊢-module-global ,C ,glob (,exs (,mut ,t)))
+                           #f
+                           (list ins-deriv))])])
          #f)]))
 
-(define (typecheck-table C tab plain-deriv)
+(define (typecheck-table C tab)
   (match tab
     [`(,exs (table ,i (import ,_ ,_) ,tfis ...))
      (derivation `(⊢-module-table ,C ,tab (,exs (,i ,@tfis))) #f empty)]
     [`(,exs (table ,i ,js ...))
-     (redex-let WASMIndexTypes ([((func (tfi ...)) _ _ _ _ _ _) C])
-                (derivation `(⊢-module-table ,C ,tab (,exs (,i ,@(map (curry list-ref (term (tfi ...))) js))))
-                            #f (list (first (build-derivations (valid-indices (tfi ...) ,js ,i))))))]))
+     (match-let ([`((func ,tfis ...) _ _ _ _ _ _) C])
+       (if (judgment-holds (valid-indices ,tfis ,js ,i))
+           (derivation `(⊢-module-table ,C ,tab (,exs (,i ,@(map (curry list-ref tfis) js))))
+                       #f (list (first (build-derivations (valid-indices ,tfis ,js ,i)))))
+           #f))]))
 
-(define (typecheck-memory C mem plain-deriv)
+(define (typecheck-memory C mem)
   (match mem
     [`(,exs (memory ,i)) (derivation `(⊢-module-memory ,C ,mem (,exs ,i)) #f empty)]
     [`(,exs (memory ,i (import ,_ ,_))) (derivation `(⊢-module-memory ,C ,mem (,exs ,i)) #f empty)]))
@@ -110,9 +111,6 @@
                                         ,d-post-gamma
                                         ,d-post-phi)))
                       "Stack-Poly" (list deriv)))))
-
-  (define (ivar-pairs tis-a tis-b)
-    (map (λ (ti-a ti-b) (list (second ti-a) (second ti-b))) tis-a tis-b))
   
   (define (typecheck-e e pre plain-deriv)
     (match-let ([`(,tis ,locals ,gamma ,phi) pre])

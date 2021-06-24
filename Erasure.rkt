@@ -25,9 +25,13 @@
     [`(,exs (table ,n (import ,n1 ,n2) ,tfis ...)) `(,exs (table ,n (import ,n1 ,n2)))]
     [`(,exs (table ,n ,is ...)) `(,exs (table ,n ,@is))]))
 
+(define (erase-tiann tiann)
+  (match tiann
+    [`(((,t ,_) ...) ,_ ,_) t]))
+
 (define (erase-tfi tfi)
   (match tfi
-    [`((((,t1 ,_) ...) ,_ ,_) -> (((,t2 ,_) ...) ,_ ,_)) `(,t1 -> ,t2)]))
+    [`(,tiann1 -> ,tiann2) `(,(erase-tiann tiann1) -> ,(erase-tiann tiann2))]))
 
 (define (erase-e e)
   (match e
@@ -44,3 +48,20 @@
     [`(block ,tfi ,es) `(block ,(erase-tfi tfi) ,(map erase-e es))]
     [`(loop ,tfi ,es) `(block ,(erase-tfi tfi) ,(map erase-e es))]
     [_ e]))
+
+(define (erase-C C)
+  (match C
+    [`((func ,tfi-f ...)
+       (global ,tg ...)
+       (table (,n-t ,tfi-t ...) ...)
+       (memory ,n-m ...)
+       (local ,t-l ...)
+       (label ,tiann-lbl  ...)
+       (return ,tiann-ret ...))
+     `((func ,@(map erase-tfi tfi-f))
+       (global ,@tg)
+       (table ,@n-t)
+       (memory ,@n-m)
+       (local ,@t-l)
+       (label ,@(map erase-tiann tiann-lbl))
+       (return ,@(map erase-tiann tiann-ret)))]))
