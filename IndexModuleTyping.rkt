@@ -20,17 +20,15 @@
   #:contract (⊢-module-func C f ((ex ...) tfi))
 
   ;; Should (t _) ... be instiantiated in phi_1?
-  [(where ((((t_1 ivar_1) ...) () Γ_1 φ_1) -> ((ti_2 ...) () Γ_4 φ_4)) tfi)
-   (⊢ C_2 (e ...) ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_5 φ_5) -> ((ti_2 ...) locals_2 Γ_3 φ_3)))
-   (where ((ti_2 ...) locals_1 Γ_6 φ_4) (context-return C_2))
-   (where (((ti_2 ...) locals_1 Γ_6 φ_4)) (context-labels C_2))
-   (where (t_1 ... t ...) (context-locals C_2))
-   (where φ_5 (extend φ_1 (build-phi-zeros (t ...) (ivar ...))))
-   (side-condition (equiv-gammas Γ_6 (union Γ_4 (build-gamma locals_1))))
-   (side-condition (equiv-gammas Γ_5 (union Γ_1 (build-gamma ((t ivar) ...)))))
-   (side-condition (equiv-gammas Γ_1 (build-gamma ((t_1 ivar_1) ...)))) ;; Γ_2 = ((t_1 a_1) ...)
-   (side-condition ,(subset? (term (domain-φ φ_1)) (term (domain-Γ Γ_1)))) ;; domain(φ_1) subset of Γ_1
-   (side-condition (satisfies Γ_3 φ_3 φ_4))
+  [(where ((((t_1 ivar_1) ...) () φ_1) -> (((t_2 ivar_2) ...) () φ_2)) tfi)
+   (⊢ C_2 (e ...) ((() ((t_1 ivar_1) ... (t ivar) ...) Γ_3 φ_3) -> (((t_2 ivar_4) ...) locals_4 Γ_4 φ_4)))
+   (where (((t_2 ivar_2) ...) locals_2 φ_2) (context-return C_2))
+   (where ((((t_2 ivar_2) ...) locals_2 φ_2)) (context-labels C_2))
+   (where C_2 (with-return (add-label (with-locals C (t_1 ... t ...)) (((t_2 ivar_2) ...) locals_2 φ_2)) (((t_2 ivar_2) ...) locals_2 φ_2)))
+   (where Γ_3 (build-gamma ((t_1 ivar_1) ... (t ivar) ...)))
+   (where φ_3 (extend φ_1 (build-phi-zeros (t ...) (ivar ...))))
+   (side-condition (tfi-ok tfi))
+   (side-condition (satisfies Γ_4 φ_4 (substitute-ivars (ivar_4 ivar_2) ... φ_2)))
    ----------------------------------------------------------------------------------------------------
    (⊢-module-func C ((ex ...) (func tfi (local (t ...) (e ...)))) ((ex ...) tfi))]
 
@@ -122,15 +120,6 @@
   [(global-contexts (tg_i-1 ... tg))
    (C ... ((func) (global tg_i-1 ...) (table) (memory) (local) (label) (return)))
    (where (C ...) (global-contexts (tg_i-1 ...)))])
-
-(define-metafunction WASMIndexTypes
-  distinct : (any ...) -> boolean
-  [(distinct ()) #t]
-  [(distinct (any any_rest ...))
-   (distinct (any_rest ...))
-   (side-condition (not (member (term any) (term (any_rest ...)))))
-   or
-   #f])
 
 
 ;; Helper metafunction to extract a function type declaration from the function definition
