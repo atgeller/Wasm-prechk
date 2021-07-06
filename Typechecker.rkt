@@ -493,7 +493,8 @@
                                                     ,locals
                                                     ,post-gamma
                                                     ,(term (union ,phi (substitute-ivars
-                                                                        ,@(ivar-pairs post-tis func-tis-post)
+                                                                        ,@(ivar-pairs (append tis post-tis)
+                                                                                      (append func-tis-pre func-tis-post))
                                                                         ,func-phi-post))))))
                                "Call"
                                empty))
@@ -512,7 +513,8 @@
                                    ,locals
                                    ,post-gamma
                                    ,(term (union ,phi (substitute-ivars
-                                                       ,@(ivar-pairs post-tis ann-tis-post)
+                                                       ,@(ivar-pairs (append (drop-right tis 1) post-tis)
+                                                                     (append ann-tis-pre ann-tis-post))
                                                        ,ann-phi-post))))))
                              "Call-Indirect"
                              empty))
@@ -534,7 +536,8 @@
                                    ,locals
                                    ,post-gamma
                                    ,(term (union ,phi (substitute-ivars
-                                                       ,@(ivar-pairs post-tis ann-tis-post)
+                                                       ,@(ivar-pairs (append (drop-right tis 1) post-tis)
+                                                                     (append ann-tis-pre ann-tis-post))
                                                        ,ann-phi-post))))))
                              "Call-Indirect-Prechk"
                              empty))
@@ -801,11 +804,18 @@
    '(module
         ((() (func ((((i32 a) (i32 b)) () empty)
                     ->
-                    (((i32 c)) () (empty (= c (i32 1)))))
+                    (((i32 c)) () (empty (= c ((i32 add) a b)))))
                    (local ()
-                     ((i32 const 0)
-                      (i32 const 1)
-                      (i32 add))))))
+                     ((get-local 0)
+                      (get-local 1)
+                      (i32 add)))))
+         (() (func ((((i32 a)) () empty)
+                    ->
+                    (((i32 b)) () (empty (= b ((i32 mul) a (i32 2))))))
+                   (local ()
+                     ((get-local 0)
+                      (get-local 0)
+                      (call 0))))))
       () () ()))
 
 #;(typecheck-module
