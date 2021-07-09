@@ -227,12 +227,12 @@
            [false (parse-proposition P2)])
        `(ite ,cond ,true ,false))]
     [`(valid-address ,index ,offset ,width ,n)
-     `(and (bvule (bvadd (bvadd (_ bv33 ,offset)
-                                ((_ zero_extend 1) ,index))
-                         (bvlshr (_ bv33 ,width) (_ bv33 3)))
-                  (bvmul (_ bv33 ,n) (_ bv33 65536)))
-           (or (bvugt (_ bv32 ,offset) (_ bv32 0))
-               (bvugt ,index (_ bv32 0))))]
+     `(and (bvule (bvadd (bvadd (_ ,(string->symbol (format "bv~a" offset)) 33)
+                                (concat \#b0 ,index))
+                         (bvlshr (_ ,(string->symbol (format "bv~a" width)) 33) (_ bv3 33)))
+                  (bvmul (_ ,(string->symbol (format "bv~a" n)) 33) (_ bv65536 33)))
+           (or (bvugt ,(integer->z3-bitvec offset 32) \#x00000000)
+               (bvugt ,index \#x00000000)))]
     [`⊥
      `false]))
 
