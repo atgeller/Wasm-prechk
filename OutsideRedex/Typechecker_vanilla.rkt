@@ -1,5 +1,7 @@
 #lang racket
 
+(require "stack.rkt")
+
 ;; program state: ((stack ...) (locals ...) gamma phi)
 #|
 (define (get-stack state)
@@ -50,6 +52,16 @@
        `(,(append stack stack-adds) ,modified-locals ,(append gamma gamma-adds) ,(append phi phi-adds)))]))
 |#
 
+;; TODO: Refactor
+(define (type? type)
+  (match type
+    ['i32 #t]
+    ['i64 #t]
+    ['f32 #t]
+    ['f64 #t]
+    [(? symbol?) (unification-type? type)]
+    [_ #f]))
+
 (define-syntax option-map
   (syntax-rules ()
     [(option-map pred result) (if pred result #f)]))
@@ -76,37 +88,37 @@
 
       ;; TODO
       #;[`(,t ,(? unop? uop))
-       (match-let ([`(,tis_0 ... (,t ,a1)) tis])
-         (let ([a (gensym)])
-           `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t ,uop) ,a1))))))]
+         (match-let ([`(,tis_0 ... (,t ,a1)) tis])
+           (let ([a (gensym)])
+             `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t ,uop) ,a1))))))]
 
       ;; TODO
       #;[`(,t div-s/unsafe)
-       (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
-         (option-map (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0)))))
-                     (let ([a (gensym)])
-                       `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t div-s) ,a1 ,a2)))))))]
+         (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
+           (option-map (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0)))))
+                       (let ([a (gensym)])
+                         `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t div-s) ,a1 ,a2)))))))]
 
       ;; TODO
       #;[`(,t div-u/unsafe)
-       (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
-         (option-map (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
-                     (let ([a (gensym)])
-                       `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t div-u) ,a1 ,a2)))))))]
+         (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
+           (option-map (term (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0))))))
+                       (let ([a (gensym)])
+                         `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t div-u) ,a1 ,a2)))))))]
 
       ;; TODO
       #;[`(,t rem-s/unsafe)
-       (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
-         (option-map (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0)))))
-                     (let ([a (gensym)])
-                       `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t rem-s) ,a1 ,a2)))))))]
+         (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
+           (option-map (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0)))))
+                       (let ([a (gensym)])
+                         `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t rem-s) ,a1 ,a2)))))))]
 
       ;; TODO
       #;[`(,t rem-u/unsafe)
-       (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
-         (option-map (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0)))))
-                     (let ([a (gensym)])
-                       `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t rem-u) ,a1 ,a2)))))))]
+         (match-let ([`(,tis_0 ... (,t ,a1) (,t ,a2)) tis])
+           (option-map (satisfies ,gamma ,phi (empty (not (= ,a2 (,t 0)))))
+                       (let ([a (gensym)])
+                         `((,@tis_0 `(,t ,a)) ,locals (,gamma (,t ,a)) (,phi (= ,a ((,t rem-u) ,a1 ,a2)))))))]
 
       ;; TODO
       #;[`(,t ,(? binop? bop))
