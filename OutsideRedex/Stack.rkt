@@ -39,6 +39,8 @@
 (define stack2 (push-stack stack1 '(i32 a_2)))
 (define stack3 (push-stack stack2 '(i32 a_3)))
 
+(define stackbad (push-stack stack1 '(i64 a_1)))
+
 ;; Example usage:
 ;(let-stack stack3 [(i32 a_3) (t_1 a_2) (t_2 a_1) rest] body)
 
@@ -74,9 +76,9 @@
                            [seen '()]
                            #:result acc)
                           ([object (syntax->list #'pattern)])
-                  (match (syntax->datum object)
+                  (match (syntax->list object)
                     [`(,type ,index-var)
-                     (let* ([env-type (if (unification-type-stx? type)
+                     (let* ([env-type (if (unification-type-stx? (syntax->datum type))
                                           (list type #`(dict-ref env '#,type))
                                           #f)]
                             [env-index-var (list index-var #`(dict-ref env '#,index-var))]
@@ -86,7 +88,12 @@
                        (if (member index-var seen)
                            (error "Multiply passed index-var to let-stack ~a" index-var)
                            (values acc** seen*)))]
-                    [(? symbol? rest-id) (values (cons (list rest-id #'rest) acc) seen)]))
+                    [#f #:when (symbol? (syntax->datum object)) (values (cons (list object #'rest) acc) seen)]))
           body))]))
 
 (let-stack stack3 [(i32 a_3) (t a_2) (t a_1) rest] (displayln t))
+(let-stack stack2 [(t a_2) (t a_1) rest] (displayln t))
+;; Error example:
+;;(let-stack stackbad [(t a_2) (t a_1) rest] (displayln t))
+;; Error example #2:
+;;(let-stack stackbad [(t a_2) (t_2 a_1) (t_7 a_7) rest] (displayln t))
