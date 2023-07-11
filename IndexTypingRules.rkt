@@ -10,15 +10,15 @@
 (provide ⊢ tfi-ok)
 
 (define-metafunction WASMIndexTypes
-  tfi-ok : tfi -> boolean
-  [(tfi-ok (((ti_1 ...) locals_1 φ_1) -> ((ti_2 ...) locals_2 φ_2)))
-   ,(and (subset? (term (domain-φ φ_1)) (term (domain-tis (merge (ti_1 ...) locals_1))))
-         (subset? (term (domain-φ φ_2)) (term (domain-tis (merge (merge (ti_1 ...) locals_1) (merge (ti_2 ...) locals_2)))))
-         (term (distinct (domain-tis (merge (ti_1 ...) locals_1))))
-         (term (distinct (doamin-tis (merge (ti_2 ...) locals_2)))))])
+  tfi-ok : tfiann -> boolean
+  [(tfi-ok (((ti_1 ...) φ_1) -> ((ti_2 ...) φ_2)))
+   ,(and (subset? (term (domain-φ φ_1)) (term (domain-tis (ti_1 ...))))
+         (subset? (term (domain-φ φ_2)) (term (domain-tis (merge (ti_1 ...) (ti_2 ...)))))
+         (term (distinct (domain-tis (ti_1 ...))))
+         (term (distinct (doamin-tis (ti_2 ...)))))])
 
 (define-judgment-form WASMIndexTypes
-  #:contract (⊢ C (e ...) tficond)
+  #:contract (⊢ C (e ...) tfi)
 
   [(where #f (in ivar Γ)) ;; ivar fresh
    --- "Const"
@@ -94,11 +94,9 @@
    (⊢ C ((t_1 reinterpret t_2)) ((((t_2 ivar_2)) locals Γ φ)
                                  -> (((t_1 ivar_1)) locals (Γ (t_1 ivar_1)) (φ (= ivar_1 ((t_1 reinterpret t_2) ivar_2))))))]
 
-  [(side-condition (equiv-gammas Γ_2 (build-gamma (ti_2 ... (t ivar) ...))))
-   (where (t ...) (context-locals C))
-   ;; TODO: distinct check on postcondition ivars?
+  [(where (t ...) (context-locals C))
    --- "Unreachable"
-   (⊢ C (unreachable) (((ti_1 ...) locals Γ_1 φ) -> ((ti_2 ...) ((t ivar) ...) Γ_2 (empty ⊥))))]
+   (⊢ C (unreachable) (((ti_1 ...) locals Γ_1 φ) -> ((ti_2 ...) ((t ivar) ...) Γ_2 φ_2)))]
 
   [--- "Nop"
    (⊢ C (nop) ((() locals Γ φ) -> (() locals Γ φ)))]
@@ -110,60 +108,41 @@
    --- "Select"
    (⊢ C (select) ((((t ivar_1) (t ivar_2) (i32 ivar)) locals Γ φ)
                   -> (((t ivar_3)) locals (Γ (t ivar)) (φ (if (= ivar (i32 0)) (= ivar_3 ivar_2) (= ivar_3 ivar_1))))))]
-  
-  [(side-condition (tfi-ok ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3))))
-   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... φ_2))) ;; Strengthen precondition outside
-   (where C_2 (add-label C_1 (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)))
-   (⊢ C_2 (e ...) ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2) -> (((t_post ivar_5) ...) ((t_l ivar_l_5) ...) Γ_5 φ_5)))
-   (side-condition (equiv-gammas Γ_2 (build-gamma ((t_pre ivar_2) ... (t_l ivar_l_2) ...))))
-   (side-condition (satisfies Γ_5 φ_5 (substitute-ivars (ivar_5 ivar_3) ... (ivar_l_5 ivar_l_3) ... φ_3))) ;; Weaken postcondition inside
-   (side-condition (distinct (merge (ivar_4 ... ivar_l_4 ...) (domain-Γ Γ_1)))) ;; (ivar_4 ... ivar_l_4 ...) fresh
-   (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ... (t_l ivar_l_4) ...)))))
-   (where φ_4 (union φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... (ivar_4 ivar_3) ... (ivar_l_4 ivar_l_3) ... φ_3)))
+
+  [(where C_2 (add-label C_1 (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) φ_2)))
+   (⊢ C_2 (e ...) ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_3)))
+   (side-condition (satisfies Γ_2 φ_3 φ_2))
    --------------------------- "Block"
-   (⊢ C_1 ((block ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)) (e ...)))
-      ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_4) ...) ((t_l ivar_l_4) ...) Γ_4 φ_4)))]
+   (⊢ C_1 ((block ((t_pre ...) -> (t_post ...)) (e ...)))
+      ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2)))]
 
-  [(side-condition (tfi-ok ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3))))
-   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... φ_2))) ;; Strengthen precondition outside
-   (where C_2 (add-label C_1 (((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2)))
-   (⊢ C_2 (e ...) ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2) -> (((t_post ivar_5) ...) ((t_l ivar_l_5) ...) Γ_5 φ_5)))
-   (side-condition (equiv-gammas Γ_2 (build-gamma ((t_pre ivar_2) ... (t_l ivar_l_2) ...))))
-   (side-condition (satisfies Γ_5 φ_5 (substitute-ivars (ivar_5 ivar_3) ... (ivar_l_5 ivar_l_3) ... φ_3))) ;; Weaken postcondition inside
-   (side-condition (distinct (merge (ivar_4 ... ivar_l_4 ...) (domain-Γ Γ_1)))) ;; (ivar_4 ... ivar_l_4 ...) fresh
-   (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ... (t_l ivar_l_4) ...)))))
-   (where φ_4 (union φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... (ivar_4 ivar_3) ... (ivar_l_4 ivar_l_3) ... φ_3)))
+  ;; Have to inline C_2 here since φ_3 is only introduced in this line
+  [(⊢ (add-label C_1 (((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) φ_3)) (e ...) ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 φ_3) -> (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_4)))
+   (side-condition (satisfies Γ_1 φ_1 φ_3))
+   (side-condition (satisfies Γ_2 φ_4 φ_2))
    --------------------------- "Loop"
-   (⊢ C_1 ((loop ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)) (e ...)))
-      ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_4) ...) ((t_l ivar_l_4) ...) Γ_4 φ_4)))]
+   (⊢ C_1 ((loop ((t_pre ...) -> (t_post ...)) (e ...)))
+      ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2)))]
 
-  [(side-condition (tfi-ok ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3))))
-   (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... φ_2))) ;; Strengthen precondition outside
-   (where C_2 (add-label C_1 (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)))
-   (⊢ C_2 (e_1 ...) ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2) -> (((t_post ivar_5) ...) ((t_l ivar_l_5) ...) Γ_5 φ_5)))
-   (⊢ C_2 (e_2 ...) ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2) -> (((t_post ivar_6) ...) ((t_l ivar_l_6) ...) Γ_6 φ_6)))
-   (side-condition (equiv-gammas Γ_2 (build-gamma (merge ((t_pre ivar_2) ...) ((t_l ivar_l_2) ...)))))
-   (side-condition (satisfies Γ_5 φ_5 (substitute-ivars (ivar_5 ivar_3) ... (ivar_l_5 ivar_l_3) ... φ_3))) ;; Weaken postcondition inside then
-   (side-condition (satisfies Γ_6 φ_6 (substitute-ivars (ivar_6 ivar_3) ... (ivar_l_6 ivar_l_3) ... φ_3))) ;; Weaken postcondition inside else
-   (side-condition (distinct (merge (ivar_4 ... ivar_l_4 ...) (domain-Γ Γ_1)))) ;; (ivar_4 ... ivar_l_4 ...) fresh
-   (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ... (t_l ivar_l_4) ...)))))
-   (where φ_4 (union φ_1 (substitute-ivars (ivar_1 ivar_2) ... (ivar_l_1 ivar_l_2) ... (ivar_4 ivar_3) ... (ivar_l_4 ivar_l_3) ... φ_3)))
-   --------------------------------------------------------------------- "If"
-   (⊢ C_1 ((if ((((t_pre ivar_2) ...) ((t_l ivar_l_2) ...) φ_2) -> (((t_post ivar_3) ...) ((t_l ivar_l_3) ...) φ_3)) (e_1 ...) else (e_2 ...)))
-      ((((t_pre ivar_1) ... (i32 ivar_s)) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_4) ...) ((t_l ivar_l_4) ...) Γ_4 φ_4)))]
+  [(where C_2 (add-label C_1 (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) φ_2)))
+   (⊢ C_2 (e_1 ...) ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 (φ_1 (not (= ivar_s (i32 0))))) -> (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_3)))
+   (⊢ C_2 (e_2 ...) ((((t_pre ivar_1) ...) ((t_l ivar_l_1) ...) Γ_1 (φ_1 (= ivar_s (i32 0)))) -> (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_4)))
+   (side-condition (satisfies Γ_2 φ_3 φ_2))
+   (side-condition (satisfies Γ_2 φ_4 φ_2))
+   --------------------------- "If"
+   (⊢ C_1 ((if ((t_pre ...) -> (t_post ...)) (e_1 ...) else (e_2 ...)))
+      ((((t_pre ivar_1) ... (i32 ivar_s)) ((t_l ivar_l_1) ...) Γ_1 φ_1) -> (((t_post ivar_2) ...) ((t_l ivar_l_2) ...) Γ_2 φ_2)))]
 
   [(where (((t ivar_pat) ...) ((t_l ivar_l_pat) ...) φ) (reverse-get (context-labels C) j))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar ivar_pat) ... (ivar_l ivar_l_pat) ... φ)))
-   (side-condition (equiv-gammas Γ_2 (build-gamma (ti_2 ... (t_l ivar_l_post) ...))))
    (where (t_l ...) (context-locals C))
-   ;; TODO: distinct check on postcondition ivars?
    -------------------------------------------------------- "Br"
    (⊢ C ((br j))
       (((ti_1 ... (t ivar) ...) ((t_l ivar_l) ...) Γ_1 φ_1)
-       -> ((ti_2 ...) ((t_l ivar_l_post) ...) Γ_2 (empty ⊥))))]
+       -> ((ti_2 ...) ((t_l ivar_l_post) ...) Γ_2 φ_2)))]
 
   [(where (((t ivar_pat) ...) ((t_l ivar_l_pat) ...) φ) (reverse-get (context-labels C) j))
-   (side-condition (satisfies Γ_1 (φ_1 (not (= ivar_s (i32 0)))) (substitute-ivars (ivar ivar_pat) ... (ivar_l ivar_l_pat) ... φ)))
+   (side-condition (satisfies Γ_1 (φ_1 (not (= ivar_s (i32 0)))) φ #;(substitute-ivars (ivar ivar_pat) ... (ivar_l ivar_l_pat) ... φ)))
    ------------------------------------------------------------------------------ "Br-If"
    (⊢ C ((br-if j))
       ((((t ivar) ... (i32 ivar_s)) ((t_l ivar_l) ...) Γ_1 φ_1)
@@ -172,11 +151,9 @@
   [(where ((((t_lbl ivar_pat) ...) ((t_l_lbl ivar_l_pat) ...) φ) ...) ((reverse-get (context-labels C) j) ...))
    (side-condition (same ((t_lbl ...) ...) (t ...)))
    (side-condition (same ((t_l_lbl ...) ...) (t_l ...)))
-   ;; TODO: could extend φ_1 with the knowledge that ivar is equal to that index?
    (side-condition (satisfies-all Γ_1 φ_1 ((substitute-ivars (ivar_3 ivar_pat) ... (ivar_l ivar_l_pat) ... φ) ...)))
    (side-condition (equiv-gammas Γ_2 (build-gamma (ti_2 ... (t_l ivar_l_post) ...))))
    (where (t_l ...) (context-locals C))
-   ;; TODO: distinct check on postcondition ivars?
    -------------------------------------------------------------- "Br-Table"
    (⊢ C ((br-table j ...))
       (((ti_1 ... (t ivar_3) ... (i32 ivar)) ((t_l ivar_l) ...) Γ_1 φ_1)
@@ -186,17 +163,11 @@
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar ivar_pat) ... φ))) ;; Strengthen precondition
    (side-condition (equiv-gammas Γ_2 (build-gamma (ti_2 ... (t_l ivar_l) ...))))
    (where (t_l ...) (context-locals C))
-   ;; TODO: distinct check on postcondition ivars?
    -------------------------------------- "Return"
    (⊢ C (return)
       (((ti_1 ... (t ivar) ...) locals Γ_1 φ_1) -> ((ti_2 ...) ((t_l ivar_l) ...) Γ_2 (empty ⊥))))]
 
-  ;; Only works if Function is internal
-  ;; Justin - Actually, I think this works fine, functions imported from other contexts have to
-  ;;          have a type declaration in the context that they're called from.
-  ;; Adam - This is the same as in the thesis
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  [(where ((((t_pre ivar_2) ...) _ φ_2) -> (((t_post ivar_3) ...) _ φ_3)) (context-func C j))
+  [(where ((((t_pre ivar_2) ...) φ_2) -> (((t_post ivar_3) ...) φ_3)) (context-func C j))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... φ_2))) ;; Strengthen precondition
    (side-condition (distinct (merge (ivar_4 ...) (domain-Γ Γ_1)))) ;; (ivar_4 ...) fresh
    (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ...)))))
@@ -207,7 +178,6 @@
        -> (((t_post ivar_4) ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ;; TODO: Do we want to allow for indexed types on non-prechk call-indirect?
   [(side-condition (tfi-ok ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3))))
    (where (j _ ...) (context-table C))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... φ_2))) ;; Strengthen precondition
@@ -215,29 +185,29 @@
    (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ...)))))
    (where φ_4 (union φ_1 (substitute-ivars (ivar_4 ivar_3) ... φ_3)))
    --------------------------- "Call-Indirect"
-   (⊢ C ((call-indirect ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3))))
+   (⊢ C ((call-indirect ((((t_pre ivar_2) ...) φ_2) -> (((t_post ivar_3) ...) φ_3))))
       ((((t_pre ivar_1) ... (i32 ivar)) locals Γ_1 φ_1)
        -> (((t_post ivar_4) ...) locals Γ_4 φ_4)))]
   
   [(side-condition (tfi-ok ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3))))
-   (where (j tfi ...) (context-table C))
+   (where (j tfiann ...) (context-table C))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... φ_2))) ;; Strengthen precondition
-   (side-condition (valid-table-call ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3)) ivar (tfi ...) Γ_1 φ_1))
+   (side-condition (valid-table-call ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3)) ivar (tfiann ...) Γ_1 φ_1))
    (side-condition (distinct (merge (ivar_4 ...) (domain-Γ Γ_1))))
    (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ...)))))
    (where φ_4 (union φ_1 (substitute-ivars (ivar_4 ivar_3) ... φ_3)))
    ------------------------------------------------------- "Call-Indirect-Prechk"
-   (⊢ C ((call-indirect/unsafe ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3))))
+   (⊢ C ((call-indirect/unsafe ((((t_pre ivar_2) ...) φ_2) -> (((t_post ivar_3) ...) φ_3))))
       ((((t_pre ivar_1) ... (i32 ivar)) locals Γ_1 φ_1)
        -> (((t_post ivar_4) ...) locals Γ_4 φ_4)))]
 
-  [(where t_2 (context-local C j))
-   (where (t_2 ivar) (index locals j))
-   (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
+  [(where t (context-local C j))
+   (where (t ivar) (index locals j))
+   (where #f (in ivar_2 Γ))
    --------------------------------- "Get-Local"
    (⊢ C ((get-local j))
       ((() locals Γ φ)
-       -> (((t_2 ivar_2)) locals (Γ (t_2 ivar_2)) (φ (= ivar_2 ivar)))))]
+       -> (((t ivar_2)) locals (Γ (t ivar_2)) (φ (= ivar_2 ivar)))))]
 
   [(where t_2 (context-local C j))
    (where locals_2 (with-index locals_1 j (t_2 ivar)))
@@ -246,13 +216,13 @@
       ((((t_2 ivar)) locals_1 Γ φ)
        -> (() locals_2 Γ φ)))]
 
-  [(where t_2 (context-local C j))
-   (where locals_2 (with-index locals_1 j (t_2 ivar)))
-   (where #f (in ivar_2 Γ)) ;; ivar_2 fresh
+  [(where t (context-local C j))
+   (where locals_2 (with-index locals_1 j (t ivar)))
+   (where #f (in ivar_2 Γ))
    ---------------------------------- "Tee-Local"
    (⊢ C ((tee-local j))
-      ((((t_2 ivar)) locals_1 Γ φ)
-       -> (((t_2 ivar_2)) locals_2 (Γ (t_2 ivar_2)) (φ (= ivar_2 ivar)))))]
+      ((((t ivar)) locals_1 Γ φ)
+       -> (((t ivar_2)) locals_2 (Γ (t ivar_2)) (φ (= ivar_2 ivar)))))]
 
   [(where (_ t_2) (context-global C j))
    (where #f (in ivar Γ)) ;; ivar fresh
@@ -348,7 +318,6 @@
    (⊢ C (e_1 ... e_2) (ticond_1 -> ticond_3))]
 
   ;; Stack polymorphism
-  ;; TODO: check that ti ... are in Γ_1 and Γ_2
   [(⊢ C (e ...) (((ti_1 ...) locals Γ_1 φ_1)
                    -> ((ti_2 ...) locals Γ_2 φ_2)))
    ------------------------------------------------------ "Stack-Poly"

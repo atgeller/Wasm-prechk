@@ -7,10 +7,10 @@
 (define-extended-language WASMIndexTypes WASM
   (ibinop ::= .... div-u/unsafe div-s/unsafe rem-u/unsafe rem-s/unsafe)
   
-  (e ::= .... (call-indirect/unsafe tfi)
+  (e ::= .... (call-indirect/unsafe tfiann)
      (t load/unsafe a o) (t load/unsafe (tp sx) a o)
      (t store/unsafe a o) (t store/unsafe tp a o)
-     (if tfi (e ...) else (e ...)) (block tfi (e ...)) (loop tfi (e ...)))
+     (if tf (e ...) else (e ...)) (block tf (e ...)) (loop tf (e ...)))
 
   ;; Index language
   (ivar ::= variable-not-otherwise-mentioned)
@@ -24,25 +24,27 @@
   (locals ::= (ti ...))
   ;; Index-type pre/post-condition: types on stack, locals, and constraint context
   (ticond ::= ((ti ...) locals Γ φ))
-  (tficond ::= (ticond -> ticond))
-  (tiann ::= ((ti ...) locals φ))
-  (tfi ::= (tiann -> tiann))
+  (labelty ::= ((ti ...) locals φ))
+  (retty ::= ((ti ...) φ))
+  ;; Function annotation
+  (tfiann ::= (retty -> retty))
+  (tfi ::= (ticond -> ticond))
 
   ;; Indexed module contexts
-  (C ::= ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory j) (local t ...) (label tiann  ...) (return tiann))
-     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory j) (local t ...) (label tiann ...) (return))
-     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory) (local t ...) (label tiann  ...) (return tiann))
-     ((func tfi ...) (global tg ...) (table (j tfi ...)) (memory) (local t ...) (label tiann ...) (return))
-     ((func tfi ...) (global tg ...) (table) (memory j) (local t ...) (label tiann  ...) (return tiann))
-     ((func tfi ...) (global tg ...) (table) (memory j) (local t ...) (label tiann ...) (return))
-     ((func tfi ...) (global tg ...) (table) (memory) (local t ...) (label tiann  ...) (return tiann))
-     ((func tfi ...) (global tg ...) (table) (memory) (local t ...) (label tiann ...) (return)))
+  (C ::= ((func tfiann ...) (global tg ...) (table (j tfiann ...)) (memory j) (local t ...) (label labelty  ...) (return retty))
+     ((func tfiann ...) (global tg ...) (table (j tfiann ...)) (memory j) (local t ...) (label labelty ...) (return))
+     ((func tfiann ...) (global tg ...) (table (j tfiann ...)) (memory) (local t ...) (label labelty  ...) (return retty))
+     ((func tfiann ...) (global tg ...) (table (j tfiann ...)) (memory) (local t ...) (label labelty ...) (return))
+     ((func tfiann ...) (global tg ...) (table) (memory j) (local t ...) (label labelty  ...) (return retty))
+     ((func tfiann ...) (global tg ...) (table) (memory j) (local t ...) (label labelty ...) (return))
+     ((func tfiann ...) (global tg ...) (table) (memory) (local t ...) (label labelty  ...) (return retty))
+     ((func tfiann ...) (global tg ...) (table) (memory) (local t ...) (label labelty ...) (return)))
 
-  (S ::= ((C ...) (table ((j (tfi ...)) ...)) (memory (j ...))))
+  (S ::= ((C ...) (table ((j (tfiann ...)) ...)) (memory (j ...))))
 
   ;; Module-level indexed declarations
-  (f ::= ((ex ...) (func tfi (local (t ...) (e ...))))
-     ((ex ...) (func tfi im)))
+  (f ::= ((ex ...) (func tfiann (local (t ...) (e ...))))
+     ((ex ...) (func tfiann im)))
   (glob ::= ((ex ...) (global tg (e ...)))
         ((ex ...) (global tg im)))
   (tab ::= ((ex ...) (table n i ...))
