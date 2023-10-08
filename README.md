@@ -11,8 +11,6 @@
   These administrative typing rules are out-of-date with respect to the submission.
 - The Z3 implementation of the constraint solver is defined in [Satisfies.rkt](Satisfies.rkt).
 - The code for generating queries to handle the checking of table calls is in [TableValidation.rkt](TableValidation.rkt).
-- A typechecking algorithm is defined in [Typechecking.rkt](Typechecking.rkt).
-- A definition of erasing Wasm-prechk programs to plain WASM is defined in [Erasure.rkt](Erasure.rkt).
 
 ## Dependencies
 
