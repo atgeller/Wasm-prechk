@@ -8,9 +8,11 @@
 - The typing rules for instruction sequences are defined in [IndexTypingRules.rkt](IndexTypingRules.rkt).
 - The typing rules for modules are defined in [IndexModuleTyping.rkt](IndexModuleTyping.rkt).
 - The syntax and typing rules for the run-time system are defined in [IndexAdministrativeTyping.rkt](IndexAdministrativeTyping.rkt).
-  These administrative typing rules are out-of-date with respect to the submission.
+  These administrative typing rules are out-of-date.
 - The Z3 implementation of the constraint solver is defined in [Satisfies.rkt](Satisfies.rkt).
 - The code for generating queries to handle the checking of table calls is in [TableValidation.rkt](TableValidation.rkt).
+- A typechecking algorithm is defined in [Typechecking.rkt](Typechecking.rkt). This is out-of-date and likely won't generate valid derivations.
+- A definition of erasing Wasm-prechk programs to plain WASM is defined in [Erasure.rkt](Erasure.rkt). This is out-of-date and may not work for all Wasm-prechk programs.
 
 ## Dependencies
 
