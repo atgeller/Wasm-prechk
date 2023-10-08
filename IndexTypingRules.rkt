@@ -178,7 +178,7 @@
        -> (((t_post ivar_4) ...) locals Γ_4 φ_4)))]
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  [(side-condition (tfi-ok ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3))))
+  [(side-condition (tfi-ok ((((t_pre ivar_2) ...) φ_2) -> (((t_post ivar_3) ...) φ_3))))
    (where (j _ ...) (context-table C))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... φ_2))) ;; Strengthen precondition
    (side-condition (distinct (merge (ivar_4 ...) (domain-Γ Γ_1)))) ;; (ivar_4 ...) fresh
@@ -189,10 +189,10 @@
       ((((t_pre ivar_1) ... (i32 ivar)) locals Γ_1 φ_1)
        -> (((t_post ivar_4) ...) locals Γ_4 φ_4)))]
   
-  [(side-condition (tfi-ok ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3))))
+  [(side-condition (tfi-ok ((((t_pre ivar_2) ...) φ_2) -> (((t_post ivar_3) ...) φ_3))))
    (where (j tfiann ...) (context-table C))
    (side-condition (satisfies Γ_1 φ_1 (substitute-ivars (ivar_1 ivar_2) ... φ_2))) ;; Strengthen precondition
-   (side-condition (valid-table-call ((((t_pre ivar_2) ...) () φ_2) -> (((t_post ivar_3) ...) () φ_3)) ivar (tfiann ...) Γ_1 φ_1))
+   (side-condition (valid-table-call ((((t_pre ivar_2) ...) φ_2) -> (((t_post ivar_3) ...) φ_3)) ivar (tfiann ...) Γ_1 φ_1))
    (side-condition (distinct (merge (ivar_4 ...) (domain-Γ Γ_1))))
    (side-condition (equiv-gammas Γ_4 (union Γ_1 (build-gamma ((t_post ivar_4) ...)))))
    (where φ_4 (union φ_1 (substitute-ivars (ivar_4 ivar_3) ... φ_3)))

@@ -98,14 +98,14 @@
 
   (test-judgment-holds ⊢ (derivation `(⊢ ((func)
                                           (global)
-                                          (table (3 ((((i32 a)) () (empty (= (i32 1) ((i32 lt-u) a (i32 0))))) -> (((i32 b)) () (empty (= (i32 1) ((i32 gt-u) b (i32 0))))))
-                                                    ((((i32 a)) () empty) -> (((i32 b)) () (empty (= (i32 1) ((i32 gt-u) b a)))))
-                                                    ((((i32 a)) () empty) -> (((i32 b)) () empty))))
+                                          (table (3 ((((i32 a)) (empty (= (i32 1) ((i32 lt-u) a (i32 0))))) -> (((i32 b)) (empty (= (i32 1) ((i32 gt-u) b (i32 0))))))
+                                                    ((((i32 a)) empty) -> (((i32 b)) (empty (= (i32 1) ((i32 gt-u) b a)))))
+                                                    ((((i32 a)) empty) -> (((i32 b)) empty))))
                                           (memory)
                                           (local)
                                           (label)
                                           (return))
-                                         ((call-indirect/unsafe ((((i32 a)) () empty) -> (((i32 b)) () (empty (= (i32 1) ((i32 gt-u) b a)))))))
+                                         ((call-indirect/unsafe ((((i32 a)) empty) -> (((i32 b)) (empty (= (i32 1) ((i32 gt-u) b a)))))))
                                          ((((i32 a) (i32 c))
                                            ()
                                            ((empty (i32 a)) (i32 c))
@@ -212,8 +212,8 @@
                                                   (list)))))
 
   (define deriv5
-    (derivation `(⊢ ((func ((((i32 b)) () (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
-                            -> (((i32 c)) () (empty (= (i32 1) ((i32 gt-u) c b))))))
+    (derivation `(⊢ ((func ((((i32 b)) (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
+                            -> (((i32 c)) (empty (= (i32 1) ((i32 gt-u) c b))))))
                      (global)
                      (table)
                      (memory)
@@ -232,8 +232,8 @@
   (test-judgment-holds ⊢ deriv5)
 
   (define deriv6
-    (derivation `(⊢ ((func ((((i32 b)) () (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
-                            -> (((i32 c)) () (empty (= (i32 1) ((i32 gt-u) c b))))))
+    (derivation `(⊢ ((func ((((i32 b)) (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
+                            -> (((i32 c)) (empty (= (i32 1) ((i32 gt-u) c b))))))
                      (global)
                      (table)
                      (memory)
@@ -252,8 +252,8 @@
   (test-judgment-holds ⊢ deriv6)
 
   (define deriv7
-    (derivation `(⊢ ((func ((((i32 b)) () (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
-                            -> (((i32 c)) () (empty (= (i32 1) ((i32 gt-u) c b))))))
+    (derivation `(⊢ ((func ((((i32 b)) (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
+                            -> (((i32 c)) (empty (= (i32 1) ((i32 gt-u) c b))))))
                      (global)
                      (table)
                      (memory)
@@ -275,8 +275,8 @@
   (test-judgment-holds ⊢ deriv7)
 
   (define deriv8
-    (derivation `(⊢ ((func ((((i32 b)) () (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
-                            -> (((i32 c)) () (empty (= (i32 1) ((i32 gt-u) c b))))))
+    (derivation `(⊢ ((func ((((i32 b)) (empty (= (i32 1) ((i32 gt-u) b (i32 0)))))
+                            -> (((i32 c)) (empty (= (i32 1) ((i32 gt-u) c b))))))
                      (global)
                      (table)
                      (memory)

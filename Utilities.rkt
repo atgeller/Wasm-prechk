@@ -41,11 +41,11 @@
 
 ;; Metafunctions for getting data out of a context
 (define-metafunction WASMIndexTypes
-  context-funcs : C -> (tfi ...)
-  [(context-funcs ((func tfi ...) _ _ _ _ _ _)) (tfi ...)])
+  context-funcs : C -> (tfiann ...)
+  [(context-funcs ((func tfiann ...) _ _ _ _ _ _)) (tfiann ...)])
 
 (define-metafunction WASMIndexTypes
-  context-func : C i -> tfi
+  context-func : C i -> tfiann
   [(context-func C i) (index (context-funcs C) i)])
 
 (define-metafunction WASMIndexTypes
@@ -57,8 +57,8 @@
   [(context-global C i) (index (context-globals C) i)])
 
 (define-metafunction WASMIndexTypes
-  context-table : C -> (n tfi ...)
-  [(context-table (_ _ (table (n tfi ...)) _ _ _ _)) (n tfi ...)])
+  context-table : C -> (n tfiann ...)
+  [(context-table (_ _ (table (n tfiann ...)) _ _ _ _)) (n tfiann ...)])
 
 (define-metafunction WASMIndexTypes
   context-memory : C -> n

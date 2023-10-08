@@ -13,12 +13,12 @@
   (define ticond2_1 `(() ((i32 a) (i32 b)) (((empty (i32 a)) (i32 b)) (i32 a_2)) (empty (= a_2 a))))
   (define ticond3 `(((i32 a_2) (i32 b_2)) ((i32 a) (i32 b)) ((((empty (i32 a)) (i32 b)) (i32 a_2)) (i32 b_2)) ((empty (= a_2 a)) (= b_2 b))))
   (define ticond3_1 `(((i32 b_2)) ((i32 a) (i32 b)) ((((empty (i32 a)) (i32 b)) (i32 a_2)) (i32 b_2)) ((empty (= a_2 a)) (= b_2 b))))
-  (define ticond4 `(((i32 c)) ((i32 a) (i32 b)) (((((empty (i32 a)) (i32 b)) (i32 a_2)) (i32 b_2)) (i32 c)) (((empty (= a_2 a)) (= b_2 b)) (= c (add a_2 b_2)))))
-  (define ticond5 `(((i32 c)) () (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c (add a b)))))
-  (define ticond5_1 `(((i32 c)) ((i32 a) (i32 b)) (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c (add a b)))))
+  (define ticond4 `(((i32 c)) ((i32 a) (i32 b)) (((((empty (i32 a)) (i32 b)) (i32 a_2)) (i32 b_2)) (i32 c)) (((empty (= a_2 a)) (= b_2 b)) (= c ((i32 add) a_2 b_2)))))
+  #;(define ticond5 `(((i32 c)) () (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c ((i32 add) a b)))))
+  #;(define ticond5_1 `(((i32 c)) ((i32 a) (i32 b)) (((empty (i32 a)) (i32 b)) (i32 c)) (empty (= c ((i32 add) a b)))))
 
   (define context1
-    (term ((func (,ticond0 -> ,ticond5))
+    (term ((func ((((i32 a) (i32 b)) empty) -> (((i32 c)) (empty (= c ((i32 add) a b))))))
            (global)
            (table)
            (memory)
@@ -27,13 +27,13 @@
            (return))))
   
   (define context1-inner
-    (term ((func (,ticond0 -> ,ticond5))
+    (term ((func ((((i32 a) (i32 b)) empty) -> (((i32 c)) (empty (= c ((i32 add) a b))))))
            (global)
            (table)
            (memory)
            (local i32 i32)
-           (label ,ticond5_1)
-           (return ,ticond5_1))))
+           (label (((i32 c)) ((i32 a) (i32 b)) (empty (= c ((i32 add) a b)))))
+           (return (((i32 c)) (empty (= c ((i32 add) a b))))))))
 
   (define deriv1
     (derivation `(⊢ ,context1-inner
@@ -91,12 +91,10 @@
 
   (define deriv4
     (derivation `(⊢-module-func ,context1
-                                (() (func (,ticond0 -> ,ticond5)
+                                (() (func ((((i32 a) (i32 b)) empty) -> (((i32 c)) (empty (= c ((i32 add) a b)))))
                                           (local () ((get-local 0) (get-local 1) (i32 add)))))
-                                (() (,ticond0 -> ,ticond5)))
+                                (() ((((i32 a) (i32 b)) empty) -> (((i32 c)) (empty (= c ((i32 add) a b)))))))
                 #f
                 (list deriv3)))
 
-  (test-judgment-holds ⊢-module-func deriv4)
-
-  )
+  (test-judgment-holds ⊢-module-func deriv4))

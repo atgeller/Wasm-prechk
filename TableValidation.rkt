@@ -11,15 +11,11 @@
 (define (construct-z3-table call-type typelist)
   (let ([unique-typelist (remove-duplicates typelist)])
     (for/hash ([type unique-typelist])
-      (displayln type)
-      (displayln call-type)
-      (displayln (equal? type call-type))
       (values type (if (equal? type call-type)
                        'true
                        'false)))))
 
 (define (check-table-call type index typelist gamma phi)
-  (displayln "Hello world")
   (let* ([typemap (construct-z3-table type typelist)]
          [vars (parse-defs gamma)]
          [constraints (extract-constraints phi)]
